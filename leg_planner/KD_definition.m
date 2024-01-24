@@ -1,5 +1,7 @@
-%This script defines dynamic parameters for the simulink and matlan
+%This script defines dynamic parameters for the simulink and matlab
 %simulation
+%
+%Defines: KD, D matrices
 
 %% Bushing joint Paramters
 KD = zeros(5,2);

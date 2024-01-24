@@ -220,7 +220,9 @@ D = diag(Dd);
 
 velocity_dyn  = M\ (u_gen - C*qt - G -D*qt);
 
-f=  -pinv( H*(  inv(M) *H' ))  *   (H*velocity_dyn + Ht*qt);
+% f=  -pinv( H*(  inv(M) *H' ))  *   (H*velocity_dyn + Ht*qt);
+
+f=   -inv( H*(  inv(M) *H' ))  *   (H*velocity_dyn + Ht*qt);
 
 %% Dynamics
 yt(1:5 ,1) = y(6:10,1);
