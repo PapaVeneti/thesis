@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="full_robot">
+  <link
+    name="quadruped_pre_jump">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="14.94817015" />
+      <inertia
+        ixx="0.4897949"
+        ixy="-0.00085624"
+        ixz="0.0025397"
+        iyy="0.92002036"
+        iyz="0.00030749"
+        izz="1.00669705" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0.00293663 0.00029324 0.04073506"
+        rpy="0 0 0" />
+
+      <geometry>
+        <mesh
+          filename="body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://full_robot/meshes/quadruped_pre_jump.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

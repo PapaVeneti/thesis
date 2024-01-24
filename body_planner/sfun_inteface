@@ -1,0 +1,33 @@
+Note: Usage of Sfunction is as follows:
+Inputs are:
+1) lbx_0 - lower bound on x for stage 0, size [7]
+2) ubx_0 - upper bound on x for stage 0, size [7]
+3) y_ref_0, size [10]
+4) y_ref - concatenated for shooting nodes 1 to N-1, size [490]
+5) y_ref_e, size [7]
+6) lbu for shooting nodes 0 to N-1, size [150]
+7) ubu for shooting nodes 0 to N-1, size [150]
+ 
+Outputs are:
+1) u0, control input at node 0, size [3]
+2) utraj, control input concatenated for nodes 0 to N-1, size [150]
+3) xtraj, state concatenated for nodes 0 to N, size [357]
+4) acados solver status (0 = SUCCESS)
+5) KKT residual
+6) x1, state at node 1
+7) CPU time
+8) SQP iterations
+Building with 'gcc'.
+MEX completed successfully.
+
+
+Successfully created sfunction:
+acados_sim_solver_sfunction_SRBD.mexa64
+
+Note: Usage of Sfunction is as follows:
+Inputs are:
+1) x0, initial state, size [7]
+2) u, size [3]
+ 
+Outputs are:
+1) x1 - simulated state, size [7]
