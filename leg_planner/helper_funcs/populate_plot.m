@@ -41,7 +41,6 @@ arguments
 end
 
 
-options.reference
 for index = 1:Nplot
     subplot(Nplot,1,index)
     
@@ -67,7 +66,6 @@ for index = 1:Nplot
     elseif     options.reference &&    isnan(var(:,index))
         pp.HandleVisibility='off';
     else 
-        options.display_names{index};
         pp.DisplayName=options.display_names{index};
     end
     legend(Interpreter="latex",FontSize=options.fontsize)

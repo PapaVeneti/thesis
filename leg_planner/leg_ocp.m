@@ -13,6 +13,8 @@ check_acados_requirements()
 Do_make_acados_simulink_files = false;
 cost_type = 'Euclidean'; %['LS']
 solver_statistics = true;
+same_init = true;
+terminal_constr = true;
 
 % simulink outputs:
 simulink_opts.outputs.utraj = 1;
@@ -32,7 +34,7 @@ xref = [qref;wref];
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
-N = 50;
+N = 20;
 Th = 1.5; % time horizon length
 
 nlp_solver = 'sqp'; % Choose from ['sqp', 'sqp_rti']
@@ -87,14 +89,23 @@ ocp_model.set('constr_Jbx',eye(nx))
 
 
 %3.  Terminal constraints (on state)
-% Jbx_e = eye(nx); 
-% Jbx_e(5,:) =[]; 
-% Jbx_e(3,:) =[];  
-% xref_tc = xref; 
-% xref_tc(5)= [];xref_tc(3)= [];
-% ocp_model.set('constr_Jbx_e',Jbx_e)
-% ocp_model.set('constr_lbx_e',xref_tc)
-% ocp_model.set('constr_ubx_e',xref_tc)
+if terminal_constr
+    Jbx_e = eye(nx); 
+    Jbx_e(5,:) =[]; 
+    Jbx_e(3,:) =[];  
+    xref_tc = xref; 
+    xref_tc(5)= [];xref_tc(3)= [];
+    ocp_model.set('constr_Jbx_e',Jbx_e)
+    ocp_model.set('constr_lbx_e',xref_tc)
+    ocp_model.set('constr_ubx_e',xref_tc)
+
+    % slack variable:
+    ocp_model.set('constr_Jsbx_e',eye(8));
+    ocp_model.set('cost_Zl_e',eye(8));
+    ocp_model.set('cost_Zu_e',eye(8));
+    ocp_model.set('cost_z_e',zeros(8,1));
+%     ocp_model.set('cost_Z_e',eye(8))
+end
 
 %4.  Path constraints 
 %TBD:
@@ -134,11 +145,16 @@ ocp_model.set('cost_y_ref_e',y_ref(1:nx))
 end
 
 %% 5. Ocp options:
+
+
 ocp_model.set('T', Th); %Time Horizon
 
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('qp_solver_iter_max', 50);
+ocp_opts.set('qp_solver_iter_max', 200);
 ocp_opts.set('nlp_solver_max_iter', 100);
+
+ocp_opts.set('sim_method_num_steps', 1); %Default 1
+
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
@@ -199,6 +215,8 @@ ubu_sim = repmat(model.input_constraints(:,2),N,1);
 %% 7a. Solver statistics:
 TESTS = 2;
 NTEST = 100;
+status = 4; %init guess
+
 
 if solver_statistics 
     SOLTIME   = nan(TESTS*NTEST,1);
@@ -214,6 +232,15 @@ if solver_statistics
             y_ref_new = [Qc,zeros(nx,nu);zeros(nu,nx),Rc]*[xref_new;tau_ref] ; %Important to give it like that.
             ocp.set('cost_y_ref', y_ref_new);
             ocp.set('cost_y_ref_e', y_ref_new(1:nx));
+
+            if terminal_constr
+                %terminal constraint
+                xref_tc = xref_new; 
+                xref_tc(5)= [];xref_tc(3)= [];
+
+                ocp.set('constr_lbx',xref_tc,N)
+                ocp.set('constr_ubx',xref_tc,N)
+            end
         end
 
         for ii =1:NTEST
@@ -232,23 +259,26 @@ if solver_statistics
             %1. update initial state
             ocp.set('constr_x0', random_x0);
             ocp.set('constr_lbx',random_x0, 0)
+
+            %initialization
+            if status == 4 || same_init
+                ocp.set('init_x',zeros(10,N+1))
+                ocp.set('init_u',zeros(3,N))
+            end
+
             
             %2.  solve and get statistics
             ocp.solve();
             ocp.print('stat')
-            
-            
+                        
             status = ocp.get('status'); % 0 - success
             time_tot = ocp.get('time_tot'); % 0 - success
-
-            if status == 4
-                ocp.set('init_x',zeros(10,N+1))
-                ocp.set('init_u',zeros(3,N))
-            end
             
             disp(['Solution status is: ', num2str(status)]);
             disp(['Solution time is: ', num2str( 1e3*ocp.get('time_tot'),3 ),'ms' ]);
             
+            
+
             if status == 0 || status == 2
                 %max iter -> still a solution, succussful
                 SOLTIME((it-1)*NTEST+ ii)   = ocp.get('time_tot');
@@ -343,3 +373,6 @@ populate_plot(3,tmpc(1:end-1),utraj',"display_names",sim_names)
 % populate_plot(5,tsimulink,q_sim,"color",'b',linestyle='--',display_names=simu_names)
 
 
+%%
+load handel
+sound(y,Fs)
