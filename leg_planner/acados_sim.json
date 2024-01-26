@@ -1,0 +1,70 @@
+{
+	"acados_include_path": "\/home\/papaveneti\/acados\/include",
+	"acados_lib_path": "\/home\/papaveneti\/acados\/lib",
+	"shared_lib_ext": ".so",
+	"json_file": "acados_sim.json",
+	"cython_include_dirs": [],
+	"code_export_directory": "\/home\/papaveneti\/mpc_ws\/leg_planner\/c_generated_code",
+	"dims": {
+		"nx": 10,
+		"nu": 3,
+		"nz": 0,
+		"np": 0
+	},
+	"model": {
+		"name": "ntnu_leg",
+		"dyn_ext_fun_type": "casadi",
+		"dyn_generic_source": [],
+		"dyn_disc_fun_jac_hess": [],
+		"dyn_disc_fun_jac": [],
+		"dyn_disc_fun": [],
+		"gnsf": {
+			"nontrivial_f_LO": 1,
+			"purely_linear": 0
+		}
+	},
+	"sim_options": {
+		"integrator_type": "IRK",
+		"collocation_type": "GAUSS_LEGENDRE",
+		"sim_method_num_stages": 1,
+		"sim_method_num_steps": 1,
+		"sim_method_newton_iter": 2,
+		"sim_method_newton_tol": 0,
+		"Tsim": 0.001,
+		"sens_forw": true,
+		"sens_adj": false,
+		"sens_algebraic": false,
+		"sens_hess": false,
+		"output_z": false,
+		"sim_method_jac_reuse": false,
+		"ext_fun_compile_flags": "-O2"
+	},
+	"parameter_values": [],
+	"problem_class": "SIM",
+	"solver_options": {
+		"integrator_type": "IRK",
+		"collocation_type": "GAUSS_LEGENDRE",
+		"sim_method_num_stages": 1,
+		"sim_method_num_steps": 1,
+		"sim_method_newton_iter": 2,
+		"sim_method_newton_tol": 0,
+		"Tsim": 0.001,
+		"sens_forw": true,
+		"sens_adj": false,
+		"sens_algebraic": false,
+		"sens_hess": false,
+		"output_z": false,
+		"sim_method_jac_reuse": false,
+		"ext_fun_compile_flags": "-O2"
+	},
+	"acados_link_libs": {
+		"openmp": "",
+		"qpoases": "-lqpOASES_e",
+		"daqp": "",
+		"qpdunes": "",
+		"osqp": "",
+		"hpmpc": "",
+		"ooqp": ""
+	},
+	"os": "unix"
+}

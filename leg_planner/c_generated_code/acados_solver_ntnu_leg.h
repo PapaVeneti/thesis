@@ -40,7 +40,7 @@
 #define NTNU_LEG_NZ     0
 #define NTNU_LEG_NU     3
 #define NTNU_LEG_NP     0
-#define NTNU_LEG_NBX    0
+#define NTNU_LEG_NBX    10
 #define NTNU_LEG_NBX0   10
 #define NTNU_LEG_NBU    3
 #define NTNU_LEG_NSBX   0
@@ -91,9 +91,8 @@ typedef struct ntnu_leg_solver_capsule
     /* external functions */
     // dynamics
 
-    external_function_param_casadi *impl_dae_fun;
-    external_function_param_casadi *impl_dae_fun_jac_x_xdot_z;
-    external_function_param_casadi *impl_dae_jac_x_xdot_u_z;
+    external_function_param_casadi *forw_vde_casadi;
+    external_function_param_casadi *expl_ode_fun;
 
 
 

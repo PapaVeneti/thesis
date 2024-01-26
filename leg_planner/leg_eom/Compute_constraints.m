@@ -59,6 +59,7 @@ for ib=1:num_bodies
     assumeAlso(state_out(ib+num_bodies,1) ,'real');
 end
 
+hqs = subs(hq(t)   ,[qs;qts]',state_out');
 Hs  = subs(H(t)    ,[qs;qts]',state_out');
 Hts = subs(Ht123(t),[qs;qts]',state_out');
 

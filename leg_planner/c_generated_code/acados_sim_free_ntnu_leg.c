@@ -28,44 +28,53 @@
  * POSSIBILITY OF SUCH DAMAGE.;
  */
 
-#ifndef ntnu_leg_MODEL
-#define ntnu_leg_MODEL
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* explicit ODE */
-
-// explicit ODE
-int ntnu_leg_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int ntnu_leg_expl_ode_fun_work(int *, int *, int *, int *);
-const int *ntnu_leg_expl_ode_fun_sparsity_in(int);
-const int *ntnu_leg_expl_ode_fun_sparsity_out(int);
-int ntnu_leg_expl_ode_fun_n_in(void);
-int ntnu_leg_expl_ode_fun_n_out(void);
-
-// explicit forward VDE
-int ntnu_leg_expl_vde_forw(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int ntnu_leg_expl_vde_forw_work(int *, int *, int *, int *);
-const int *ntnu_leg_expl_vde_forw_sparsity_in(int);
-const int *ntnu_leg_expl_vde_forw_sparsity_out(int);
-int ntnu_leg_expl_vde_forw_n_in(void);
-int ntnu_leg_expl_vde_forw_n_out(void);
-
-// explicit adjoint VDE
-int ntnu_leg_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
-int ntnu_leg_expl_vde_adj_work(int *, int *, int *, int *);
-const int *ntnu_leg_expl_vde_adj_sparsity_in(int);
-const int *ntnu_leg_expl_vde_adj_sparsity_out(int);
-int ntnu_leg_expl_vde_adj_n_in(void);
-int ntnu_leg_expl_vde_adj_n_out(void);
+// system
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+// acados
+#include "acados/sim/sim_common.h"
+#include "acados_c/sim_interface.h"
+// example specific
+#include "acados_sim_solver_ntnu_leg.h"
+// mex
+#include "mex.h"
 
 
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
 
-#endif  // ntnu_leg_MODEL
+//    mexPrintf("\nin sim_destroy\n");
+
+//    void *config = mxGetPr( mxGetField( prhs[0], 0, "config" ) );
+//    long long *config_mat = (long long *) mxGetData( mxGetField( prhs[0], 0, "config" ) );
+//    long long config = (long long) mxGetScalar( mxGetField( prhs[0], 0, "config" ) );
+
+    /* RHS */
+    const mxArray *C_sim = prhs[0];
+    long long * ptr;
+
+    // capsule
+    ptr = (long long *) mxGetData( mxGetField( C_sim, 0, "capsule" ) );
+    ntnu_leg_sim_solver_capsule *capsule = (ntnu_leg_sim_solver_capsule *) ptr[0];
+
+
+    /* free memory */
+    int status = 0;
+
+    status = ntnu_leg_acados_sim_free(capsule);
+    if (status)
+    {
+        mexPrintf("ntnu_leg_acados_sim_free() returned status %d.\n", status);
+    }
+
+    status = ntnu_leg_acados_sim_solver_free_capsule(capsule);
+    if (status)
+    {
+        mexPrintf("ntnu_leg_acados_sim_solver_free_capsule() returned status %d.\n", status);
+    }
+
+    return;
+
+}

@@ -15,7 +15,9 @@ function [] = populate_plot(Nplot,time,var,options)
 % 3. linestyle: Defaults to '-'
 % 4. marker: Defaults to 'none'
 % 5. display_names: cell array with LATEX style display names
-% 6. hold_on: `on`/'off` -> defaults to 'on'
+% 6. reference: boolean if values are reference. tmpcDefaults to 'false'
+% 7. hold_on: `on`/'off` -> defaults to 'on'
+% 8. fontsize: Default =15
 %
 %OUTPUT:
 % none. It affects the last declared figure.
@@ -32,39 +34,44 @@ arguments
     options.color = 'k'
     options.linestyle = "-"
     options.marker = "none"
+    options.fontsize = 15
     options.hold_on = 'on';
+    options.reference = false
     options.display_names = cell(Nplot,1)
 end
 
 
+options.reference
 for index = 1:Nplot
     subplot(Nplot,1,index)
     
-
-    if isempty(options.display_names{index})
-        plot(time,...
-        var(:,index),...
+    if options.reference 
+        if isnan(var(:,index))
+            continue
+        end
+        
+        pp = yline(var(:,index),...
+        Color=options.color, ...
+        LineWidth=options.linewidth, ...
+        LineStyle=options.linestyle);
+    else  
+        pp = plot(time, var(:,index),...
         Color=options.color, ...
         LineWidth=options.linewidth, ...
         Marker= options.marker,...
         LineStyle=options.linestyle);
-    else
-        plot(time,...
-        var(:,index),...
-        Color=options.color, ...
-        LineWidth=options.linewidth, ...
-        Marker= options.marker,...
-        LineStyle=options.linestyle, ...
-        DisplayName=options.display_names{index});
-        legend(Interpreter="latex")
     end
-
-    %hold on/off
+    
+    if isempty(options.display_names{index})
+        pp.HandleVisibility='off';
+    elseif     options.reference &&    isnan(var(:,index))
+        pp.HandleVisibility='off';
+    else 
+        options.display_names{index};
+        pp.DisplayName=options.display_names{index};
+    end
+    legend(Interpreter="latex",FontSize=options.fontsize)
     hold(options.hold_on)
-%     if options.hold_on  
-%         hold on
-%     else
-%         hold off
-%     end
+end
 
 end

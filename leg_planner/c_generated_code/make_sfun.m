@@ -31,9 +31,8 @@
 
 
 SOURCES = { ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_fun.c', ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_fun_jac_x_xdot_z.c', ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_jac_x_xdot_u_z.c', ...
+            'ntnu_leg_model/ntnu_leg_expl_ode_fun.c', ...
+            'ntnu_leg_model/ntnu_leg_expl_vde_forw.c',...
             'acados_solver_sfunction_ntnu_leg.c', ...
             'acados_solver_ntnu_leg.c'
           };
@@ -103,6 +102,12 @@ sfun_input_names = [sfun_input_names; 'y_ref [637]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [10]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_e [10]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [490]\n ');
+sfun_input_names = [sfun_input_names; 'lbx [490]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [490]\n ');
+sfun_input_names = [sfun_input_names; 'ubx [490]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [150]\n ');
 sfun_input_names = [sfun_input_names; 'lbu [150]'];

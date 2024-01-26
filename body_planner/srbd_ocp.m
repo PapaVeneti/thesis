@@ -20,7 +20,7 @@ end
 clear sys_path  helper_dir;
 
 %% INPUT0: ocp definition options - Simulink outputs
-Do_make_acados_simulink_files = true;
+Do_make_acados_simulink_files = false;
 cost_type = 'Euclidean'; %['LS','Geodesic']
 
 % simulink outputs:
@@ -34,7 +34,8 @@ w0 = [0;0;0];
 x0 = [q0;w0];
 
 % reference:
-eul_ref = [pi/2,0,0];
+% eul_ref = [pi/2,0,0];
+eul_ref = rand(1,3);
 qref = eul2quat(eul_ref,'ZYX')';
 wref = [0;0;0];
 xref = [qref;wref];
@@ -205,7 +206,11 @@ ubu_sim = repmat(model.input_constraints(:,2),N,1);
 
 
 %% 7. Call solver
-eul0 = [0,0,0];
+SOLTIME=zeros(100,1);
+
+for ii = 1:100
+
+eul0 = [0,0,0]+rand(1,3);
 q0 = eul2quat(eul0,'ZYX')';
 w0 = [0;0;0];
 x0 = [q0;w0];
@@ -234,7 +239,12 @@ time_tot = ocp.get('time_tot'); % 0 - success
 
 disp(['Solution status is: ', num2str(status)]);
 disp(['Solution time is: ', num2str( 1e3*ocp.get('time_tot'),3 ),'ms' ]);
+SOLTIME(ii) = ocp.get('time_tot');
 
+end
+
+mean(SOLTIME)
+std(SOLTIME)
 %% 8. Plot
 % get solution
 utraj = ocp.get('u');

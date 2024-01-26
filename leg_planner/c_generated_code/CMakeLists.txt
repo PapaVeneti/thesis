@@ -60,9 +60,9 @@ set(SIM_OBJ sim_ntnu_leg)
 
 # model
 set(MODEL_SRC
-    ntnu_leg_model/ntnu_leg_impl_dae_fun.c
-    ntnu_leg_model/ntnu_leg_impl_dae_fun_jac_x_xdot_z.c
-    ntnu_leg_model/ntnu_leg_impl_dae_jac_x_xdot_u_z.c
+    ntnu_leg_model/ntnu_leg_expl_ode_fun.c
+    ntnu_leg_model/ntnu_leg_expl_vde_forw.c
+    ntnu_leg_model/ntnu_leg_expl_vde_adj.c
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 

@@ -71,6 +71,19 @@ expr_f_impl = expr_f_expl - sym_xdot;
 
 %% 5.  system constraints:
 %1. state constraints
+state_constraints = zeros(10,2);
+
+state_constraints(1,:) = [-pi   ,pi  ];
+state_constraints(2,:) = [-pi   ,1.65];
+state_constraints(3,:) = [-2.5  ,1.58];
+state_constraints(4,:) = [-1.65 ,pi  ];
+state_constraints(5,:) = [-1.51 ,2.5 ];
+
+
+%velocity constraints
+max_vel = 32; % [rad/s] from olympian_rl
+state_constraints(6:10,:) = max_vel*ones(5,2)*[-1,0;0,1];
+
 
 %2. input constraints
 input_constraints = [10;10;10]*[-1,1];
@@ -86,5 +99,5 @@ model.sym_u = sym_u;
 model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
 model.input_constraints = input_constraints;
-
+model.state_constraints = state_constraints;
 end
