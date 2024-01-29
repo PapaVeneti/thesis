@@ -352,7 +352,7 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     if (new_time_steps) {
         ntnu_leg_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
-        double time_step = 0.075;
+        double time_step = 0.05;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -518,28 +518,52 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
 
     // change only the non-zero elements:
     
-    Zl_e[0] = 1;
-    Zl_e[1] = 1;
-    Zl_e[2] = 1;
-    Zl_e[3] = 1;
-    Zl_e[4] = 1;
-    Zl_e[5] = 1;
-    Zl_e[6] = 1;
-    Zl_e[7] = 1;
+    Zl_e[0] = 10;
+    Zl_e[1] = 10;
+    Zl_e[2] = 10;
+    Zl_e[3] = 10;
+    Zl_e[4] = 10;
+    Zl_e[5] = 10;
+    Zl_e[6] = 10;
+    Zl_e[7] = 10;
+    Zl_e[8] = 10;
+    Zl_e[9] = 10;
 
     
-    Zu_e[0] = 1;
-    Zu_e[1] = 1;
-    Zu_e[2] = 1;
-    Zu_e[3] = 1;
-    Zu_e[4] = 1;
-    Zu_e[5] = 1;
-    Zu_e[6] = 1;
-    Zu_e[7] = 1;
+    Zu_e[0] = 10;
+    Zu_e[1] = 10;
+    Zu_e[2] = 10;
+    Zu_e[3] = 10;
+    Zu_e[4] = 10;
+    Zu_e[5] = 10;
+    Zu_e[6] = 10;
+    Zu_e[7] = 10;
+    Zu_e[8] = 10;
+    Zu_e[9] = 10;
 
     
+    zl_e[0] = 1;
+    zl_e[1] = 1;
+    zl_e[2] = 1;
+    zl_e[3] = 1;
+    zl_e[4] = 1;
+    zl_e[5] = 1;
+    zl_e[6] = 1;
+    zl_e[7] = 1;
+    zl_e[8] = 1;
+    zl_e[9] = 1;
 
     
+    zu_e[0] = 1;
+    zu_e[1] = 1;
+    zu_e[2] = 1;
+    zu_e[3] = 1;
+    zu_e[4] = 1;
+    zu_e[5] = 1;
+    zu_e[6] = 1;
+    zu_e[7] = 1;
+    zu_e[8] = 1;
+    zu_e[9] = 1;
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zl", Zl_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Zu", Zu_e);
@@ -684,12 +708,14 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     
     idxbx_e[0] = 0;
     idxbx_e[1] = 1;
-    idxbx_e[2] = 3;
-    idxbx_e[3] = 5;
-    idxbx_e[4] = 6;
-    idxbx_e[5] = 7;
-    idxbx_e[6] = 8;
-    idxbx_e[7] = 9;
+    idxbx_e[2] = 2;
+    idxbx_e[3] = 3;
+    idxbx_e[4] = 4;
+    idxbx_e[5] = 5;
+    idxbx_e[6] = 6;
+    idxbx_e[7] = 7;
+    idxbx_e[8] = 8;
+    idxbx_e[9] = 9;
     double* lubx_e = calloc(2*NBXN, sizeof(double));
     double* lbx_e = lubx_e;
     double* ubx_e = lubx_e + NBXN;
@@ -698,8 +724,12 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     ubx_e[0] = -1;
     lbx_e[1] = 1;
     ubx_e[1] = 1;
-    lbx_e[2] = 1;
-    ubx_e[2] = 1;
+    lbx_e[2] = -0.3271000596;
+    ubx_e[2] = -0.3271000596;
+    lbx_e[3] = 1;
+    ubx_e[3] = 1;
+    lbx_e[4] = -0.1861075081;
+    ubx_e[4] = -0.1861075081;
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);
@@ -724,6 +754,8 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     idxsbx_e[5] = 5;
     idxsbx_e[6] = 6;
     idxsbx_e[7] = 7;
+    idxsbx_e[8] = 8;
+    idxsbx_e[9] = 9;
     double* lusbx_e = calloc(2*NSBXN, sizeof(double));
     double* lsbx_e = lusbx_e;
     double* usbx_e = lusbx_e + NSBXN;
@@ -796,7 +828,7 @@ void ntnu_leg_acados_create_6_set_opts(ntnu_leg_solver_capsule* capsule)
     /* options QP solver */
     int qp_solver_cond_N;
 
-    const int qp_solver_cond_N_ori = 20;
+    const int qp_solver_cond_N_ori = 30;
     qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
@@ -825,7 +857,7 @@ void ntnu_leg_acados_create_6_set_opts(ntnu_leg_solver_capsule* capsule)
     int initialize_t_slacks = 0;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
 
-    int qp_solver_iter_max = 200;
+    int qp_solver_iter_max = 500;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
 
 int print_level = 0;

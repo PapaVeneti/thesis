@@ -70,24 +70,24 @@ static void mdlInitializeSizes (SimStruct *S)
     // y_ref_0
     ssSetInputPortVectorDimension(S, 2, 13);
     // y_ref
-    ssSetInputPortVectorDimension(S, 3, 247);
+    ssSetInputPortVectorDimension(S, 3, 377);
     // y_ref_e
     ssSetInputPortVectorDimension(S, 4, 10);
     // lbx
-    ssSetInputPortVectorDimension(S, 5, 190);
+    ssSetInputPortVectorDimension(S, 5, 290);
     // ubx
-    ssSetInputPortVectorDimension(S, 6, 190);
+    ssSetInputPortVectorDimension(S, 6, 290);
     // lbx_e
-    ssSetInputPortVectorDimension(S, 7, 8);
+    ssSetInputPortVectorDimension(S, 7, 10);
     // ubx_e
-    ssSetInputPortVectorDimension(S, 8, 8);
+    ssSetInputPortVectorDimension(S, 8, 10);
     // lbu
-    ssSetInputPortVectorDimension(S, 9, 60);
+    ssSetInputPortVectorDimension(S, 9, 90);
     // ubu
-    ssSetInputPortVectorDimension(S, 10, 60);/* specify dimension information for the OUTPUT ports */
+    ssSetInputPortVectorDimension(S, 10, 90);/* specify dimension information for the OUTPUT ports */
     ssSetOutputPortVectorDimension(S, 0, 3 );
-    ssSetOutputPortVectorDimension(S, 1, 60 );
-    ssSetOutputPortVectorDimension(S, 2, 210 );
+    ssSetOutputPortVectorDimension(S, 1, 90 );
+    ssSetOutputPortVectorDimension(S, 2, 310 );
     ssSetOutputPortVectorDimension(S, 3, 1 );
     ssSetOutputPortVectorDimension(S, 4, 1 );
     ssSetOutputPortVectorDimension(S, 5, 10 ); // state at shooting node 1
@@ -225,13 +225,13 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // lbx_e
     in_sign = ssGetInputPortRealSignalPtrs(S, 7);
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 10; i++)
         buffer[i] = (double)(*in_sign[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", buffer);
     // ubx_e
     in_sign = ssGetInputPortRealSignalPtrs(S, 8);
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 10; i++)
         buffer[i] = (double)(*in_sign[i]);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", buffer);
     // lbu
@@ -273,7 +273,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   
 
     out_xtraj = ssGetOutputPortRealSignal(S, 2);
-    for (int ii = 0; ii < 21; ii++)
+    for (int ii = 0; ii < 31; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
                         "x", (void *) (out_xtraj + ii * 10));
     out_status = ssGetOutputPortRealSignal(S, 3);

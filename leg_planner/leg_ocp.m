@@ -11,10 +11,11 @@ check_acados_requirements()
 
 %% INPUT0: ocp definition options - Simulink outputs
 Do_make_acados_simulink_files = false;
-cost_type = 'Euclidean'; %['LS']
+cost_type = 'LS'; %['LS']
 solver_statistics = true;
 same_init = true;
-terminal_constr = true;
+terminal_constr = 3; 
+%0: no tc, 1: pos(1,2,4) + vel, 2:pos(1,2,4), 3 full state tc
 
 % simulink outputs:
 simulink_opts.outputs.utraj = 1;
@@ -34,7 +35,7 @@ xref = [qref;wref];
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
-N = 20;
+N = 30;
 Th = 1.5; % time horizon length
 
 nlp_solver = 'sqp'; % Choose from ['sqp', 'sqp_rti']
@@ -89,22 +90,55 @@ ocp_model.set('constr_Jbx',eye(nx))
 
 
 %3.  Terminal constraints (on state)
+slack_pos = 10;
+slack_vel = 10;
+
 if terminal_constr
-    Jbx_e = eye(nx); 
-    Jbx_e(5,:) =[]; 
-    Jbx_e(3,:) =[];  
-    xref_tc = xref; 
-    xref_tc(5)= [];xref_tc(3)= [];
+    switch terminal_constr
+        case 1
+        %a. pos1,2,4 full vel
+        Jbx_e = eye(nx); 
+        Jbx_e(5,:) =[]; 
+        Jbx_e(3,:) =[]; 
+    
+        xref_tc = xref; 
+        xref_tc(5)= [];
+        xref_tc(3)= [];
+    
+        ns_e  = 8;%number of slack variables for terminal constraint
+        Z_e = diag([slack_pos*ones(3,1);slack_vel*ones(5,1)]);
+    
+        case 2
+        %b. pos1,2,4
+        Jbx_e = [eye(3),zeros(3,10)];
+        xref_tc = xref([1,2,4]);
+    
+        ns = 3;
+        Z_e = diag(slack_pos*ones(3,1));
+        
+        
+        case 3
+        %c. full state
+        Jbx_e = eye(nx); 
+        xref_tc = consistent_x0(xref([1,2,4]),xref([6,7,9]));
+
+        ns_e  = 10;
+        Z_e = diag([slack_pos*ones(5,1);slack_vel*ones(5,1)]);
+    
+        otherwise 
+    
+    end
+
+    %Set terminal constraint
     ocp_model.set('constr_Jbx_e',Jbx_e)
     ocp_model.set('constr_lbx_e',xref_tc)
     ocp_model.set('constr_ubx_e',xref_tc)
-
-    % slack variable:
-    ocp_model.set('constr_Jsbx_e',eye(8));
-    ocp_model.set('cost_Zl_e',eye(8));
-    ocp_model.set('cost_Zu_e',eye(8));
-    ocp_model.set('cost_z_e',zeros(8,1));
-%     ocp_model.set('cost_Z_e',eye(8))
+    
+    %Set slack variables for terminal constraint
+    ocp_model.set('constr_Jsbx_e',eye(ns_e));
+    ocp_model.set('cost_Z_e',Z_e);
+    ocp_model.set('cost_z_e',ones(ns_e,1));
+    
 end
 
 %4.  Path constraints 
@@ -115,12 +149,11 @@ end
 %% 4. Cost:
 
 switch cost_type
-    case 'Euclidean'
+    case 'LS'
 % Linear LS
 ocp_model.set('cost_type','linear_ls')
 ocp_model.set('cost_type_e','linear_ls')
 
-% q \in [0-1], w\in[0-10], u \in [0-10]
 Q = diag( [100,100,0,100,0,10,10,10,10,10 ] ); 
 R = diag( [10,10,10 ] );
 
@@ -128,13 +161,13 @@ Qc = sqrt(Q); %nx * nx %chol
 Rc = sqrt(R); %nu * nu
 y_ref = [Qc,zeros(nx,nu);zeros(nu,nx),Rc]*[xref;tau_ref] ; %Important to give it like that.
 
-ocp_model.set('cost_Vx', [Qc;zeros(nu,nx)] );
-ocp_model.set('cost_Vx_e', Qc );
-ocp_model.set('cost_Vu', [zeros(nx,nu);Rc] );
-ocp_model.set('cost_W', eye(nx+nu) );
-ocp_model.set('cost_W_e', eye(nx) );
+ocp_model.set('cost_Vx'  , [Qc;zeros(nu,nx)] );
+ocp_model.set('cost_Vx_e', Qc                );
+ocp_model.set('cost_Vu'  , [zeros(nx,nu);Rc] );
+ocp_model.set('cost_W'   , eye(nx+nu)        );
+ocp_model.set('cost_W_e' , eye(nx)           );
 
-ocp_model.set('cost_y_ref',y_ref)
+ocp_model.set('cost_y_ref'  ,y_ref      )
 ocp_model.set('cost_y_ref_e',y_ref(1:nx))
 
     case 'Geodesic'
@@ -150,17 +183,24 @@ end
 ocp_model.set('T', Th); %Time Horizon
 
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('qp_solver_iter_max', 200);
+ocp_opts.set('qp_solver_iter_max', 500); %usually goes max 15-20 -> if 50 it fails too with tc
 ocp_opts.set('nlp_solver_max_iter', 100);
-
-ocp_opts.set('sim_method_num_steps', 1); %Default 1
-
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
 ocp_opts.set('qp_solver', qp_solver);
 ocp_opts.set('qp_solver_cond_N', qp_solver_cond_N);
 ocp_opts.set('ext_fun_compile_flags', ''); % '-O2'
+
+%extra options:
+%globalization: 
+% ocp_opts.set('levenberg_marquardt', 1e-2);
+% ocp_opts.set('globalization', 'MERIT_BACKTRACKING');
+% ocp_opts.set('alpha_min', 0.05);
+% ocp_opts.set('alpha_min', 100);
+
+%fidelity:
+ocp_opts.set('sim_method_num_steps', 1); %Default 1
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% 6. Finalize:
@@ -216,10 +256,11 @@ ubu_sim = repmat(model.input_constraints(:,2),N,1);
 TESTS = 2;
 NTEST = 100;
 status = 4; %init guess
+xref_new = xref;
 
 
 if solver_statistics 
-    SOLTIME   = nan(TESTS*NTEST,1);
+    SOLTIME   = nan(TESTS*NTEST,4); %4 time statistics
     SOLSTATUS = ones(TESTS*NTEST,1);
 
     for it = 1:TESTS   
@@ -232,21 +273,35 @@ if solver_statistics
             y_ref_new = [Qc,zeros(nx,nu);zeros(nu,nx),Rc]*[xref_new;tau_ref] ; %Important to give it like that.
             ocp.set('cost_y_ref', y_ref_new);
             ocp.set('cost_y_ref_e', y_ref_new(1:nx));
-
+            
+            %Update terminal constr
             if terminal_constr
-                %terminal constraint
-                xref_tc = xref_new; 
-                xref_tc(5)= [];xref_tc(3)= [];
+                switch terminal_constr
+                    case 1
+                    %terminal constraint
+                    xref_tc = xref_new; 
+                    xref_tc(5)= [];xref_tc(3)= [];
 
+                    case 2
+                    xref_tc = xref_new([1 2 4]);     
+
+                    case 3
+                    xref_tc = consistent_x0(xref_new([1,2,4]),xref_new([6,7,9]));
+
+                end
                 ocp.set('constr_lbx',xref_tc,N)
                 ocp.set('constr_ubx',xref_tc,N)
             end
         end
+    
+        %consistent final state:
+        xref_for_init = consistent_x0(xref_new([1,2,4]),xref_new([6,7,9]));
+        xinit =zeros(nx,N+1);
 
         for ii =1:NTEST
             
             %disturb the initial conditions:
-            random_q0 = 2e-1*rand(3,1);
+            random_q0 =   2e-1*rand(3,1);
             random_w0 =   5*   rand(3,1);
             
             %random initial condtions for q1,q2,q4
@@ -259,11 +314,17 @@ if solver_statistics
             %1. update initial state
             ocp.set('constr_x0', random_x0);
             ocp.set('constr_lbx',random_x0, 0)
+            ocp.set('constr_ubx',random_x0, 0)
 
             %initialization
             if status == 4 || same_init
                 ocp.set('init_x',zeros(10,N+1))
                 ocp.set('init_u',zeros(3,N))
+                
+                for iS = 1:10
+                    xinit(iS,:) = linspace(random_x0(iS),xref_for_init(iS),N+1);
+                end
+                ocp.set('init_x',xinit)
             end
 
             
@@ -278,12 +339,20 @@ if solver_statistics
             disp(['Solution time is: ', num2str( 1e3*ocp.get('time_tot'),3 ),'ms' ]);
             
             
-
+            if status == 4
+                error('')
+            end
             if status == 0 || status == 2
                 %max iter -> still a solution, succussful
-                SOLTIME((it-1)*NTEST+ ii)   = ocp.get('time_tot');
+                time_stats(1,1) = ocp.get('time_tot');
+                time_stats(1,2) = ocp.get('time_lin');
+                time_stats(1,3) = ocp.get('time_qp_sol');
+                time_stats(1,4) = ocp.get('time_reg');
+
+                SOLTIME((it-1)*NTEST+ ii,:)   = time_stats;
+
             else
-                SOLTIME((it-1)*NTEST+ ii)   = nan;
+                SOLTIME((it-1)*NTEST+ ii,:)   = nan*zeros(1,4);
             end
             SOLSTATUS((it-1)*NTEST+ ii) = ocp.get('status');
         end
@@ -299,12 +368,17 @@ if solver_statistics
         disp(['MINSTEP: '         , num2str(length(find(SOLSTATUS == 3)))]);
         disp(['QP_FAILURE: '      , num2str(length(find(SOLSTATUS == 4)))]);
     end
-    mean_sol_time = mean(SOLTIME,'omitnan');
-    std_sol_time = std (SOLTIME,'omitnan');
+    mean_sol_time = mean(SOLTIME(:,1),'omitnan');
+    std_sol_time = std (SOLTIME(:,1),'omitnan');
     disp(['Mean solution time is: ', num2str( 1e3*mean_sol_time,3 ),'ms']);
     disp(['Standard deviation is: ', num2str( 1e3*std_sol_time ,3 ),'ms']);
+    %linearization
+    mean_lin_time = mean(SOLTIME(:,2),'omitnan');
+    std_lin_time = std (SOLTIME(:,2),'omitnan');
+    disp('--------------')
+    disp(['Mean linearization time is: ', num2str( 1e3*mean_lin_time,3 ),'ms']);
+    disp(['Standard deviation is: ', num2str( 1e3*std_lin_time ,3 ),'ms']);
 
-num2str( 1e3*mean_sol_time,3 )
     end
 end
 

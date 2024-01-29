@@ -52,7 +52,7 @@ classdef ntnu_leg_mex_solver < handle
             addpath('.')
             obj.cost_ext_fun_type = 'casadi';
             obj.cost_ext_fun_type_e = 'casadi';
-            obj.N = 20;
+            obj.N = 30;
             obj.name = 'ntnu_leg';
             obj.code_gen_dir = pwd();
         end

@@ -61,13 +61,20 @@ vel_dyn  = Minv* (u_gen - C*qt - G -D*qt);
 f=  -finv2( H*Minv*H' )  *   (H*vel_dyn + Ht*qt);
 
 
-%% 4.b dynamics:
+%% 4.b Explicit dynamics:
 derivatives = [qt(1);qt(2);qt(3);qt(4);qt(5)];
 dynamics    = Minv* (u_gen - C*qt - G + (H')*f -D*qt);
 
 
 expr_f_expl = vertcat(derivatives,dynamics);
-expr_f_impl = expr_f_expl - sym_xdot;
+
+%% 4.c Implicit dynamics (not working):
+
+temp = inv(H*Minv*H');
+Nc = eye(5) - Minv*(H')*temp*H ; % constraint null-space matrix
+
+
+expr_f_impl = [sym_xdot(1:5)-qt;(Nc')*(M*sym_xdot(6:10) + (C+D)*qt + G -u_gen)];
 
 %% 5.  system constraints:
 %1. state constraints
