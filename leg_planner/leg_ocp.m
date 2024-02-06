@@ -170,8 +170,6 @@ ocp_model.set('cost_W_e' , eye(nx)           );
 ocp_model.set('cost_y_ref'  ,y_ref      )
 ocp_model.set('cost_y_ref_e',y_ref(1:nx))
 
-    case 'Geodesic'
-
     otherwise 
         error_msg = ['Wrong cost type.',newline, 'Select `cost_type` from: ["LS"]'];
         error(error_msg)
