@@ -1,18 +1,17 @@
 //Drake pre-reqs:
-#include "drake/systems/analysis/simulator.h"
 #include "drake/systems/framework/diagram_builder.h"
+
 //Drake Multibody
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/multibody/parsing/parser.h"
-#include <drake/math/rigid_transform.h> //to set up first frame
-#include <drake/math/rotation_matrix.h> //to set up first frame
 #include <drake/multibody/tree/revolute_joint.h> //to add revolute joint
 #include <drake/multibody/tree/linear_bushing_roll_pitch_yaw.h> // Add spring and bushing
 #include <drake/multibody/tree/linear_spring_damper.h>
+#include <drake/math/rigid_transform.h> //to set up first frame
+// #include <drake/math/rotation_matrix.h> //to set up first frame
 
 
-
-
+//Better in a file for typedefs
 using drake_tfd       = drake::math::RigidTransform<double>;
 using drake_rotMat    = drake::math::RotationMatrix<double>;
 using drake_rigidBody = drake::multibody::RigidBody<double> ; 

@@ -1,6 +1,11 @@
 //robot class
 #include "ntnu_leg.hpp"
 
+//Simulation
+#include <drake/math/rotation_matrix.h> //to set up first frame
+#include "drake/systems/analysis/simulator.h"
+
+
 //Visualization
 #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
 #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
