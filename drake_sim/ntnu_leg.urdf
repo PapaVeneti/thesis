@@ -4,7 +4,7 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="ntnu_leg">
-  <link name="world"/>
+  <!-- <link name="world"/> -->
 
   <link
     name="MH">
@@ -46,7 +46,7 @@
       </geometry>
     </collision>
   </link>
-  <joint
+  <!-- <joint
     name="jointMH"
     type="revolute">
     <origin
@@ -63,7 +63,7 @@
       upper="1.57079632679"
       effort="100"
       velocity="1000" />
-  </joint>
+  </joint> -->
   <link
     name="link11">
     <inertial>
@@ -301,7 +301,13 @@
 <gazebo reference="link21">
   <selfCollide>true</selfCollide>
 </gazebo>
+<gazebo reference="link11">
+  <selfCollide>true</selfCollide>
+</gazebo>
 <gazebo reference="link22">
+  <selfCollide>true</selfCollide>
+</gazebo>
+<gazebo reference="link12">
   <selfCollide>true</selfCollide>
 </gazebo>
 

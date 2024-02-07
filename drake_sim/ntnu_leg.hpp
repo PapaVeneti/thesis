@@ -6,14 +6,12 @@
 #include "drake/multibody/parsing/parser.h"
 #include <drake/math/rigid_transform.h> //to set up first frame
 #include <drake/math/rotation_matrix.h> //to set up first frame
+#include <drake/multibody/tree/revolute_joint.h> //to add revolute joint
 #include <drake/multibody/tree/linear_bushing_roll_pitch_yaw.h> // Add spring and bushing
 #include <drake/multibody/tree/linear_spring_damper.h>
-//Visualization
-// #include "drake/visualization/visualization_config_functions.h"
-#include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
 
 
-using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
+
 
 using drake_tfd       = drake::math::RigidTransform<double>;
 using drake_rotMat    = drake::math::RotationMatrix<double>;
