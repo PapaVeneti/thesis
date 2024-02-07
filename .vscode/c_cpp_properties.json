@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/drake/**",
+                "/usr/include/eigen3/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang-12",
+            "intelliSenseMode": "linux-clang-x64",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

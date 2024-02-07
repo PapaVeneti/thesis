@@ -9,3 +9,8 @@
 - The OPC is created in the `leg_ocp.m` script. 
 - The ntnu model is defined in the `leg_model` function. (Dynamics are defined in section 4).
 - Currently is solves 200 cases (with 2 different references, prints out some statistics and plots the final solution). 
+
+
+# Drake Sim
+Requirements:
+C++ standard: C++17
