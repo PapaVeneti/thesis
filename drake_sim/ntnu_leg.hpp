@@ -24,29 +24,28 @@ using drake_builder   = drake::systems::DiagramBuilder<double>;
 class ntnu_leg
 {
 private:
-  /* data */
+  drake_plant & plant;
 public:
   ntnu_leg(
     drake_builder & builder,
-    drake_plant & plant,
+    drake_plant & created_plant,
     const bool right_side, 
     const drake_rigidBody & ParentBody, 
     const drake_tfd & TF_B_MH);
   ~ntnu_leg();
+
+  void add_bushing_joint();
+  void add_linear_spring();
+  void add_actuators();
+
+
 };
 
 /// The constructor for the `ntnu_leg` class. 
 /// @param[in] TF Transform defining the frame
 /// @param[in] mescat_ptr raw pointer to the mescat instance.
 /// @param[in] path_prefix Path prefix
-/// Curently using setlinesegments (maybe `SetLine` is more optimal)
-// ntnu_leg::ntnu_leg(const drake_rigidBody & ParentBody , const drake_tfd & TF_B_MH)
-// {
-// }
 
-ntnu_leg::~ntnu_leg()
-{
-}
 
 
 

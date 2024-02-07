@@ -14,10 +14,10 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 
 ntnu_leg::ntnu_leg(
   drake_builder &builder,
-  drake_plant &plant,
+  drake_plant & created_plant,
   bool right_side,
   const drake_rigidBody & ParentBody ,
-  const drake_tfd & TF_B_MH){
+  const drake_tfd & TF_B_MH): plant(created_plant) {
 
 //1. Load leg model
 // TODO: load depending on side.
