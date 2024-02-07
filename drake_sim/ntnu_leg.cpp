@@ -177,7 +177,9 @@ std::string filePath = "graph.dot";
 
 //Simulate: 
 drake::systems::Simulator sim(*diagram);
-assert(  plant.get_discrete_contact_solver() ==  drake::multibody::DiscreteContactSolver::kSap );
+// assert(  plant.get_discrete_contact_solver() ==  drake::multibody::DiscreteContactSolver::kSap ); 
+plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);
+
 
 // for (auto str : plant.GetPositionNames() )
 // {

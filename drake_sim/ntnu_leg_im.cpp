@@ -33,6 +33,16 @@ plant.AddJoint< drake::multibody::WeldJoint >("world_joint",
                                                 drake_tfd::Identity());
 
 
+//2. Add actuators
+// TODO
+
+//3.  Add bushing element
+
+//4. Add linear spring
+
+
+
+
 }
 
 
