@@ -21,9 +21,8 @@ const std::map<leg_index,std::string> leg_names::suffix = {
 ntnu_leg::ntnu_leg(
   drake_builder &builder,
   drake_plant & created_plant,
-  const leg_index leg_id_input,
-  const drake_rigidBody & ParentBody ,
-  const drake_tfd & TF_B_MH): plant(created_plant), leg_id(leg_id_input) {
+  const leg_config & config): plant(created_plant), 
+                              leg_id(config.leg_id){
 
 //1. Load leg model
 // TODO: load depending on side.
@@ -41,8 +40,8 @@ plant.RenameModelInstance(leg, leg_names::suffix.at(leg_id)+"_leg"); //each mode
 const drake::multibody::RevoluteJoint<double> & base_joint =  
 plant.AddJoint< drake::multibody::RevoluteJoint >(
   "jointMH",
-  ParentBody,
-  TF_B_MH,
+  config.ParentBody,
+  config.TF_B_MH,
   plant.GetBodyByName("MH",leg),
   drake_tfd(),
   Eigen::Vector3d{1,0,0}, //axis of joint in 
@@ -70,15 +69,10 @@ inline void ntnu_leg::add_actuators(){
   auto& motor1  = plant.AddJointActuator(suffix+"motor1" ,plant.GetJointByName("joint11",leg));
   auto& motor2  = plant.AddJointActuator(suffix+"motor2" ,plant.GetJointByName("joint12",leg));
 
-  drake::multibody::PdControllerGains motorMH_gains{10,1};
-  drake::multibody::PdControllerGains motor1_gains{10,1};
-  drake::multibody::PdControllerGains motor2_gains{10,1};
-
-  plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(motorMH_gains); 
-  plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(motor1_gains ); 
-  plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(motor2_gains ); 
+  plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(Gains.gains_MH     ); 
+  plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(Gains.gains_joint11); 
+  plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(Gains.gains_joint21); 
 }
-
 inline void ntnu_leg::add_bushing_joint(){
   double attachment_point_link21 =  0.29977;
   double attachment_point_link22 =  0.29929;
@@ -107,32 +101,33 @@ inline void ntnu_leg::add_bushing_joint(){
   auto&  bushing = plant.AddForceElement<drake::multibody::LinearBushingRollPitchYaw>(
       link21_endpoint,
       link22_endpoint,
-      Eigen::Vector3d{100,100,0},
-      Eigen::Vector3d{20,20,0},
-      Eigen::Vector3d{100,100,0},
-      Eigen::Vector3d{20,20,0}
-      // Eigen::Vector3d{5000,5000,0},
-      // Eigen::Vector3d{200,200,0},
-      // Eigen::Vector3d{20000,20000,2000},
-      // Eigen::Vector3d{200,200,50} //Andreas
+      BushingParams.torque_stiffness_constants,
+      BushingParams.torque_damping_constants,
+      BushingParams.force_stiffness_constants,
+      BushingParams.force_damping_constant
   );
 
 }
-
 inline void ntnu_leg::add_linear_spring(){
   auto&  spring = plant.AddForceElement<drake::multibody::LinearSpringDamper>(
       plant.GetBodyByName("link21",leg),
       drake::Vector3<double>::Zero(),
       plant.GetBodyByName("link22",leg),
       drake::Vector3<double>::Zero(),
-      0.175,1,10
-      //  const Body<T>& bodyA, const Vector3<double>& p_AP,
-      //   const Body<T>& bodyB, const Vector3<double>& p_BQ,
-      //   double free_length, double stiffness, double damping);
+      SpringParams.free_length,
+      SpringParams.stiffness,
+      SpringParams.damping
   );
 }
 
-
-
+void ntnu_leg::set_leg_gains(const controllerGains & newGains){
+  Gains = newGains ; 
+}
+void ntnu_leg::set_bushing_params(const BushingParamsStruct & newBushingParams){
+  BushingParams = newBushingParams;
+}
+void ntnu_leg::set_spring_params(const SpringParamsStruct & newSpringParams){
+  SpringParams = newSpringParams;
+}
 
 
