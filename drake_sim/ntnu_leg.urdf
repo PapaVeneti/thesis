@@ -42,7 +42,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="meshes/MH_collision.obj" />
+          filename="meshes/MH_collisionSW.obj" />
       </geometry>
     </collision>
   </link>
@@ -100,7 +100,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="meshes/link11_collision.obj" />
+          filename="meshes/link11_collisionSW.obj" />
       </geometry>
     </collision>
   </link>
@@ -158,7 +158,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="meshes/link21_collision.obj" />
+          filename="meshes/link21_collisionSW.obj" />
       </geometry>
     </collision>
   </link>
@@ -216,7 +216,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="meshes/link12_collision.obj" />
+          filename="meshes/link12_collisionSW.obj" />
       </geometry>
     </collision>
   </link>
@@ -274,7 +274,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="meshes/link22_collision.obj" />
+          filename="meshes/link22_collisionSW.obj" />
       </geometry>
     </collision>
   </link>
@@ -310,6 +310,12 @@
 <gazebo reference="link12">
   <selfCollide>true</selfCollide>
 </gazebo>
+
+<drake:collision_filter_group name="end_effectors">
+  <drake:member link="link21"/>
+  <drake:member link="link22"/>
+  <drake:ignored_collision_filter_group name="end_effectors"/>
+</drake:collision_filter_group>
 
 
 </robot>

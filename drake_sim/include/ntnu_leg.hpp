@@ -29,39 +29,30 @@ class leg_names {
   leg_names() = delete ;
   
 };
-// Definition and initialization of static member variables
-const std::map<leg_index,std::string> leg_names::full = {
-    {leg_index::fr, "front_right"},
-    {leg_index::fl, "front_left"},
-    {leg_index::rr, "rear_right"},
-    {leg_index::rl, "rear_left"}
-};
-
-const std::map<leg_index,std::string> leg_names::suffix = {
-    {leg_index::fr, "fr"},
-    {leg_index::fl, "fl"},
-    {leg_index::rr, "rr"},
-    {leg_index::rl, "rl"}
-};
 
 
 class ntnu_leg
 {
 private:
   drake_plant & plant;
+  drake::multibody::ModelInstanceIndex leg;
+  const leg_index leg_id;
+
+  inline void add_bushing_joint();
+  inline void add_linear_spring();
+  inline void add_actuators();
 public:
   ntnu_leg(
     drake_builder & builder,
     drake_plant & created_plant,
-    const leg_index leg_id, 
+    const leg_index leg_id_input, 
     const drake_rigidBody & ParentBody, 
     const drake_tfd & TF_B_MH);
   
+  
   // ~ntnu_leg();
 
-  void add_bushing_joint();
-  void add_linear_spring();
-  void add_actuators();
+
 
 
 };
