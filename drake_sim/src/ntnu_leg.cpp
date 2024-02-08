@@ -1,18 +1,6 @@
 //robot class
 #include "ntnu_leg.hpp"
-
-// //Simulation
-// #include <drake/math/rotation_matrix.h> //to set up first frame
-// #include "drake/systems/analysis/simulator.h"
-
-
-// //Visualization
-// #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
-// #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
-// using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
-
 #include <iostream>
-// #include <memory>
 
 // Definition and initialization of static member variables
 const std::map<leg_index,std::string> leg_names::full = {
@@ -42,10 +30,10 @@ ntnu_leg::ntnu_leg(
 drake::multibody::Parser parser(&plant);
 
 if (leg_id == leg_index::fr || leg_id == leg_index::rr ){
-  leg = parser.AddModels("../ntnu_leg.urdf").at(0); 
+  leg = parser.AddModels("../urdf/ntnu_leg.urdf").at(0); 
 } else {
   std::cerr << "Left side legs are not implemented yet. The simulation will fail" <<std::endl;
-  leg = parser.AddModels("../ntnu_leg.urdf").at(0); 
+  leg = parser.AddModels("../urdf/ntnu_leg.urdf").at(0); 
 }
 plant.RenameModelInstance(leg, leg_names::suffix.at(leg_id)+"_leg"); //each model instance must have different name
 
