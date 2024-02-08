@@ -36,3 +36,8 @@ target_include_directories(ntnu_leg PUBLIC include)
 target_link_libraries(ntnu_leg drake::drake )
 target_link_libraries(ntnu_leg_sim drake::drake ntnu_leg)
 
+
+
+add_executable(position_controller position_controller.cpp)
+# target_link_libraries(position_controller)
+
