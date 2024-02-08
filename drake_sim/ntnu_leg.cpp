@@ -11,24 +11,27 @@
 #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
 using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
 
+#include <iostream>
+
 
 ntnu_leg::ntnu_leg(
   drake_builder &builder,
   drake_plant & created_plant,
-  bool right_side,
+  const leg_index leg_id,
   const drake_rigidBody & ParentBody ,
   const drake_tfd & TF_B_MH): plant(created_plant) {
 
 //1. Load leg model
 // TODO: load depending on side.
 drake::multibody::Parser parser(&plant);
-auto fl_leg = parser.AddModels("../ntnu_leg.urdf").at(0); //only one model // this adds one instance
+auto leg = parser.AddModels("../ntnu_leg.urdf").at(0); //only one model // this adds one instance
+plant.RenameModelInstance(leg, leg_names::suffix.at(leg_id)+"_leg");
 
 const drake::multibody::RevoluteJoint<double> & base_joint =  
 plant.AddJoint< drake::multibody::RevoluteJoint >("jointMH",
                                                 ParentBody,
                                                 TF_B_MH,
-                                                plant.GetBodyByName("MH"),
+                                                plant.GetBodyByName("MH",leg),
                                                 drake_tfd(),
                                                 Eigen::Vector3d{1,0,0}, //axis of joint in 
                                                 -M_PI_2, // lower position limit
@@ -40,6 +43,43 @@ plant.AddJoint< drake::multibody::RevoluteJoint >("jointMH",
 // TODO
 
 //3.  Add bushing element
+double attachment_point_shank1 =  0.29977;
+double attachment_point_shank2 =  0.29929;
+
+auto& shank1_frame = plant.GetBodyByName("link21",leg).body_frame();
+auto& shank2_frame = plant.GetBodyByName("link22").body_frame();
+
+
+// auto& shank1_endpoint = plant.AddFrame(
+//     std::make_unique<drake::multibody::FixedOffsetFrame<double>>
+//     (
+//         "shank1_endpoint",
+//         shank1_frame,
+//         drake_tfd(Eigen::Translation3d{attachment_point_shank1_x,attachment_point_shank1_y,0})
+//     ) 
+// );
+
+// auto& shank2_endpoint = plant.AddFrame(
+//     std::make_unique<drake::multibody::FixedOffsetFrame<double>>
+//     (
+//         "shank2_endpoint",
+//         shank2_frame,
+//         drake_tfd(Eigen::Translation3d{attachment_point_shank2_x,attachment_point_shank2_y,0})
+//     ) 
+// );
+
+// auto&  bushing = plant.AddForceElement<drake::multibody::LinearBushingRollPitchYaw>(
+//     shank1_endpoint,
+//     shank2_endpoint,
+//     Eigen::Vector3d{100,100,0},
+//     Eigen::Vector3d{20,20,0},
+//     Eigen::Vector3d{100,100,0},
+//     Eigen::Vector3d{20,20,0}
+//     // Eigen::Vector3d{5000,5000,0},
+//     // Eigen::Vector3d{200,200,0},
+//     // Eigen::Vector3d{20000,20000,2000},
+//     // Eigen::Vector3d{200,200,50} //Andreas
+// );
 
 //4. Add linear spring
 
@@ -60,7 +100,7 @@ drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>
 const drake_rigidBody &robot_base= plant.world_body();
 
 //2. Instance of each leg
-ntnu_leg(builder,plant,true, robot_base,frleg_TF);
+ntnu_leg(builder,plant,leg_index::fr, robot_base,frleg_TF);
 
 //3. Finish plant
 plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);
@@ -96,7 +136,7 @@ while( sim_time < 5){
     //realtime vis
     sim_time +=sim_update_rate;
     sim.AdvanceTo(sim_time);    
-    // (fl_leg).FixValue(&plant_context,qd); //for pid joints
+    // (leg).FixValue(&plant_context,qd); //for pid joints
 
 }
 

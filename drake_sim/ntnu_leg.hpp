@@ -19,6 +19,30 @@ using drake_plant     = drake::multibody::MultibodyPlant<double>;
 using drake_builder   = drake::systems::DiagramBuilder<double>;
 
 #define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
+enum class leg_index {fr, fl, rr, rl};
+
+class leg_names {
+  public: 
+  const static std::map<leg_index,std::string> full;
+  const static std::map<leg_index,std::string> suffix;
+
+  leg_names() = delete ;
+  
+};
+// Definition and initialization of static member variables
+const std::map<leg_index,std::string> leg_names::full = {
+    {leg_index::fr, "front_right"},
+    {leg_index::fl, "front_left"},
+    {leg_index::rr, "rear_right"},
+    {leg_index::rl, "rear_left"}
+};
+
+const std::map<leg_index,std::string> leg_names::suffix = {
+    {leg_index::fr, "fr"},
+    {leg_index::fl, "fl"},
+    {leg_index::rr, "rr"},
+    {leg_index::rl, "rl"}
+};
 
 
 class ntnu_leg
@@ -29,10 +53,11 @@ public:
   ntnu_leg(
     drake_builder & builder,
     drake_plant & created_plant,
-    const bool right_side, 
+    const leg_index leg_id, 
     const drake_rigidBody & ParentBody, 
     const drake_tfd & TF_B_MH);
-  ~ntnu_leg();
+  
+  // ~ntnu_leg();
 
   void add_bushing_joint();
   void add_linear_spring();
