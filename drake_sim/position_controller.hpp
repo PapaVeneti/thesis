@@ -1,8 +1,8 @@
 #include <eigen3/Eigen/Dense>
 
 #define q11_offset  2.3095
-#define q12_offset  1.3265
-#define q21_offset  0.8348
+#define q21_offset  1.3265
+#define q12_offset  0.83482
 #define q22_offset  -1.3233
 
 #define z_MH_j11j21 -0.0597
@@ -23,9 +23,17 @@ class position_controller {
     /// @note The leg doesn't know its position in the world frame. The user is responsible for further transformations. 
     /// Based on: "The Pantograph Mk-II: A Haptic Instrument". 
     ///
-    Eigen::Vector3d DK(const Eigen::Vector3d &JointPositionVector);
+    void DK(const Eigen::Vector3d &JointPositionVector);
+
+    Eigen::Vector3d get_EE_position(void);
 
     Eigen::Matrix3d rotate_x(const double & th);
+
+    void calculate_joint_angles(const Eigen::Vector3d &JointPositionVector);
+
+    Eigen::Matrix<double,5,1> get_joint_angles(void);
+
+
 
 
 
@@ -48,17 +56,27 @@ class position_controller {
     Eigen::Vector3d IK(const Eigen::Vector3d & p_M3 );
 
 private:
+//Geometrical Quantites:
 double j11_Dx = 0.046; //Horizontal distance of joint11 from MH frame
-double l11 = 0.18;
-double l21 = 0.18;
+double l11    = 0.18;
+double l21    = 0.29977;
 
 double j12_Dx = 0.136; //Horizontal distance of joint12 from MH frame
-double l12 = 0.29977;
-double l22 = 0.29929;
+double l12    = 0.18;
+double l22    = 0.29929;
 
-double j_Dy = -0.000011338000000000000543607693581638; //Vertical Distance of joint11 and joint12 from MH frame
+double j_Dy = -1.1338e-05; //Vertical Distance of joint11 and joint12 from MH frame
 
+//Kinematic Quantities
 double side_sign =-1; //-1 for right side, +1 for left -> in constructor 
+Eigen::Vector2d       p1c,p2c;                   //`p1c`,`p2c` are circle centers in the rotated {MH} frame. Used in `DK`, and saved for state estimation
+const Eigen::Vector2d pj11{0.046, -1.1338e-05} ; // `pj11` is the center of joint11
+const Eigen::Vector2d pj12{0.136, -1.1338e-05} ; // `pj12` is the center of joint12 
+Eigen::Vector2d       p_EE_22d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
 
+//State (Cartesian and Angle joints)
+Eigen::Vector3d pEE; //End Effector position vector in the default {MH} frame.
+Eigen::Matrix<double,5,1> q;  //Joint Angles
+Eigen::Matrix<double,5,1> qd; //Desired Joint Angles
 
 };
