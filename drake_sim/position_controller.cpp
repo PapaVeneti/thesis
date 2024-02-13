@@ -17,8 +17,13 @@
 
 // testing
 #include <iostream>
+#include <chrono>
 #define DK_TESTS false
 #define IK_TESTS true
+
+double wrap_angle(double angle) {
+    return std::fmod((angle + M_PI), (2 * M_PI)) - M_PI;
+}
 
 void print_nested_array(const std::array<std::array<double,2>,2> & arr){
   std::cout << "[ [" << arr[0][0] << "," ; 
@@ -198,35 +203,19 @@ std::array<std::array<double,2>,2> position_controller::RR_IK(const double &x,co
   solution1[0] = RR_IK_system(x,y,r1,r2,solution1[1]);
   solution2[0] = RR_IK_system(x,y,r1,r2,solution2[1]);
 
-  // solution1[0] *= -1; 
-  // solution1[0] += theta1_offset;
-  // solution1[0] = std::fmod(solution1[0],2*M_PI);
-  // solution2[0] *= -1; 
-  // solution2[0] += theta1_offset;
-  // solution2[0] = std::fmod(solution2[0],2*M_PI);
 
-  // solution1[1] *= -1; 
-  // solution1[1] +=M_PI + theta2_offset;
-  // solution1[1]  = std::fmod(solution1[1],2*M_PI);
-  // solution2[1] *= -1; 
-  // solution2[1] +=M_PI + theta2_offset;
-  // solution2[1]  = std::fmod(solution2[1],2*M_PI);
+// offsets:
+  solution1[0] = theta1_offset - solution1[0] ;
+  solution1[0] = wrap_angle(solution1[0]);
 
-  solution1[0] = theta1_offset -solution1[0] ;
-  solution1[0] = std::fmod(solution1[0],2*M_PI);
-
-  solution2[0] = theta1_offset -solution2[0] ;
-  solution2[0] = std::fmod(solution2[0],2*M_PI);
-  
-
-  //theta 2
-  std::cout<<solution1[1]<<std::endl;
+  solution2[0] = theta1_offset - solution2[0] ;
+  solution2[0] = wrap_angle(solution2[0]);
 
   solution1[1]  = -theta2_offset - solution1[1] ;
-  // solution1[1]  = std::fmod(solution1[1],2*M_PI);
+  solution1[1]  = wrap_angle(solution1[1]);
 
   solution2[1]  = -theta2_offset - solution2[1] ;
-  // solution2[1]  = std::fmod(solution2[1],2*M_PI);
+  solution2[1]  = wrap_angle(solution2[1]);
 
 
 
@@ -327,6 +316,7 @@ inline bool position_controller::solution_in_limits(const std::array<double,2> &
 int main(int argc, char const *argv[])
 {
 position_controller a; 
+auto start = std::chrono::high_resolution_clock::now();
 
 //DK TESTS:
 if (DK_TESTS){
@@ -375,13 +365,19 @@ if (IK_TESTS){
 // std::cout << "IK angles are:" <<std::endl;
 
 // std::cout << a.IK( a.get_EE_position() ) <<std::endl;
-std::cout << a.IK( {0.088921,0.36555,0.13167} ) <<std::endl;
+// std::cout << a.IK( {0.088921,0.36555,0.13167} ) <<std::endl;
+
+
+std::cout << a.IK( {0.087188,0.18217,0.031493}) <<std::endl;
+
+
+auto stop = std::chrono::high_resolution_clock::now();
+// Calculate the duration
+auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+std::cout << "IK single call takes: " << duration.count() << " microseconds" << std::endl;
+
 }
 
-// std::cout<< std::fmod(-0.1,1) <<std::endl;
-// std::cout<< std::fmod(-1.1,1) <<std::endl;
-// std::cout<< std::fmod(1.1,1) <<std::endl;
-// std::cout<< std::fmod(0.1,1) <<std::endl;
 
 return 0;
 }
