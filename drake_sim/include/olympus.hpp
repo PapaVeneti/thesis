@@ -9,6 +9,8 @@ class olympus {
   public:		
     olympus(drake_builder & builder, const double & time_step_ );
 
+  std::unique_ptr<ntnu_leg> fr_leg;  //pointer_as cannot be initialized initially
+  std::unique_ptr<ntnu_leg> rr_leg;
   private:
 
     void add_body(drake_plant & plant);
@@ -18,8 +20,6 @@ class olympus {
   // drake_plant & plant;
   // drake::geometry::SceneGraph<double> & scene_graph;
   drake::multibody::ModelInstanceIndex body_index;
-  drake::multibody::ModelInstanceIndex fr_leg;
-  drake::multibody::ModelInstanceIndex rr_leg;
 
 };
 
@@ -42,7 +42,8 @@ void olympus::add_body(drake_plant & plant){
                                                     plant.world_body(), 
                                                     T_WP,                                                   
                                                     plant.GetBodyByName(base_name),
-                                                    T_BM );
+                                                    T_BM,
+                                                    drake_tfd::Identity() );
   }else{
     const drake::multibody::BallRpyJoint<double> & base_ball_joint =
     plant.AddJoint<drake::multibody::BallRpyJoint> ( "base ball joint",
@@ -68,14 +69,14 @@ void olympus::attach_legs(drake_builder & builder, drake_plant & plant){
   leg_config config_rr(leg_index::rr, robot_base,rrleg_TF);
 
   //1b. Instance of each leg
-  ntnu_leg(builder,plant,config_fr); 
-  ntnu_leg(builder,plant,config_rr); 
-
-  fr_leg = plant.GetModelInstanceByName("fr_leg");
-  rr_leg = plant.GetModelInstanceByName("rr_leg");
+  fr_leg.reset(new ntnu_leg(builder,plant,config_fr) ); 
+  rr_leg.reset(new ntnu_leg(builder,plant,config_rr) ); 
 }
 
-olympus::olympus(drake_builder & builder, const double & time_step_): time_step(time_step_)
+olympus::olympus(drake_builder & builder, const double & time_step_):
+time_step(time_step_),
+fr_leg(nullptr),
+rr_leg(nullptr)
 {
 auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&builder,time_step);
 
@@ -85,5 +86,8 @@ attach_legs(builder, plant);
 // Plant parameters: 
 plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);
 plant.Finalize();
+
+fr_leg->connect_PID_system(builder,plant);
+rr_leg->connect_PID_system(builder,plant);
 
 };

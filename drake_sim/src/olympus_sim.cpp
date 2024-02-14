@@ -33,9 +33,18 @@ int main() {
     drake::systems::Simulator sim(*diagram);
     auto& context = sim.get_mutable_context();
     sim.set_publish_every_time_step(true); // publish simulation as it happens
-    sim.Initialize();
     sim.set_target_realtime_rate(1);
 
+    // Set desired positions
+    Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
+    Eigen::VectorXd qd(6); 
+    qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
+    diagram -> get_input_port(robot.fr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
+    diagram -> get_input_port(robot.rr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
+
+
+
+    sim.Initialize();
     double sim_time = 0; 
     double sim_update_rate = 0.01; 
     assert(sim_update_rate >= mb_time_step);
