@@ -69,9 +69,11 @@ inline void ntnu_leg::add_actuators(){
   auto& motor1  = plant.AddJointActuator(suffix+"motor1" ,plant.GetJointByName("joint11",leg));
   auto& motor2  = plant.AddJointActuator(suffix+"motor2" ,plant.GetJointByName("joint12",leg));
 
-  plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(Gains.gains_MH     ); 
-  plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(Gains.gains_joint11); 
-  plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(Gains.gains_joint21); 
+  
+
+  // plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(Gains.gains_MH     ); 
+  // plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(Gains.gains_joint11); 
+  // plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(Gains.gains_joint21); 
 }
 inline void ntnu_leg::add_bushing_joint(){
   double attachment_point_link21 =  0.29977;
