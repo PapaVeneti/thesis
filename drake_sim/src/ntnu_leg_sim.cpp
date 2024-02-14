@@ -39,14 +39,7 @@ struct sim_parameters {
 // }
 
 
-class olympus {
-  public:		
-    olympus() {
-      ;
-    }
-  private:
 
-};
 
 int main(int argc, char **argv){
 
