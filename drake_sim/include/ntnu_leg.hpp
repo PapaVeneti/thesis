@@ -4,12 +4,10 @@
 //Drake Multibody
 #include "drake/multibody/plant/multibody_plant.h"
 #include "drake/multibody/parsing/parser.h"
-#include <drake/multibody/tree/revolute_joint.h> //to add revolute joint
+#include <drake/multibody/tree/revolute_joint.h>                //to add revolute joint ({MH})
 #include <drake/multibody/tree/linear_bushing_roll_pitch_yaw.h> // Add spring and bushing
 #include <drake/multibody/tree/linear_spring_damper.h>
 #include <drake/math/rigid_transform.h> //to set up first frame
-// #include <drake/math/rotation_matrix.h> //to set up first frame
-
 #include "drake/systems/controllers/pid_controller.h"//Pid Controller
 
 
@@ -96,6 +94,9 @@ public:
 
   //helper funcs 
   void visualize_leg_frame(); 
+
+  ///This function is called to connect the leg with a Pid controller.
+  ///@note must be called after `plant.Finalize()`
   void connect_PID_system(drake_builder & builder, drake_plant & plant);
 
   //getters
@@ -103,6 +104,7 @@ public:
   drake::systems::controllers::PidController<double> *  get_leg_controller();
   drake::systems::InputPortIndex  get_controller_desired_state_port();
   drake::systems::OutputPortIndex get_leg_output_state_port();
+  drake::multibody::ModelInstanceIndex get_leg_model_instance();
 
 private:
   const leg_index leg_id;

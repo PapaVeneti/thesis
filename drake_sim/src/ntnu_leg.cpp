@@ -69,6 +69,27 @@ add_PID_system(builder,plant);
 
 }
 
+//getters:
+
+drake_plant & ntnu_leg::get_plant(){
+  return plant;
+};
+drake::systems::controllers::PidController<double> *  ntnu_leg::get_leg_controller(){
+  return controller;
+};
+
+drake::systems::InputPortIndex  ntnu_leg::get_controller_desired_state_port(){
+  return controller_desired_state_port;
+};
+drake::systems::OutputPortIndex ntnu_leg::get_leg_output_state_port(){
+  return leg_output_state_port;
+}
+drake::multibody::ModelInstanceIndex ntnu_leg::get_leg_model_instance(){
+  return leg;
+}
+
+// Building Methods:
+
 //has motors
 inline void ntnu_leg::add_actuators(){
   std::string suffix = leg_names::suffix.at(leg_id);
@@ -153,6 +174,10 @@ void ntnu_leg::add_PID_system(drake_builder & builder, drake_plant & plant){
     Gains.Ki);
 }
 void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
+  if (!plant.is_finalized()){
+    std::cerr << "`connect_PID_system` must be called after `plant.Finalize()`" <<std::endl;
+  }
+  
   //0. get prefix:
   std::string prefix = leg_names::suffix.at(leg_id);
   //4. Connections:
@@ -165,16 +190,4 @@ void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
 
 }
 
-drake_plant & ntnu_leg::get_plant(){
-  return plant;
-};
-drake::systems::InputPortIndex  ntnu_leg::get_controller_desired_state_port(){
-  return controller_desired_state_port;
-};
-drake::systems::OutputPortIndex ntnu_leg::get_leg_output_state_port(){
-  return leg_output_state_port;
-}
 
-drake::systems::controllers::PidController<double> *  ntnu_leg::get_leg_controller(){
-  return controller;
-}

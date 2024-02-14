@@ -47,27 +47,28 @@ auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&build
 //1a. Instace of robot body (FOR NOW WORLD)
 const drake_rigidBody &robot_base= plant.world_body();
 
-//create config structs for each leg
+  //create config structs for each leg
 drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
 leg_config config_fr(leg_index::fr, robot_base,frleg_TF);
 
 //1b. Instance of each leg
 ntnu_leg leg(builder,plant,config_fr); 
-auto fr_leg = plant.GetModelInstanceByName("fr_leg");
+// auto fr_leg = plant.GetModelInstanceByName("fr_leg");
+auto fr_leg = leg.get_leg_model_instance();
 
-//3
-//3a. Finish plant
+
+//1c. Finish plant
 plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);
 plant.Finalize();
 
-
+//2. Wire up diagram
 leg.connect_PID_system(builder,plant); //Connections happen after the plant is finalized
 
-//3b. Add visualization (connect scene_graph and set_up meshcat)
+//2b. Add visualization (connect scene_graph and set_up meshcat)
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();
 drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
 
-//3d. Finish building. Never use builder again
+//2c. Finish building. Never use builder again
 auto diagram = builder.Build(); //Connections before here
 #pragma endregion
 
