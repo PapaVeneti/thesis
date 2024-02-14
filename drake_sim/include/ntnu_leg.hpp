@@ -54,7 +54,7 @@ struct SpringParamsStruct {
 };
 
 struct leg_config{
-  const leg_index       & leg_id;             //Select from {leg_index::fr,fl,rr,rl}
+  const leg_index       leg_id;             //Select from {leg_index::fr,fl,rr,rl}
   const drake_rigidBody & ParentBody ;      //Parent body this leg is connected to
   const drake_tfd       & TF_B_MH;          //Transform from Parent body to MH frame
   controllerGains     Gains;                //They have default values + optional set (thus no const)
