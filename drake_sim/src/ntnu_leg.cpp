@@ -53,7 +53,9 @@ plant.AddJoint< drake::multibody::RevoluteJoint >(
 //3. Add actuators - bushing element and spring
 add_bushing_joint();
 add_linear_spring();
-add_actuators();
+add_actuators(); //MUST CONNECT
+add_PID_system(builder,plant);
+// connect_PID_system(builder,plant);
 
 // TODO: Add constraint
 // drake::systems::SystemConstraint<double> joint1_2_constr(
@@ -63,6 +65,7 @@ add_actuators();
 
 }
 
+//has motors
 inline void ntnu_leg::add_actuators(){
   std::string suffix = leg_names::suffix.at(leg_id);
   auto& motorMH = plant.AddJointActuator(suffix+"motorMH",plant.GetJointByName("jointMH",leg));
@@ -70,11 +73,13 @@ inline void ntnu_leg::add_actuators(){
   auto& motor2  = plant.AddJointActuator(suffix+"motor2" ,plant.GetJointByName("joint12",leg));
 
   
-
+  // Added PID controller as seperate system
   // plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(Gains.gains_MH     ); 
   // plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(Gains.gains_joint11); 
   // plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(Gains.gains_joint21); 
 }
+
+//has 1) ee frames, 2)bushing joint
 inline void ntnu_leg::add_bushing_joint(){
   double attachment_point_link21 =  0.29977;
   double attachment_point_link22 =  0.29929;
@@ -110,6 +115,8 @@ inline void ntnu_leg::add_bushing_joint(){
   );
 
 }
+
+//has spring
 inline void ntnu_leg::add_linear_spring(){
   auto&  spring = plant.AddForceElement<drake::multibody::LinearSpringDamper>(
       plant.GetBodyByName("link21",leg),
@@ -122,6 +129,49 @@ inline void ntnu_leg::add_linear_spring(){
   );
 }
 
+void ntnu_leg::add_PID_system(drake_builder & builder, drake_plant & plant){
+  //0. get prefix:
+  std::string prefix = leg_names::suffix.at(leg_id);
+
+  //1. Define Control Projection Matrix:
+  //Given estimated state x_in = (q_in, v_in), the controlled state x_c = (q_c, v_c) is computed by x_c = P_x * x_in
+  Eigen::Matrix<double,6,10> ControlProjectionMatrix ; 
+  ControlProjectionMatrix.setZero();
+  //positions
+  ControlProjectionMatrix(0,leg_states::qMH) = 1;
+  ControlProjectionMatrix(1,leg_states::q11) = 1;
+  ControlProjectionMatrix(2,leg_states::q12) = 1;
+  //gen velocities
+  ControlProjectionMatrix(3,leg_states::vMH) = 1;
+  ControlProjectionMatrix(4,leg_states::v11) = 1;
+  ControlProjectionMatrix(5,leg_states::v12) = 1;
+
+  //2.  Set Gains
+  Eigen::Vector3d Kp = {10,10,10};
+  Eigen::Vector3d Kd = {1,1,1};
+  Eigen::Vector3d Ki = {1,1,1};
+
+  //3. Add PID system
+  controller = builder.AddNamedSystem<drake::systems::controllers::PidController<double>>(
+    prefix+"controller",
+    ControlProjectionMatrix,
+    Kp,
+    Kd,
+    Ki);
+}
+void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
+  //0. get prefix:
+  std::string prefix = leg_names::suffix.at(leg_id);
+  //4. Connections:
+
+  builder.Connect(plant.get_state_output_port(leg)       ,controller->get_input_port_estimated_state());
+  builder.Connect(controller -> get_output_port_control(), plant.get_actuation_input_port(leg)        );
+
+  controller_desired_state_port = builder.ExportInput(controller -> get_input_port_desired_state(),prefix+"leg_setpoint");
+  leg_output_state_port             = builder.ExportOutput(plant.get_state_output_port(leg)           ,prefix+"leg_state"   );
+
+}
+
 void ntnu_leg::set_leg_gains(const controllerGains & newGains){
   Gains = newGains ; 
 }
@@ -132,4 +182,16 @@ void ntnu_leg::set_spring_params(const SpringParamsStruct & newSpringParams){
   SpringParams = newSpringParams;
 }
 
+drake_plant & ntnu_leg::get_plant(){
+  return plant;
+};
+drake::systems::InputPortIndex  ntnu_leg::get_controller_desired_state_port(){
+  return controller_desired_state_port;
+};
+drake::systems::OutputPortIndex ntnu_leg::get_leg_output_state_port(){
+  return leg_output_state_port;
+}
 
+drake::systems::controllers::PidController<double> *  ntnu_leg::get_leg_controller(){
+  return controller;
+}

@@ -10,6 +10,9 @@
 #include <drake/math/rigid_transform.h> //to set up first frame
 // #include <drake/math/rotation_matrix.h> //to set up first frame
 
+#include "drake/systems/controllers/pid_controller.h"//Pid Controller
+
+
 
 //Better in a file for typedefs
 using drake_tfd       = drake::math::RigidTransform<double>;
@@ -20,6 +23,7 @@ using drake_builder   = drake::systems::DiagramBuilder<double>;
 
 #define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
 enum class leg_index {fr, fl, rr, rl};
+enum leg_states {qMH, q11, q21, q12, q22, vMH, v11, v21, v12, v22};
 
 class leg_names {
   public: 
@@ -78,10 +82,18 @@ public:
 
   
   void visualize_leg_frame(); //NOT IMPLEMENTED
+  drake_plant & get_plant();
+  drake::systems::controllers::PidController<double> *  get_leg_controller();
+
+  drake::systems::InputPortIndex  get_controller_desired_state_port();
+  drake::systems::OutputPortIndex get_leg_output_state_port();
   
   void set_leg_gains(const controllerGains & newGains);
   void set_bushing_params(const BushingParamsStruct & newBushingParams);
   void set_spring_params(const SpringParamsStruct & newSpringParams);
+
+  void connect_PID_system(drake_builder & builder, drake_plant & plant);
+
 
 private:
   const leg_index leg_id;
@@ -89,6 +101,9 @@ private:
   //Drake specific:
   drake_plant & plant;
   drake::multibody::ModelInstanceIndex leg;
+  drake::systems::controllers::PidController<double>* controller =nullptr;
+  drake::systems::InputPortIndex  controller_desired_state_port;
+  drake::systems::OutputPortIndex leg_output_state_port;
   
   //Simulation parameters:
   controllerGains Gains;             //They have default values
@@ -99,6 +114,10 @@ private:
   inline void add_bushing_joint();
   inline void add_linear_spring();
   inline void add_actuators();
+
+
+  void add_PID_system(drake_builder & builder, drake_plant & plant);
+
 
 };
 
