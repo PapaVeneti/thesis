@@ -1,6 +1,6 @@
 //robot class
 #include "ntnu_leg.hpp"
-#include <iostream>
+#include <iostream> //-> for some error msgs
 
 // Definition and initialization of static member variables
 const std::map<leg_index,std::string> leg_names::full = {
@@ -21,8 +21,12 @@ const std::map<leg_index,std::string> leg_names::suffix = {
 ntnu_leg::ntnu_leg(
   drake_builder &builder,
   drake_plant & created_plant,
-  const leg_config & config): plant(created_plant), 
-                              leg_id(config.leg_id){
+  const leg_config & config): 
+  plant(created_plant), 
+  leg_id(config.leg_id),
+  BushingParams(config.BushingParams),
+  SpringParams(config.SpringParams),
+  Gains(config.Gains){
 
 //1. Load leg model
 // TODO: load depending on side.
@@ -71,12 +75,6 @@ inline void ntnu_leg::add_actuators(){
   auto& motorMH = plant.AddJointActuator(suffix+"motorMH",plant.GetJointByName("jointMH",leg));
   auto& motor1  = plant.AddJointActuator(suffix+"motor1" ,plant.GetJointByName("joint11",leg));
   auto& motor2  = plant.AddJointActuator(suffix+"motor2" ,plant.GetJointByName("joint12",leg));
-
-  
-  // Added PID controller as seperate system
-  // plant.get_mutable_joint_actuator(motorMH.index()).set_controller_gains(Gains.gains_MH     ); 
-  // plant.get_mutable_joint_actuator(motor1 .index()).set_controller_gains(Gains.gains_joint11); 
-  // plant.get_mutable_joint_actuator(motor2 .index()).set_controller_gains(Gains.gains_joint21); 
 }
 
 //has 1) ee frames, 2)bushing joint
@@ -146,18 +144,13 @@ void ntnu_leg::add_PID_system(drake_builder & builder, drake_plant & plant){
   ControlProjectionMatrix(4,leg_states::v11) = 1;
   ControlProjectionMatrix(5,leg_states::v12) = 1;
 
-  //2.  Set Gains
-  Eigen::Vector3d Kp = {10,10,10};
-  Eigen::Vector3d Kd = {1,1,1};
-  Eigen::Vector3d Ki = {1,1,1};
-
   //3. Add PID system
   controller = builder.AddNamedSystem<drake::systems::controllers::PidController<double>>(
-    prefix+"controller",
+    prefix+"_controller",
     ControlProjectionMatrix,
-    Kp,
-    Kd,
-    Ki);
+    Gains.Kp,
+    Gains.Kd,
+    Gains.Ki);
 }
 void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
   //0. get prefix:
@@ -170,16 +163,6 @@ void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
   controller_desired_state_port = builder.ExportInput(controller -> get_input_port_desired_state(),prefix+"leg_setpoint");
   leg_output_state_port             = builder.ExportOutput(plant.get_state_output_port(leg)           ,prefix+"leg_state"   );
 
-}
-
-void ntnu_leg::set_leg_gains(const controllerGains & newGains){
-  Gains = newGains ; 
-}
-void ntnu_leg::set_bushing_params(const BushingParamsStruct & newBushingParams){
-  BushingParams = newBushingParams;
-}
-void ntnu_leg::set_spring_params(const SpringParamsStruct & newSpringParams){
-  SpringParams = newSpringParams;
 }
 
 drake_plant & ntnu_leg::get_plant(){

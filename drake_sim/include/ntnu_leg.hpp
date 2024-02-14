@@ -35,9 +35,9 @@ class leg_names {
 };
 
 struct controllerGains {
-  drake::multibody::PdControllerGains gains_MH{10,1};
-  drake::multibody::PdControllerGains gains_joint11{10,1};
-  drake::multibody::PdControllerGains gains_joint21{10,1};
+  Eigen::Vector3d Kp = {10,10,10};
+  Eigen::Vector3d Kd = {1,1,1};
+  Eigen::Vector3d Ki = {1,1,1};
 };
 
 struct BushingParamsStruct {
@@ -57,8 +57,18 @@ struct SpringParamsStruct {
   double damping     = 10;
 };
 
+
+///This struct contains the leg parameters (id, parent body, transform from parent, 
+///PID gains, Bushing and Spring parameters). 
+///The user MUST specify the following:
+/// @param[in] leg_id from [`fr,fl,rr,rl`] in the leg_index name space (e.g. `leg_index::fr`)
+/// @param[in] ParentBody  //Parent body this leg is connected to
+/// @param[in] TF_B_MH //Transform from Parent body to {MH} frame (MotorHousing)
+///
+/// @note  The other parameters have default values. If they need to change, here it the place. The should 
+///not be changed in the class
 struct leg_config{
-  const leg_index       leg_id;             //Select from {leg_index::fr,fl,rr,rl}
+  const leg_index      leg_id;             //Select from {leg_index::fr,fl,rr,rl}
   const drake_rigidBody & ParentBody ;      //Parent body this leg is connected to
   const drake_tfd       & TF_B_MH;          //Transform from Parent body to MH frame
   controllerGains     Gains;                //They have default values + optional set (thus no const)
@@ -75,56 +85,55 @@ struct leg_config{
 class ntnu_leg
 {
 public:
+/// The constructor for the `ntnu_leg` class. 
+/// @param[in] builder builder reference 
+/// @param[in] created_plant create plant reference. This populates the `plant` attribute of the class
+/// @param[in] config Leg paramters
   ntnu_leg( 
     drake_builder & builder,
-    drake_plant & created_plant, 
+    drake_plant   & created_plant, 
     const leg_config & config);
 
-  
-  void visualize_leg_frame(); //NOT IMPLEMENTED
-  drake_plant & get_plant();
-  drake::systems::controllers::PidController<double> *  get_leg_controller();
-
-  drake::systems::InputPortIndex  get_controller_desired_state_port();
-  drake::systems::OutputPortIndex get_leg_output_state_port();
-  
-  void set_leg_gains(const controllerGains & newGains);
-  void set_bushing_params(const BushingParamsStruct & newBushingParams);
-  void set_spring_params(const SpringParamsStruct & newSpringParams);
-
+  //helper funcs 
+  void visualize_leg_frame(); 
   void connect_PID_system(drake_builder & builder, drake_plant & plant);
 
+  //getters
+  drake_plant & get_plant();
+  drake::systems::controllers::PidController<double> *  get_leg_controller();
+  drake::systems::InputPortIndex  get_controller_desired_state_port();
+  drake::systems::OutputPortIndex get_leg_output_state_port();
 
 private:
   const leg_index leg_id;
   
   //Drake specific:
-  drake_plant & plant;
-  drake::multibody::ModelInstanceIndex leg;
-  drake::systems::controllers::PidController<double>* controller =nullptr;
-  drake::systems::InputPortIndex  controller_desired_state_port;
-  drake::systems::OutputPortIndex leg_output_state_port;
+  drake_plant & plant; //Reference to multibody plant. 
+  drake::systems::controllers::PidController<double>* controller =nullptr; //Controller system pointer (returned by `AddSystem`, so no ref as no prir existance!)
+  
+  //Plant entities indices: (no consts as cannot be prior initialized, no ref/ptr as initially local var)
+  drake::multibody::ModelInstanceIndex leg;                      // leg model instace
+  drake::systems::InputPortIndex  controller_desired_state_port; // [qMH,q11,q12,vMH,v11,v12]_d
+  drake::systems::OutputPortIndex leg_output_state_port;         // [q,v]
+
+  //MISSING PLANT ELEMENTS
+  //1. JointActuators
+  //2. bushingJoint
+  //2. linearSpring
   
   //Simulation parameters:
-  controllerGains Gains;             //They have default values
-  BushingParamsStruct BushingParams; //They have default values
-  SpringParamsStruct SpringParams;   //They have default values
+  const controllerGains     &Gains;         //PID gains         (const as one time use in building)
+  const BushingParamsStruct &BushingParams; //BushingParameters (const as one time use in building)
+  const SpringParamsStruct  &SpringParams;  //SpringParameters  (const as one time use in building)
 
   //Private member functions:
   inline void add_bushing_joint();
   inline void add_linear_spring();
   inline void add_actuators();
-
-
-  void add_PID_system(drake_builder & builder, drake_plant & plant);
+  inline void add_PID_system(drake_builder & builder, drake_plant & plant);
 
 
 };
-
-/// The constructor for the `ntnu_leg` class. 
-/// @param[in] TF Transform defining the frame
-/// @param[in] mescat_ptr raw pointer to the mescat instance.
-/// @param[in] path_prefix Path prefix
 
 
 
