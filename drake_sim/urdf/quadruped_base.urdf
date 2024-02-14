@@ -6,7 +6,7 @@
   name="quadruped_base">
   <link name="world" />
 
-  <link name="quadruped_base">
+  <link name="main_body">
     <inertial>
       <origin
         xyz="-0.00716131 -0.00065373 0.0070715"

@@ -7,6 +7,8 @@
 using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
 
 
+#define base_name "main_body" //name for both model instance, and body_name
+
 class olympus {
   public:		
 
@@ -23,47 +25,46 @@ class olympus {
 
 };
 
-
+// Inside this function the following are created:
+//1. drake::multibody::ModelInstanceIndex body_index -> class attribute
+//2. const drake::multibody::BallRpyJoint<double> & base_ball_joint -> lost, as it is not actuated
 void olympus::add_body(drake_plant & plant){
   //Add the body urdf
   drake::multibody::Parser parser(&plant);
   body_index = parser.AddModels("../urdf/quadruped_base.urdf").at(0);
+  plant.RenameModelInstance(body_index, base_name); 
 
   // Connect to world using a ball rpy joint (Connect {P} and {M})
   drake_tfd T_WP( Eigen::Translation3d{0,0,1}); //frame {P} in the {W} frame
-  drake_tfd T_BM( plant.GetBodyByName("quadruped_base").default_com() ) ; //frame {M} in the {B} frame
+  drake_tfd T_BM( plant.GetBodyByName(base_name).default_com() ) ; //frame {M} in the {B} frame
 
   const drake::multibody::BallRpyJoint<double> & base_ball_joint =
   plant.AddJoint<drake::multibody::BallRpyJoint> ( "base ball joint",
                                                     plant.world_body(), 
                                                     T_WP,                                                   
-                                                    plant.GetBodyByName("quadruped_base"),
+                                                    plant.GetBodyByName(base_name),
                                                     T_BM );
-
 
 }
 
-
 olympus::olympus(drake_builder & builder,meshcat_shared_ptr meshcat_ptr, const double & time_step_): time_step(time_step_)
 {
-
 //1. Add plant and populate it with the robot instances
 auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&builder,time_step);
 
 //1a. Instace of robot body (FOR NOW WORLD)
-const drake_rigidBody &robot_base= plant.world_body();
 add_body(plant);
-
+const drake_rigidBody &robot_base= plant.GetBodyByName(base_name,body_index);
 
 //TEMPORARY: create config structs for each leg
-drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
+drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), {0.265,-0.13,0} ); //FR
 // drake_tfd rrleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>{-1,0,1});
 
 leg_config config_fr(leg_index::fr, robot_base,frleg_TF);
 
 //1b. Instance of each leg
-// ntnu_leg(builder,plant,config_fr); 
-// auto fr_leg = plant.GetModelInstanceByName("fr_leg");
+ntnu_leg(builder,plant,config_fr); 
+auto fr_leg = plant.GetModelInstanceByName("fr_leg");
 
 //3
 //3a. Finish plant
