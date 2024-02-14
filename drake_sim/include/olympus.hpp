@@ -1,21 +1,19 @@
 #include "ntnu_leg.hpp" //For Legs
 #include "drake/multibody/tree/ball_rpy_joint.h" //For base
-
-// #include <iostream>
-
-
-
+#include "drake/multibody/tree/weld_joint.h" // (To be deleted) For base 
 
 #define base_name "main_body" //name for both model instance, and body_name
+#define weld_on true
 
 class olympus {
   public:		
     olympus(drake_builder & builder, const double & time_step_ );
 
+  private:
+
     void add_body(drake_plant & plant);
     void attach_legs(drake_builder & builder,drake_plant & plant);
 
-  private:
   double time_step = 0.002;
   // drake_plant & plant;
   // drake::geometry::SceneGraph<double> & scene_graph;
@@ -38,13 +36,22 @@ void olympus::add_body(drake_plant & plant){
   drake_tfd T_WP( Eigen::Translation3d{0,0,1}); //frame {P} in the {W} frame
   drake_tfd T_BM( plant.GetBodyByName(base_name).default_com() ) ; //frame {M} in the {B} frame
 
-  const drake::multibody::BallRpyJoint<double> & base_ball_joint =
-  plant.AddJoint<drake::multibody::BallRpyJoint> ( "base ball joint",
+  if (weld_on){
+    const drake::multibody::WeldJoint<double> & weld_joint =
+    plant.AddJoint<drake::multibody::WeldJoint> ( "base ball joint",
+                                                    plant.world_body(), 
+                                                    T_WP,                                                   
+                                                    plant.GetBodyByName(base_name),
+                                                    T_BM );
+  }else{
+    const drake::multibody::BallRpyJoint<double> & base_ball_joint =
+    plant.AddJoint<drake::multibody::BallRpyJoint> ( "base ball joint",
                                                     plant.world_body(), 
                                                     T_WP,                                                   
                                                     plant.GetBodyByName(base_name),
                                                     T_BM );
 
+  }
 }
 
 // Inside this function the following are created:
