@@ -189,5 +189,3 @@ void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
   leg_output_state_port             = builder.ExportOutput(plant.get_state_output_port(leg)           ,prefix+"leg_state"   );
 
 }
-
-

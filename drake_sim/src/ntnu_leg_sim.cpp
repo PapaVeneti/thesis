@@ -53,7 +53,6 @@ leg_config config_fr(leg_index::fr, robot_base,frleg_TF);
 
 //1b. Instance of each leg
 ntnu_leg leg(builder,plant,config_fr); 
-// auto fr_leg = plant.GetModelInstanceByName("fr_leg");
 auto fr_leg = leg.get_leg_model_instance();
 
 
