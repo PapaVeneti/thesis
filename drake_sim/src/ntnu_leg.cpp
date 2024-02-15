@@ -32,12 +32,20 @@ ntnu_leg::ntnu_leg(
 // TODO: load depending on side.
 drake::multibody::Parser parser(&plant);
 
-if (leg_id == leg_index::fr || leg_id == leg_index::rr ){
+switch (leg_id ){
+case leg_index::fr:
   leg = parser.AddModels("../urdf/ntnu_leg.urdf").at(0); 
-} else {
+  break;
+
+case leg_index::rr:
+  leg = parser.AddModels("../urdf/ntnu_legRR.urdf").at(0); 
+  break;
+
+default:
   std::cerr << "Left side legs are not implemented yet. The simulation will fail" <<std::endl;
-  leg = parser.AddModels("../urdf/ntnu_leg.urdf").at(0); 
+  break;
 }
+
 plant.RenameModelInstance(leg, leg_names::suffix.at(leg_id)+"_leg"); //each model instance must have different name
 
 //2. Connect to parent Body:

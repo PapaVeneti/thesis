@@ -68,8 +68,8 @@
     name="link11">
     <inertial>
       <origin
-        xyz="0.098421 -0.00092667 -0.00012402"
-        rpy="0 0 0" />
+        xyz="0.098421 0.00092667 0.00012402"
+        rpy="3.14159 0 0" />
       <mass
         value="0.10145" />
       <inertia
@@ -83,7 +83,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="meshes/link11.obj" />
@@ -109,7 +109,7 @@
     type="revolute">
     <origin
       xyz="0.046 -1.1338E-05 -0.0597"
-      rpy="3.1416 0 2.3095" />
+      rpy="0 0 -2.3095" />
     <parent
       link="MH" />
     <child
@@ -184,8 +184,8 @@
     name="link12">
     <inertial>
       <origin
-        xyz="0.098201 0.00092745 -0.00012329"
-        rpy="0 0 0" />
+        xyz="0.098201 -0.00092745 0.00012329"
+        rpy="3.14159 0 0" />
       <mass
         value="0.10205" />
       <inertia
@@ -199,7 +199,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="3.14159 0 0" />
       <geometry>
         <mesh
           filename="meshes/link12.obj" />
@@ -225,7 +225,7 @@
     type="revolute">
     <origin
       xyz="0.136 -1.1338E-05 -0.0597"
-      rpy="3.1416 0 0.83482" />
+      rpy="0 0 -0.83482" />
     <parent
       link="MH" />
     <child
