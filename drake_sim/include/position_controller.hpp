@@ -52,12 +52,6 @@ class position_controller {
 
     Eigen::Matrix<double,5,1> get_joint_angles(void);
 
-
-
-
-
-
-
     /// @brief Return the input in`motor3` frame. 
     ///
     /// Returns [joint1,joint2,motor3]

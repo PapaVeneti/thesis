@@ -55,7 +55,7 @@ std::string AddPoint(
   // Create a pose for the sphere. Replace x, y, z with the desired position.
 
 
-  mescat_ptr->SetObject( path_name, drake::geometry::Sphere(radius));
+  mescat_ptr->SetObject( path_name, drake::geometry::Sphere(radius),RGBA);
   mescat_ptr->SetTransform(path_name,TF);
 
   return path_name;

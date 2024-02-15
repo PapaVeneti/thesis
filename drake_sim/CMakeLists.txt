@@ -20,6 +20,7 @@ project(ntnu_sim VERSION 1.0)
 # 1. Add the library target
 add_library(ntnu_leg src/ntnu_leg.cpp)
 add_library(robot src/olympus.cpp)
+add_library(position_controller src/position_controller.cpp)
 
 # 2. Add the executable target
 # add_executable(multibody_leg multibody_leg.cpp) #deprecated
@@ -34,16 +35,13 @@ add_dependencies(robot ntnu_leg)
 # add header files -> PUBLIC to be available for all targets that link againts ntnu_leg
 target_include_directories(ntnu_leg PUBLIC include) 
 target_include_directories(robot PUBLIC include) 
+target_include_directories(position_controller PUBLIC include) 
+
 
 # Link the target with the necessary libraries
 # target_link_libraries(multibody_leg drake::drake ) #deprecated
 target_link_libraries(ntnu_leg drake::drake )
 target_link_libraries(robot drake::drake ntnu_leg)
-target_link_libraries(ntnu_leg_sim drake::drake ntnu_leg)
+target_link_libraries(ntnu_leg_sim drake::drake ntnu_leg position_controller)
 target_link_libraries(robot_sim drake::drake robot ntnu_leg )
-
-
-
-add_executable(position_controller position_controller.cpp)
-# target_link_libraries(position_controller)
 
