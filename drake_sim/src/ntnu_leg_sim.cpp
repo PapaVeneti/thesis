@@ -50,11 +50,14 @@ auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&build
 const drake_rigidBody &robot_base= plant.world_body();
 
   //create config structs for each leg
-drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
-leg_config config_fr(leg_index::fr, robot_base,frleg_TF);
+// drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
+drake_rotMat R_W_FR = drake_rotMat::MakeXRotation(-M_PI_2);
+drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(-M_PI);
+drake_tfd frleg_TF( R_W_FR* R_FR_RR, drake::Vector3<double>::UnitZ() ); //RR
+leg_config config_rr(leg_index::rr, robot_base,frleg_TF);
 
 //1b. Instance of each leg
-ntnu_leg leg(builder,plant,config_fr); 
+ntnu_leg leg(builder,plant,config_rr); 
 auto fr_leg = leg.get_leg_model_instance();
 
 
