@@ -51,7 +51,7 @@
     type="revolute">
     <origin
       xyz="0 0 1"
-      rpy="-1.57079632679  0 0" />
+      rpy="1.57079632679  3.14159 0" />
     <parent
       link="world" />
     <child

@@ -41,6 +41,8 @@ int main() {
     qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
     diagram -> get_input_port(robot.fr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
     diagram -> get_input_port(robot.rr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
+    diagram -> get_input_port(robot.fl_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
+    diagram -> get_input_port(robot.rl_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
 
 
 

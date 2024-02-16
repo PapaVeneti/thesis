@@ -5,12 +5,17 @@
 #define base_name "main_body" //name for both model instance, and body_name
 #define weld_on true
 
+using drake_rpy       = drake::math::RollPitchYawd ;
+
+
 class olympus {
   public:		
     olympus(drake_builder & builder, const double & time_step_ );
 
   std::unique_ptr<ntnu_leg> fr_leg;  //pointer_as cannot be initialized initially
   std::unique_ptr<ntnu_leg> rr_leg;
+  std::unique_ptr<ntnu_leg> fl_leg;
+  std::unique_ptr<ntnu_leg> rl_leg;
   private:
 
     void add_body(drake_plant & plant);
@@ -20,6 +25,12 @@ class olympus {
   // drake_plant & plant;
   // drake::geometry::SceneGraph<double> & scene_graph;
   drake::multibody::ModelInstanceIndex body_index;
+
+  //Transforms for each leg
+  drake_tfd frleg_TF;
+  drake_tfd rrleg_TF;
+  drake_tfd flleg_TF;
+  drake_tfd rlleg_TF;
 
 };
 
@@ -60,26 +71,40 @@ void olympus::add_body(drake_plant & plant){
 void olympus::attach_legs(drake_builder & builder, drake_plant & plant){
   const drake_rigidBody &robot_base= plant.GetBodyByName(base_name,body_index);
 
-  //TEMPORARY: create config structs for each leg
-  drake_rotMat R_B_FR  = drake_rotMat::MakeXRotation(-M_PI_2);
-  drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(-M_PI);
+  drake_rpy  rpy_B_FR (Eigen::Vector3d( {-M_PI_2,0,0}    ));
+  drake_rpy  rpy_B_RR (Eigen::Vector3d( {-M_PI_2,M_PI,0} ));
+  drake_rpy  rpy_B_FL (Eigen::Vector3d( { M_PI_2,0,0}    ));
+  drake_rpy  rpy_B_RL (Eigen::Vector3d( { M_PI_2,M_PI,0} ));
 
-  drake_tfd frleg_TF( R_B_FR, {0.149 ,-0.105,0} ); //FR
-  drake_tfd rrleg_TF( R_B_FR*R_FR_RR, {-0.1485,-0.15,0} ); //FR
+  double DX = 0.1485;
+  double DY_f = 0.105;
+  double DY_r = 0.15;
+  double DZ = 0;
+
+  // Save the transforms to keep them for later
+  frleg_TF = drake_tfd( rpy_B_FR, { DX,-DY_f,DZ} ); //FR
+  rrleg_TF = drake_tfd( rpy_B_RR, {-DX,-DY_r,DZ} ); //RR
+  flleg_TF = drake_tfd( rpy_B_FL, { DX, DY_f,DZ} ); //RR
+  rlleg_TF = drake_tfd( rpy_B_RL, {-DX, DY_r,DZ} ); //RR
+
+
   // drake_tfd rrleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>{-1,0,1});
 
   leg_config config_fr(leg_index::fr, robot_base,frleg_TF);
   leg_config config_rr(leg_index::rr, robot_base,rrleg_TF);
+  leg_config config_fl(leg_index::fl, robot_base,flleg_TF);
+  leg_config config_rl(leg_index::rl, robot_base,rlleg_TF);
 
   //1b. Instance of each leg
   fr_leg.reset(new ntnu_leg(builder,plant,config_fr) ); 
   rr_leg.reset(new ntnu_leg(builder,plant,config_rr) ); 
+  fl_leg.reset(new ntnu_leg(builder,plant,config_fl) ); 
+  rl_leg.reset(new ntnu_leg(builder,plant,config_rl) ); 
 }
 
 olympus::olympus(drake_builder & builder, const double & time_step_):
 time_step(time_step_),
-fr_leg(nullptr),
-rr_leg(nullptr)
+fr_leg(nullptr), rr_leg(nullptr), fl_leg(nullptr), rl_leg(nullptr)
 {
 auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&builder,time_step);
 
@@ -92,5 +117,7 @@ plant.Finalize();
 
 fr_leg->connect_PID_system(builder,plant);
 rr_leg->connect_PID_system(builder,plant);
+fl_leg->connect_PID_system(builder,plant);
+rl_leg->connect_PID_system(builder,plant);
 
 };
