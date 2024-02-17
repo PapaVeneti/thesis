@@ -15,6 +15,7 @@
 //6. Set desired cartesian position
 //7. Document functions
 
+
 // testing
 #include <iostream>
 #include <chrono>
@@ -32,28 +33,52 @@ void print_nested_array(const std::array<std::array<double,2>,2> & arr){
   std::cout          << arr[1][1] << "] ]" <<std::endl ; 
 }
 
-void position_controller::DK(const Eigen::Vector3d &JointPositionVector){
-  double qMH = JointPositionVector[0] ; 
-  double q11 = side_sign* JointPositionVector[1] + q11_offset; //Positive joint angles opposite from MH
-  double q12 = side_sign* JointPositionVector[2] + q12_offset; 
+void position_controller::DK(){
+  pEE = DK( qm ) ;
+}
 
-  //circle centers:
+Eigen::Vector3d  position_controller::DK(const Eigen::Vector3d &JointPositionVector){
+  double q11,q12;
+  double qMH = JointPositionVector[0] ; 
+  switch (config_param){
+    case 1:
+      q11 = - JointPositionVector[1] +  offsets_1[joint_id::j11];
+      q12 = - JointPositionVector[2] +  offsets_1[joint_id::j12];
+      break;
+    case 2:
+      q11 = + JointPositionVector[1] +  offsets_2[joint_id::j11];
+      q12 = + JointPositionVector[2] +  offsets_2[joint_id::j12];
+      break;
+  }
+
+  double side_param = (( config_param == 1)? 1 : -1);
+
+  //1. circle centers:
   Eigen::Vector2d vc;    //distance vector from `p1c` and `p2c` circle centers
   Eigen::Vector2d vn;    //normal to distance vector `vc`
 
-  p1c[0] = j11_Dx + l11*cos(q11);
-  p1c[1] = j_Dy   + l11*sin(q11);
+  p1c[0] =             j11_Dx + l11*cos(q11);
+  p1c[1] = side_param* j_Dy   + l11*sin(q11);
 
-  p2c[0] = j12_Dx + l12*cos(q12);
-  p2c[1] = j_Dy   + l12*sin(q12);
+  p2c[0] =             j12_Dx + l12*cos(q12);
+  p2c[1] = side_param* j_Dy   + l12*sin(q12);
 
   //2. Distance vectors and normal to distance
   vc = p2c-p1c;
   double d = vc.norm(); //distance of circle centers `p1c` and `p2c`
   vc.normalize();             
 
-  vn << -vc[1],vc[0];
-
+  switch (config_param){
+    case 1:
+      //clockwise normal:
+      vn << -vc[1],vc[0];
+      break;
+    case 2:
+      //anticlockwise normal:
+      vn << vc[1],-vc[0];
+      break;
+  }
+  
   //3. Triangle solution: 
   //see https://www.petercollingridge.co.uk/tutorials/computational-geometry/circle-circle-intersections/
   double a,h;
@@ -61,15 +86,18 @@ void position_controller::DK(const Eigen::Vector3d &JointPositionVector){
   h = sqrt( (l21*l21) - (a*a));
 
   //4. Calculate Intersection point in the rotated {MH} frame.
-  Eigen::Vector3d p_MH = {0,0,z_MH_j11j21};
+  Eigen::Vector3d p_MHrotated_EE = {0,0,z_MH_j11j21};
   p_EE_22d = p1c + (a*vc) + (h*vn);
 
-  p_MH.head(2) = p_EE_22d; 
+  p_MHrotated_EE.head(2) = p_EE_22d; 
   //5. Change to the default {MH} frame = {MH} for q1=0
-  pEE = rotate_x(qMH)*p_MH;
+  return  rotate_x(qMH)*p_MHrotated_EE;
+
+  // Eigen::Transform<double,3,Eigen::Isometry> a;
+  // Eigen::Rotation2Dd d(3);
 };
 
-void position_controller::calculate_joint_angles(const Eigen::Vector3d &JointPositionVector){
+Eigen::Matrix<double,5,1> position_controller::calculate_joint_angles(const Eigen::Vector3d &JointPositionVector){
   //The calculations are done in the rotated frame. 
   Eigen::Vector2d link11_v = p1c-pj11;
   Eigen::Vector2d link12_v = p2c-pj12;
@@ -95,12 +123,24 @@ void position_controller::calculate_joint_angles(const Eigen::Vector3d &JointPos
     theta2 *= -1;
   }
 
+  Eigen::Matrix<double,5,1> qvector;
 
-  q[0] = JointPositionVector[0] ; 
-  q[1] = JointPositionVector[1] ; //Positive joint angles opposite from MH
-  q[2] = theta1 - q21_offset;
-  q[3] = JointPositionVector[2] ; 
-  q[4] = theta2 - q22_offset; 
+  qvector[0] = JointPositionVector[0] ; 
+  qvector[1] = JointPositionVector[1] ; //Positive joint angles opposite from MH
+  qvector[2] = theta1 - q21_offset;
+  qvector[3] = JointPositionVector[2] ; 
+  qvector[4] = theta2 - q22_offset; 
+
+  return qvector;
+}
+
+void position_controller::calculate_joint_angles(){
+  q = calculate_joint_angles(qm);
+}
+
+void position_controller::state_estimation(){
+  DK();
+  calculate_joint_angles();
 }
 
 Eigen::Matrix<double,5,1> position_controller::get_joint_angles(void){

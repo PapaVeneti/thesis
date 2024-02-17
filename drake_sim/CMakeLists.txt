@@ -26,11 +26,13 @@ add_library(position_controller src/position_controller.cpp)
 # add_executable(multibody_leg multibody_leg.cpp) #deprecated
 add_executable(ntnu_leg_sim src/ntnu_leg_sim.cpp)
 add_executable(robot_sim src/olympus_sim.cpp)
+add_executable(controller_test test2.cpp)
 
 # Linking:
 # Add dependencies
 add_dependencies(ntnu_leg_sim ntnu_leg)
 add_dependencies(robot ntnu_leg)
+add_dependencies(controller_test position_controller)
 
 # add header files -> PUBLIC to be available for all targets that link againts ntnu_leg
 target_include_directories(ntnu_leg PUBLIC include) 
@@ -44,4 +46,5 @@ target_link_libraries(ntnu_leg drake::drake )
 target_link_libraries(robot drake::drake ntnu_leg)
 target_link_libraries(ntnu_leg_sim drake::drake ntnu_leg position_controller)
 target_link_libraries(robot_sim drake::drake robot ntnu_leg )
+target_link_libraries(controller_test position_controller )
 

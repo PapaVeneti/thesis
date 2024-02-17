@@ -28,9 +28,13 @@
 #define ANLGE_DIST(x1,x2,x3,x4)  SQUARE(x1)+SQUARE(x2)+SQUARE(x3)+SQUARE(x4)
 
 
+// enum config_parameter {FR_RR}
+
+enum joint_id {j11,j21,j12,j22};
+
 class position_controller {
   public:		
-    position_controller()  {
+    position_controller(int configuration):config_param(configuration)  {
         ;
     }
     
@@ -42,15 +46,29 @@ class position_controller {
     /// @note The leg doesn't know its position in the world frame. The user is responsible for further transformations. 
     /// Based on: "The Pantograph Mk-II: A Haptic Instrument". 
     ///
-    void DK(const Eigen::Vector3d &JointPositionVector);
+    Eigen::Vector3d DK(const Eigen::Vector3d &JointPositionVector);
 
+    ///Function to return the full  leg state.
+    /// @note It must be called after the most relevatn DK call
+    Eigen::Matrix<double,5,1> calculate_joint_angles(const Eigen::Vector3d &JointPositionVector);
+
+    /// FW kinematics based on the current measured state `qm`
+    /// It updated the current estimated end effector position `pEE` in the {MH} frame.
+    void DK();
+    void calculate_joint_angles();
+    void state_estimation();
+
+
+    //getters
     Eigen::Vector3d get_EE_position(void);
-
+    Eigen::Matrix<double,5,1> get_joint_angles(void);
+    
+    
+    //helpers:
     Eigen::Matrix3d rotate_x(const double & th);
 
-    void calculate_joint_angles(const Eigen::Vector3d &JointPositionVector);
 
-    Eigen::Matrix<double,5,1> get_joint_angles(void);
+    // IK
 
     /// @brief Return the input in`motor3` frame. 
     ///
@@ -68,7 +86,6 @@ class position_controller {
     ///
     Eigen::Vector3d IK(const Eigen::Vector3d & pD_MH  );
 
-
     /// @brief Returns the solutions of the inverse kinematics for an RR manipulator
     ///
     /// @param[in] 
@@ -82,10 +99,10 @@ class position_controller {
       const std::array<std::array<double,2>,2> & SOLS_1,
       const std::array<std::array<double,2>,2> & SOLS_2 );
 
-  std::array<int,2> RR_best_sol( 
-  const std::array<std::array<double,2>,2> & SOLS_1,
-  const std::array<std::array<double,2>,2> & SOLS_2 );
-  inline double angle_distance(const std::array<double,2>& sol_chain1,const std::array<double,2>& sol_chain2,const Eigen::Matrix<double,5,1> qpos );
+    std::array<int,2> RR_best_sol( 
+    const std::array<std::array<double,2>,2> & SOLS_1,
+    const std::array<std::array<double,2>,2> & SOLS_2 );
+    inline double angle_distance(const std::array<double,2>& sol_chain1,const std::array<double,2>& sol_chain2,const Eigen::Matrix<double,5,1> qpos );
     
     inline bool joint_angle_in_limits(const double & q, const std::array<double,2> & qlim);
     inline bool solution_in_limits(const std::array<double,2> & sol, const std::array<double,2> & qa_lim, const std::array<double,2> & qb_lim);
@@ -104,14 +121,16 @@ double l22    = 0.29929;
 double j_Dy = -1.1338e-05; //Vertical Distance of joint11 and joint12 from MH frame
 
 //Kinematic Quantities
-double side_sign =-1; //-1 for right side, +1 for left -> in constructor 
+const int config_param = 2; // [config 1: {FR,RL}, config2: {FL,RR}] 
+
 Eigen::Vector2d       p1c,p2c;                   //`p1c`,`p2c` are circle centers in the rotated {MH} frame. Used in `DK`, and saved for state estimation
+Eigen::Vector2d       p_EE_22d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
 const Eigen::Vector2d pj11{0.046, -1.1338e-05} ; // `pj11` is the center of joint11
 const Eigen::Vector2d pj12{0.136, -1.1338e-05} ; // `pj12` is the center of joint12 
-Eigen::Vector2d       p_EE_22d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
 
 //State (Cartesian and Angle joints)
 Eigen::Vector3d pEE; //End Effector position vector in the default {MH} frame.
+Eigen::Vector3d qm;           //Measured Joint Angles
 Eigen::Matrix<double,5,1> q;  //Joint Angles
 Eigen::Matrix<double,5,1> qd; //Desired Joint Angles
 
@@ -131,5 +150,10 @@ const std::array<double,2> q22_lim { q22_lb,q22_ub};
 std::array<std::array<bool,2>,2> feasibility_matrix;
 const double qMH_default_angle =  -M_PI_2;
 
+
+const std::array<double,4> offsets_1 ={q11_offset ,q21_offset,q12_offset ,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
+const std::array<double,4> offsets_2 ={-q11_offset,q21_offset,-q12_offset,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
+const Eigen::Vector3d p_MH_j11{0.046,-1.1338e-05,z_MH_j11j21};
+// const Eigen::Vector3d p_MH_j11{0.046, 1.1338e-05,z_MH_j11j21};
 };
 
