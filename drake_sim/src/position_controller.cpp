@@ -166,39 +166,53 @@ return rotm;
 Eigen::Vector3d position_controller::IK(const Eigen::Vector3d & pD_MH ){
   // double qMH = atan2(pD_MH[2],pD_MH[1]) - qMH_default_angle;
 
+  double side_param = (( config_param == 1)? 1 : -1);
+
   //Find qMH angle:
-  const double & yd = pD_MH[1];
-  const double & zd = pD_MH[2];
+  const double & yd  = pD_MH[1];
+  const double & zd  = pD_MH[2];
   constexpr double r = abs(z_MH_j11j21) ; 
 
-  double lambda = sqrt(SQUARE(zd)+SQUARE(yd)-SQUARE(r) ); //plus
+  double lambda = side_param* sqrt(SQUARE(zd)+SQUARE(yd)-SQUARE(r) ); //plus
   double c3,s3,determinant3;
   determinant3 = SQUARE(r) + SQUARE(lambda); 
   c3 =  (r*yd + lambda*zd) / determinant3;
   s3 =  (r*zd - lambda*yd) / determinant3;
-  double qMH = atan2(s3,c3)-qMH_default_angle; 
+  double qMH = atan2(s3,c3);//-qMH_default_angle; 
+  
+  qMH -= (config_param==1?offsets_1[joint_id::jMH]:offsets_2[joint_id::jMH]);
+  //For  the initial position, we match the y axis  of {MH} with the y axis of the RR plane ->
+  //Thus offseting qMH ->
 
-  try {
-    if ( qMH > qMH_ub || qMH< qMH_lb ) {
-      throw(std::runtime_error("[IK]:Cannot rotate ab-ad to reach this possition") );
-      }
-  }catch(const std::exception & e){
-    std::cerr << e.what() << std::endl;
-    return Eigen::Vector3d{0,0,0};
-  }
+  // try {
+  //   if ( qMH > qMH_ub || qMH< qMH_lb ) {
+  //     throw(std::runtime_error("[IK]:Cannot rotate ab-ad to reach this possition") );
+  //     }
+  // }catch(const std::exception & e){
+  //   std::cerr << e.what() << std::endl;
+  //   return Eigen::Vector3d{0,0,0};
+  // }
 
-  //Project pD to RR plane:
+  std::cout << "Desired Position in {MH} frame:" <<std::endl;
   std::cout << pD_MH <<std::endl;
+  std::cout << "Rotation Matrix:" <<std::endl;
   std::cout << rotate_x(qMH) <<std::endl;
+  //Project pD to RR plane:
   Eigen::Vector3d p_MH   = rotate_x(-qMH)*pD_MH; //Rotate pDesired 
+  Eigen::Vector3d DP1{j11_Dx,abs( z_MH_j11j21) ,j_Dy};
+  Eigen::Vector3d DP2{j12_Dx,abs( z_MH_j11j21) ,j_Dy};
 
-  std::cout << "Desired Position in Rotated {MH} frame:" <<std::endl;
-  std::cout << p_MH <<std::endl;
+  Eigen::Vector3d p_j1   = p_MH - rotate_x(-M_PI_2)*DP1;
+  Eigen::Vector3d p_j2   = p_MH - rotate_x(-M_PI_2)*DP2;
+  // std::cout << "Desired Position in Rotated {MH} frame:" <<std::endl;
+  // std::cout << p_MH <<std::endl;
 
 
   //Get all RRIK solutions
-  auto SOLS_1  = RR_IK(p_MH[0]-j11_Dx,p_MH[1],true) ; //Array { [q11,q21]_a,  [q11,q21]_b }  
-  auto SOLS_2  = RR_IK(p_MH[0]-j12_Dx,p_MH[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
+  // auto SOLS_1  = RR_IK(p_MH[0]-j11_Dx,p_MH[1],true) ; //Array { [q11,q21]_a,  [q11,q21]_b }  
+  // auto SOLS_2  = RR_IK(p_MH[0]-j12_Dx,p_MH[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
+  auto SOLS_1  = RR_IK(p_j1[0],p_j1[1],true); //Array { [q12,q22]_a,  [q12,q22]_b } 
+  auto SOLS_2  = RR_IK(p_j2[0],p_j2[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
 
   print_nested_array(SOLS_1);
   print_nested_array(SOLS_2);
@@ -230,12 +244,25 @@ std::array<std::array<double,2>,2> position_controller::RR_IK(const double &x,co
 
   if (chain1){
     r1 = l11; r2 = l21;
-    theta1_offset = q11_offset;
-    theta2_offset = q21_offset;
+    if (config_param == 1){
+      theta1_offset = offsets_1[joint_id::j11];
+      theta2_offset = offsets_1[joint_id::j21];
+    }else{
+      theta1_offset = offsets_2[joint_id::j11];
+      theta2_offset = offsets_2[joint_id::j21];
+    }
+
   }else{
     r1 = l12; r2 = l22; 
-    theta1_offset = q12_offset;
-    theta2_offset = -q22_offset;
+    // theta1_offset = q12_offset;
+    // theta2_offset = -q22_offset;
+    if (config_param == 1){
+      theta1_offset = offsets_1[joint_id::j12];
+      theta2_offset = offsets_1[joint_id::j22];
+    }else{
+      theta1_offset = offsets_2[joint_id::j12];
+      theta2_offset = offsets_2[joint_id::j22];
+    }
   }
   solution1[1] = acos(( x*x +y*y -r1*r1 -r2*r2)/(2*r1*r2));
   solution2[1] = -solution1[1];
@@ -245,17 +272,33 @@ std::array<std::array<double,2>,2> position_controller::RR_IK(const double &x,co
 
 
 // offsets:
-  solution1[0] = theta1_offset - solution1[0] ;
-  solution1[0] = wrap_angle(solution1[0]);
+  if ( config_param == 2) { 
+    solution1[0] = -theta1_offset + solution1[0] ;
+    solution1[0] = wrap_angle(solution1[0]);
 
-  solution2[0] = theta1_offset - solution2[0] ;
-  solution2[0] = wrap_angle(solution2[0]);
+    solution2[0] = -theta1_offset + solution2[0] ;
+    solution2[0] = wrap_angle(solution2[0]);
 
-  solution1[1]  = -theta2_offset - solution1[1] ;
-  solution1[1]  = wrap_angle(solution1[1]);
+    solution1[1]  = -theta2_offset + solution1[1] ;
+    solution1[1]  = wrap_angle(solution1[1]);
 
-  solution2[1]  = -theta2_offset - solution2[1] ;
-  solution2[1]  = wrap_angle(solution2[1]);
+    solution2[1]  = -theta2_offset + solution2[1] ;
+    solution2[1]  = wrap_angle(solution2[1]);
+  }else{
+    solution1[0] = theta1_offset - solution1[0] ;
+    solution1[0] = wrap_angle(solution1[0]);
+
+    solution2[0] = theta1_offset - solution2[0] ;
+    solution2[0] = wrap_angle(solution2[0]);
+
+    solution1[1]  = -theta2_offset - solution1[1] ;
+    solution1[1]  = wrap_angle(solution1[1]);
+
+    solution2[1]  = -theta2_offset - solution2[1] ;
+    solution2[1]  = wrap_angle(solution2[1]);
+  }
+
+
 
 
 

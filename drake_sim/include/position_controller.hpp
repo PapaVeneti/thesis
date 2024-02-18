@@ -1,5 +1,6 @@
 #include <eigen3/Eigen/Dense>
 
+#define qMH_offset -M_PI_2
 #define q11_offset  2.3095
 #define q21_offset  1.3265
 #define q12_offset  0.83482
@@ -30,7 +31,7 @@
 
 // enum config_parameter {FR_RR}
 
-enum joint_id {j11,j21,j12,j22};
+enum joint_id {jMH,j11,j21,j12,j22};
 
 class position_controller {
   public:		
@@ -151,8 +152,8 @@ std::array<std::array<bool,2>,2> feasibility_matrix;
 const double qMH_default_angle =  -M_PI_2;
 
 
-const std::array<double,4> offsets_1 ={q11_offset ,q21_offset,q12_offset ,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
-const std::array<double,4> offsets_2 ={-q11_offset,q21_offset,-q12_offset,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
+const std::array<double,5> offsets_1 ={qMH_offset,q11_offset ,q21_offset,q12_offset ,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
+const std::array<double,5> offsets_2 ={qMH_offset,-q11_offset,q21_offset,-q12_offset,q22_offset}; //SOS MUST CHANGE FOR CONFIG 2
 const Eigen::Vector3d p_MH_j11{0.046,-1.1338e-05,z_MH_j11j21};
 // const Eigen::Vector3d p_MH_j11{0.046, 1.1338e-05,z_MH_j11j21};
 };
