@@ -10,4 +10,4 @@ test
 position_controller
 debug.cpp
 urdf/meshes/measurement_in_main_body.FCStd
-test2.cpp
+test_class
