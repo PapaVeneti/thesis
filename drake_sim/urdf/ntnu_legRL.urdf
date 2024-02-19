@@ -311,11 +311,6 @@
   <selfCollide>true</selfCollide>
 </gazebo>
 
-<drake:collision_filter_group name="end_effectors">
-  <drake:member link="link21"/>
-  <drake:member link="link22"/>
-  <drake:ignored_collision_filter_group name="end_effectors"/>
-</drake:collision_filter_group>
 
 
 </robot>

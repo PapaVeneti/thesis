@@ -36,7 +36,7 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -44,7 +44,7 @@
         <mesh
           filename="meshes/MH_collisionSW.obj" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <!-- <joint
     name="jointMH"
@@ -94,7 +94,7 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -102,7 +102,7 @@
         <mesh
           filename="meshes/link11_collisionSW.obj" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="joint11"
@@ -152,7 +152,7 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -160,7 +160,7 @@
         <mesh
           filename="meshes/link21_collisionSW.obj" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="joint21"
@@ -210,7 +210,7 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -218,7 +218,7 @@
         <mesh
           filename="meshes/link12_collisionSW.obj" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="joint12"
@@ -268,7 +268,7 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
@@ -276,7 +276,7 @@
         <mesh
           filename="meshes/link22_collisionSW.obj" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="joint22"
@@ -311,11 +311,6 @@
   <selfCollide>true</selfCollide>
 </gazebo>
 
-<drake:collision_filter_group name="end_effectors">
-  <drake:member link="link21"/>
-  <drake:member link="link22"/>
-  <drake:ignored_collision_filter_group name="end_effectors"/>
-</drake:collision_filter_group>
 
 
 </robot>

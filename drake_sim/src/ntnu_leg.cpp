@@ -73,6 +73,7 @@ plant.AddJoint< drake::multibody::RevoluteJoint >(
 //3. Add actuators - bushing element and spring
 add_bushing_joint();
 add_linear_spring();
+add_collision_sets();
 add_actuators(); //MUST CONNECT
 add_PID_system(builder,plant);
 // connect_PID_system(builder,plant);
@@ -94,16 +95,21 @@ drake::systems::controllers::PidController<double> *  ntnu_leg::get_leg_controll
   return controller;
 };
 
-drake::systems::InputPortIndex  ntnu_leg::get_controller_desired_state_port(){
+drake::systems::InputPortIndex       ntnu_leg::get_controller_desired_state_port(){
   return controller_desired_state_port;
 };
-drake::systems::OutputPortIndex ntnu_leg::get_leg_output_state_port(){
+drake::systems::OutputPortIndex      ntnu_leg::get_leg_output_state_port(){
   return leg_output_state_port;
 }
 drake::multibody::ModelInstanceIndex ntnu_leg::get_leg_model_instance(){
   return leg;
 }
-
+drake::geometry::GeometrySet         ntnu_leg::get_shanks_collision(){
+  return shanks_collision_set;
+}
+drake::geometry::GeometrySet         ntnu_leg::get_MH_collision(){
+  return MotorHousing_collision_set;
+}
 // Building Methods:
 
 //has motors
@@ -162,6 +168,24 @@ inline void ntnu_leg::add_linear_spring(){
       SpringParams.stiffness,
       SpringParams.damping
   );
+}
+
+//
+void ntnu_leg::add_collision_sets(){
+  //add shanks collision
+  auto &link21 = plant.GetBodyByName("link21",leg);
+  auto &link22 = plant.GetBodyByName("link22",leg);
+
+  auto &link21_collision = plant.GetCollisionGeometriesForBody(link21);
+  auto &link22_collision = plant.GetCollisionGeometriesForBody(link22);
+
+  shanks_collision_set.Add(link21_collision);
+  shanks_collision_set.Add(link22_collision);
+
+  //add motor housing collision
+  auto &MH = plant.GetBodyByName("MH",leg);
+  auto &MH_collision = plant.GetCollisionGeometriesForBody(link21);
+  MotorHousing_collision_set.Add(MH_collision);
 }
 
 void ntnu_leg::add_PID_system(drake_builder & builder, drake_plant & plant){

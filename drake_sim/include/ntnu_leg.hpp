@@ -105,6 +105,8 @@ public:
   drake::systems::InputPortIndex  get_controller_desired_state_port();
   drake::systems::OutputPortIndex get_leg_output_state_port();
   drake::multibody::ModelInstanceIndex get_leg_model_instance();
+  drake::geometry::GeometrySet get_shanks_collision();
+  drake::geometry::GeometrySet get_MH_collision();
 
 private:
   const leg_index leg_id;
@@ -117,6 +119,10 @@ private:
   drake::multibody::ModelInstanceIndex leg;                      // leg model instace
   drake::systems::InputPortIndex  controller_desired_state_port; // [qMH,q11,q12,vMH,v11,v12]_d
   drake::systems::OutputPortIndex leg_output_state_port;         // [q,v]
+
+  //Collision
+  drake::geometry::GeometrySet shanks_collision_set; 
+  drake::geometry::GeometrySet MotorHousing_collision_set; 
 
   //MISSING PLANT ELEMENTS
   //1. JointActuators
@@ -131,6 +137,7 @@ private:
   //Private member functions:
   inline void add_bushing_joint();
   inline void add_linear_spring();
+  void add_collision_sets();
   inline void add_actuators();
   inline void add_PID_system(drake_builder & builder, drake_plant & plant);
 
