@@ -36,13 +36,18 @@ int main() {
     sim.set_target_realtime_rate(1);
 
     // Set desired positions
-    Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
-    Eigen::VectorXd qd(6); 
-    qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
-    diagram -> get_input_port(robot.fr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
-    diagram -> get_input_port(robot.rr_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
-    diagram -> get_input_port(robot.fl_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
-    diagram -> get_input_port(robot.rl_leg->get_controller_desired_state_port()).FixValue(&context,qd);;
+    // Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
+    Eigen::Vector3d des_angles1{-M_PI_2,-3,0}; 
+    Eigen::Vector3d des_angles2{ M_PI_2,-3,3}; 
+    Eigen::VectorXd qd1(6);  
+    Eigen::VectorXd qd2(6);  
+    qd1<<  des_angles1[0],des_angles1[1],des_angles1[2],0,0,0;
+    // qd2<<  des_angles2[0],des_angles2[1],des_angles2[2],0,0,0;
+    qd2.setZero();
+    diagram -> get_input_port(robot.fr_leg->get_controller_desired_state_port()).FixValue(&context,qd1);
+    diagram -> get_input_port(robot.rr_leg->get_controller_desired_state_port()).FixValue(&context,qd2);
+    diagram -> get_input_port(robot.fl_leg->get_controller_desired_state_port()).FixValue(&context,qd2);
+    diagram -> get_input_port(robot.rl_leg->get_controller_desired_state_port()).FixValue(&context,qd1);
 
 
 

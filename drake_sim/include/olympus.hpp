@@ -20,11 +20,13 @@ class olympus {
 
     void add_body(drake_plant & plant);
     void attach_legs(drake_builder & builder,drake_plant & plant);
+    void handle_collisions(drake::geometry::SceneGraph<double> & scene_graph);
 
   double time_step = 0.002;
   // drake_plant & plant;
   // drake::geometry::SceneGraph<double> & scene_graph;
   drake::multibody::ModelInstanceIndex body_index;
+  drake::geometry::GeometrySet body_collision;
 
   //Transforms for each leg
   drake_tfd frleg_TF;
@@ -64,6 +66,8 @@ void olympus::add_body(drake_plant & plant){
                                                     T_BM );
 
   }
+
+  body_collision.Add(plant.GetCollisionGeometriesForBody( plant.GetBodyByName(base_name) ) );
 }
 
 // Inside this function the following are created:
@@ -102,6 +106,30 @@ void olympus::attach_legs(drake_builder & builder, drake_plant & plant){
   rl_leg.reset(new ntnu_leg(builder,plant,config_rl) ); 
 }
 
+void olympus::handle_collisions(drake::geometry::SceneGraph<double> & scene_graph){
+  auto collision_manager = scene_graph.collision_filter_manager();
+  
+  //Exlude collisions between link21,12
+  collision_manager.Apply(
+  drake::geometry::CollisionFilterDeclaration().
+  ExcludeWithin(fr_leg->get_shanks_collision()).
+  ExcludeWithin(fl_leg->get_shanks_collision()).
+  ExcludeWithin(rr_leg->get_shanks_collision()).
+  ExcludeWithin(rl_leg->get_shanks_collision())
+  );
+
+
+  collision_manager.Apply(
+  drake::geometry::CollisionFilterDeclaration().
+  ExcludeBetween(fr_leg->get_MH_collision(),body_collision).
+  ExcludeBetween(fl_leg->get_MH_collision(),body_collision).
+  ExcludeBetween(rr_leg->get_MH_collision(),body_collision).
+  ExcludeBetween(rl_leg->get_MH_collision(),body_collision)
+  );
+
+
+}
+
 olympus::olympus(drake_builder & builder, const double & time_step_):
 time_step(time_step_),
 fr_leg(nullptr), rr_leg(nullptr), fl_leg(nullptr), rl_leg(nullptr)
@@ -110,6 +138,7 @@ auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&build
 
 add_body(plant);
 attach_legs(builder, plant);
+handle_collisions(scene_graph);
 
 // Plant parameters: 
 plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);

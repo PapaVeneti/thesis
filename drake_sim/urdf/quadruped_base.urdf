@@ -35,13 +35,67 @@
           rgba="0.79216 0.81961 0.93333 1" />
       </material>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
         <mesh
           filename="meshes/body_collision.obj" />
+      </geometry>
+    </collision> -->
+    <collision name="Front_MH_1">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/body_MH_front_motors.obj" />
+      </geometry>
+    </collision>
+    <collision name="Front_MH_2">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/body_MH_front_cover.obj" />
+      </geometry>
+    </collision>
+    <collision name="Rear_MH_1">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/body_MH_rear_motors.obj" />
+      </geometry>
+    </collision>
+    <collision name="Rear_MH_2">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/body_MH_rear_cover.obj" />
+      </geometry>
+    </collision>
+    <collision name="main_body_width">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/main_body_collision.obj" />
+      </geometry>
+    </collision>
+    <collision name="main_body_length">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/main_body_collision_2.obj" />
       </geometry>
     </collision>
   </link>
