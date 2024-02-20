@@ -34,19 +34,19 @@ drake::multibody::Parser parser(&plant);
 
 switch (leg_id ){
 case leg_index::fr:
-  leg = parser.AddModels("../urdf/ntnu_legFR.urdf").at(0); 
+  leg = parser.AddModels("urdf/ntnu_legFR.urdf").at(0); 
   break;
 
 case leg_index::rr:
-  leg = parser.AddModels("../urdf/ntnu_legRR.urdf").at(0); 
+  leg = parser.AddModels("urdf/ntnu_legRR.urdf").at(0); 
   break;
 
 case leg_index::fl:
-leg = parser.AddModels("../urdf/ntnu_legFL.urdf").at(0); 
+leg = parser.AddModels("urdf/ntnu_legFL.urdf").at(0); 
 break;
 
 case leg_index::rl:
-leg = parser.AddModels("../urdf/ntnu_legRL.urdf").at(0); 
+leg = parser.AddModels("urdf/ntnu_legRL.urdf").at(0); 
 break;
 
 default:

@@ -42,7 +42,7 @@ class olympus {
 void olympus::add_body(drake_plant & plant){
   //Add the body urdf
   drake::multibody::Parser parser(&plant);
-  body_index = parser.AddModels("../urdf/quadruped_base.urdf").at(0);
+  body_index = parser.AddModels("urdf/quadruped_base.urdf").at(0);
   plant.RenameModelInstance(body_index, base_name); 
 
   // Connect to world using a ball rpy joint (Connect {P} and {M})

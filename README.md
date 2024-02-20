@@ -14,3 +14,16 @@
 # Drake Sim
 Requirements:
 C++ standard: C++17
+
+
+## How to run drake simulations from VScode 
+TODO: make it an install script.
+
+1. symlink to the urdfs: (In the `drake_sim/` directory)
+```bash
+$  ln -s $(pwd)/urdf build/urdf
+```
+- Now simulations (after building) can be executed from either the `drake_sim/build` directory or the `drake_sim` directory. 
+
+2.  Also, you can use the [VsCode Cmake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) to build and launch the simulations from within vscode. 
+
