@@ -10,3 +10,13 @@ leg_planner/slprj
 leg_planner/Videos
 leg_planner/Figures
 leg_planner/*.asv
+
+/ros_ws/.catkin_tools
+/ros_ws/build
+/ros_ws/devel
+/ros_ws/logs
+/ros_ws/src/build
+/ros_ws/src/.vscode
+
+
+/drake_sim/build_old
