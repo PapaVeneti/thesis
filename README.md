@@ -19,7 +19,7 @@ C++ standard: C++17
 ## How to run drake simulations from VScode 
 TODO: make it an install script.
 
-1. symlink to the urdfs: (In the `drake_sim/` directory)
+1. symlink to the urdfs: (In the repo root directory)
 ```bash
 $  ln -s $(pwd)/drake_sim/urdf $(pwd)/drake_sim/build/examples/urdf
 ```
@@ -29,9 +29,12 @@ $  ln -s $(pwd)/drake_sim/urdf $(pwd)/drake_sim/build/examples/urdf
 
 
 # Ros_ws
-To run the simulations
+## Run the simulations:
 
-1. From root directory (not home)
+From root directory (In the repo root directory)
 ```bash
 $ ln -s  $(pwd)/drake_sim/urdf $(pwd)/ros_ws/src/olympus_control/urdf
+$ ln -s  $(pwd)/drake_sim/urdf <desired_directory>/urdf #for other directories
 ```
+
+Currently running the simulations is only possible from the `ros_ws/src/olympus_controller/` directory or any other directory you specified above in the `<desired_directory>`. 
