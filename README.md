@@ -21,9 +21,17 @@ TODO: make it an install script.
 
 1. symlink to the urdfs: (In the `drake_sim/` directory)
 ```bash
-$  ln -s $(pwd)/urdf build/urdf
+$  ln -s $(pwd)/drake_sim/urdf $(pwd)/drake_sim/build/examples/urdf
 ```
 - Now simulations (after building) can be executed from either the `drake_sim/build` directory or the `drake_sim` directory. 
 
 2.  Also, you can use the [VsCode Cmake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) to build and launch the simulations from within vscode. 
 
+
+# Ros_ws
+To run the simulations
+
+1. From root directory (not home)
+```bash
+$ ln -s  $(pwd)/drake_sim/urdf $(pwd)/ros_ws/src/olympus_control/urdf
+```

@@ -2,6 +2,10 @@
 #include "ntnu_leg.hpp"
 #include <iostream> //-> for some error msgs
 
+//
+//
+//
+
 // Definition and initialization of static member variables
 const std::map<leg_index,std::string> leg_names::full = {
     {leg_index::fr, "front_right"},
