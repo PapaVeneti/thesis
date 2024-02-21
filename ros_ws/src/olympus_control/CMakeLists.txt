@@ -130,6 +130,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/olympus_control_node.cpp)
 add_executable(ros_leg_sim src/ntnu_leg.cpp)
+add_executable(leg_controller src/leg_controller.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,6 +147,7 @@ add_executable(ros_leg_sim src/ntnu_leg.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg position_controller)
+target_link_libraries(leg_controller ${catkin_LIBRARIES}  position_controller)
 
 
 #############

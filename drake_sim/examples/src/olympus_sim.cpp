@@ -7,7 +7,8 @@
 #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
 using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
 
-//1. DEFINE MB_TIME_STEP
+#define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
+
 //2. DEFINE base_NAME
 //3. container for model instances
 

@@ -19,7 +19,6 @@ using drake_rigidBody = drake::multibody::RigidBody<double> ;
 using drake_plant     = drake::multibody::MultibodyPlant<double>;
 using drake_builder   = drake::systems::DiagramBuilder<double>;
 
-#define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
 enum class leg_index {fr, fl, rr, rl};
 enum leg_states {qMH, q11, q21, q12, q22, vMH, v11, v21, v12, v22};
 

@@ -15,6 +15,8 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 #include "drake_helpers.hpp"
 #include "position_controller.hpp"
 
+#define mb_time_step 0.0002
+
 //for collisions:
 // #include <drake/geometry/collision_filter_declaration.h>
 // #include <drake/geometry/scene_graph_inspector.h>
