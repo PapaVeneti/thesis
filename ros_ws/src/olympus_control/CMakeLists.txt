@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(drake CONFIG REQUIRED PATHS /opt/drake)
 # message(STATUS "CMAKE_BINARY_DIR is: ${CMAKE_BINARY_DIR}" )
-add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../../../build/drake_libraries")
+add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../../build/drake_libraries")
 # add_subdirectory("../../../drake_sim")
 
 
@@ -145,7 +145,7 @@ add_executable(ros_leg_sim src/ntnu_leg.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(ros_leg_sim drake::drake ntnu_leg position_controller)
+target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg position_controller)
 
 
 #############

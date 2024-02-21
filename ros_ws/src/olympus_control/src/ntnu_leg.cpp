@@ -15,10 +15,15 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 #include "drake_helpers.hpp"
 #include "position_controller.hpp"
 
-//for collisions:
-// #include <drake/geometry/collision_filter_declaration.h>
-// #include <drake/geometry/scene_graph_inspector.h>
-// #include <drake/geometry/geometry_set.h>
+#define get_graph false
+
+
+// ros specific
+#include "ros/ros.h"
+// #include "std_msgs/String.h"
+// #include "std_msgs/Float64.h"
+#include "rosgraph_msgs/Clock.h"
+// #include "sensor_msgs/JointState.h"
 
 
 struct sim_parameters {
@@ -33,13 +38,13 @@ int main(int argc, char **argv){
 
 // Ros: node SETUP
 #pragma region
-// // Node Set up 
-// ros::init(argc, argv, "drake simulation");
-// ros::NodeHandle n;
-// ros::Publisher clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
+// Node Set up 
+ros::init(argc, argv, "drake_leg_simulation");
+ros::NodeHandle n;
+ros::Publisher clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
 
-// double loop_freq = 100;
-// ros::Rate loop_rate(loop_freq); //HZ
+double loop_freq = 100;
+ros::Rate loop_rate(loop_freq); //HZ
 
 #pragma endregion
 
@@ -85,33 +90,9 @@ drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
 
 //2c. Finish building. Never use builder again
 auto diagram = builder.Build(); //Connections before here
-#pragma endregion
-
-bool export_graph = true;
-// Write graph to file:
-#pragma region 
-if (export_graph){
-std::string GraphString = diagram -> GetGraphvizString(1);
-std::string filePath = "graph.dot";
-
-    // Create an output file stream
-    std::ofstream outFile(filePath);
-
-    // Check if the file stream is open
-    if (outFile.is_open()) {
-        // Write the string to the file
-        outFile << GraphString;
-
-        // Close the file stream
-        outFile.close();
-
-        std::cout << "String successfully written to file: " << filePath << std::endl;
-    } else {
-        std::cerr << "Error opening the file: " << filePath << std::endl;
-    }
-}
 
 
+if (get_graph){ get_system_graph(diagram.get());  }
 #pragma endregion
 
 //4. Simulation initialization: 

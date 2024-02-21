@@ -1,5 +1,6 @@
 #include "olympus.hpp"
 #include "drake/systems/analysis/simulator.h" //Simulation
+#include "drake_helpers.hpp"
 
 //Visualization
 #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
@@ -10,10 +11,7 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 //2. DEFINE base_NAME
 //3. container for model instances
 
-//graphviz
-#include <iostream>
-#include <fstream>
-void get_system_graph(const drake::systems::Diagram<double> * diagram,const std::string & filePath = "graph.dot" );
+
 
 int main() {
 
@@ -68,23 +66,3 @@ int main() {
 }
 
 
-void get_system_graph(const drake::systems::Diagram<double> * diagram,const std::string & filePath){
-    std::string GraphString = diagram -> GetGraphvizString(1);
-    // std::string filePath = "graph.dot";
-
-    // Create an output file stream
-    std::ofstream outFile(filePath);
-
-    // Check if the file stream is open
-    if (outFile.is_open()) {
-        // Write the string to the file
-        outFile << GraphString;
-
-        // Close the file stream
-        outFile.close();
-
-        std::cout << "String successfully written to file: " << filePath << std::endl;
-    } else {
-        std::cerr << "Error opening the file: " << filePath << std::endl;
-    }
-}
