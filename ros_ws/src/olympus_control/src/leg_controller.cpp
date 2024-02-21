@@ -3,6 +3,7 @@
 #include "std_msgs/Float64MultiArray.h"
 #include "sensor_msgs/JointState.h"
 
+#include "olympus_control/leg_msg.h"
 #include <chrono>
 
 
@@ -46,10 +47,11 @@ int main(int argc, char **argv){
   // controller controller;
 
   ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/position_controller",10,true);
+  // ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/position_controller",10,true);
+  ros::Publisher pub = n.advertise<olympus_control::leg_msg>("/position_controller",10,true);
   ros::Rate loop_rate(10);
 
-  std_msgs::Float64MultiArray msg;
+  olympus_control::leg_msg msg;
   if (argc != 4) {  
     ROS_ERROR_STREAM("[Position Controller]: The number of arguments must be 3");
     ROS_ERROR_STREAM("[Position Controller]: No command");
@@ -62,9 +64,12 @@ int main(int argc, char **argv){
   // msg.data.push_back(1);
   ros::spinOnce();
 
-  msg.data.push_back(atof( argv[1]));
-  msg.data.push_back(atof( argv[2]));
-  msg.data.push_back(atof( argv[3]));
+  msg.controller_id =0;
+  msg.n_joints = 3;
+  msg.joint_angles.push_back(atof(argv[1]));
+  msg.joint_angles.push_back(atof(argv[2]));
+  msg.joint_angles.push_back(atof(argv[3]));
+  msg.joint_velocities.assign(3,0);
   pub.publish(msg);
 
   auto starting_time = std::chrono::system_clock::now();

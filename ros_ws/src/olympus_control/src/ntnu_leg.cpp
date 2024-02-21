@@ -26,6 +26,7 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 // #include "std_msgs/Float64.h"
 // #include "std_msgs/Float64.h"
 #include "std_msgs/Float64MultiArray.h" //1st way
+#include "olympus_control/leg_msg.h"
 
 #include "rosgraph_msgs/Clock.h"
 #include "sensor_msgs/JointState.h"
@@ -45,25 +46,32 @@ struct sim_parameters {
   double sim_update_rate = 0.01;
 };
 
+// Overload << operator to output vector data
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec) {
+    for (auto it = vec.begin() ; it < vec.end()-1 ; ++it ){
+      stream << *it << ",";
+    }
+    if (!vec.empty()) {
+        stream << *(vec.end() - 1); // Output the last element without a comma
+    }
+    return stream;
+}
 
+
+template<int nu>
 class simInterface{
 public:
-  simInterface(drake::systems::Simulator<double> & deployed_simulator,const drake::systems::InputPort<double> * system_input_port): 
+  // simInterface(const std::array<std::string,nu> & topic_names , drake::systems::Simulator<double> & deployed_simulator,const drake::systems::InputPort<double> * system_input_port): 
+  simInterface(const std::array<std::string,nu> & topic_names , drake::systems::Simulator<double> & deployed_simulator,std::array <const drake::systems::InputPort<double> *,nu> system_input_ports_): 
   n(),
   simulator(deployed_simulator),
-  input_port(system_input_port)
+  input_ports(system_input_ports_)
   {
-
     controllerSub  = n.subscribe("/position_controller", 1000, &simInterface::controllerCallback,this);
     encoderPub     = n.advertise<sensor_msgs::JointState>("/joint_states",10);
 
-    // xd = InitialJointState.position[0];
   }
-
-  inline Eigen::Vector3d get_command(void){
-    std::vector<double> & v=  control_set_point.data;
-    return Eigen::Vector3d({v[0],v[1],v[2]});
-    }
 
   void encoderPublish(const sensor_msgs::JointState & CurrentJointState){
     joint_state = CurrentJointState;
@@ -77,32 +85,57 @@ public:
 
 private:
 
-  void controllerCallback(const std_msgs::Float64MultiArray::ConstPtr& command){
-    ROS_INFO("[simController]: New command: [%.3lf,%.3lf,%.3lf]", command->data[0],command->data[1],command->data[2]);
-    control_set_point.data   = command->data; 
-    control_set_point.layout = command->layout; 
+  // template< int control_index>
+  // void controllerCallback(const std_msgs::Float64MultiArray::ConstPtr& command){
+  // olympus_control::leg_msg::ConstPtr
+  void controllerCallback(const olympus_control::leg_msg::ConstPtr& msg){
+    // ROS_INFO("[simController]: New command for controller %d: [%.3lf,%.3lf,%.3lf]",nu, command->data[0],command->data[1],command->data[2]);
+    // control_set_points[nu].data   = command->data; 
+    // control_set_points[nu].layout = command->layout; 
+    const uint16_t& N   = msg->n_joints;
+    const uint16_t& id =  msg->controller_id;
+    ROS_INFO_STREAM(
+      "[simController]: New command for "<< 
+      "controller 1" << " : [" <<
+      msg->joint_angles << "]" );
 
-    std::vector<double> & v=  control_set_point.data;
+    const std::vector<double> & p=  msg->joint_angles;
+    const std::vector<double> & v=  msg->joint_velocities;
     // Eigen::Vector3d qd({v[0],v[1],v[2]});
-    Eigen::Matrix<double,6,1> qd ;
-    qd << v[0],v[1],v[2],0,0,0;
-
+    Eigen::VectorXd qd(2*N) ;
+    for(int i = 0; i<N ; i++){
+      qd[i]   = p[i];
+      qd[i+N] = v[i];
+    }
+    ROS_INFO_STREAM(qd);
     auto& sim_context = simulator.get_mutable_context();
-    input_port->FixValue(&sim_context,qd);
-
+    ROS_INFO("1");
+    input_ports[id]->FixValue(&sim_context,qd);
+    ROS_INFO("2");
   }
+
 
   int num_controllers = 1;
   // std::vector< std_msgs::Float64MultiArray > control_msgs; 
-  std_msgs::Float64MultiArray  control_set_point; 
-  sensor_msgs::JointState joint_state;
+  
 
   ros::NodeHandle n;
+  ros::Publisher  encoderPub; //one joint_states_topic
+  sensor_msgs::JointState joint_state; //corresponding msg
+
+  // std::array < ros::Subscriber,nu>              controllerSubscribers ;
+  // std::array < std_msgs::Float64MultiArray,nu>  control_set_points; 
+
   ros::Subscriber controllerSub;
-  ros::Publisher encoderPub;
+  // std_msgs::Float64MultiArray  control_set_point; 
+
+  std::array<std::string,nu> controller_names ; 
+
+
 
   //drake connection
-  const drake::systems::InputPort<double> * input_port;
+  // const drake::systems::InputPort<double> * input_port;
+  std::array <const drake::systems::InputPort<double> *,nu>  input_ports;
   drake::systems::Simulator<double> & simulator;
 
 };
@@ -229,9 +262,13 @@ for (int i = 0; i < p0.size(); i++){
 }
 JointState.header.stamp = ros::Time(0);
 
+std::array < double,2> arr ({3,1});
 
-const drake::systems::InputPort<double> & INPUT  = diagram -> get_input_port(leg.get_controller_desired_state_port());
-simInterface simInterface(sim,&INPUT);
+std::array<std::string,1> names({"/position_controller"});
+
+const drake::systems::InputPort<double> * INPUT  = &diagram -> get_input_port(leg.get_controller_desired_state_port());
+std::array<const drake::systems::InputPort<double> *,1> input_({INPUT}) ;
+simInterface<1> simInterface(names,sim,input_);
 simInterface.set_Joint_states(JointState);
 
 Eigen::Matrix<double,10,1> state_vector;

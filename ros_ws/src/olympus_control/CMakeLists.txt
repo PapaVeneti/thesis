@@ -9,6 +9,8 @@ project(olympus_control)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  std_msgs 
+  message_generation
 )
 find_package(drake CONFIG REQUIRED PATHS /opt/drake)
 # message(STATUS "CMAKE_BINARY_DIR is: ${CMAKE_BINARY_DIR}" )
@@ -42,11 +44,10 @@ add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  leg_msg.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -63,10 +64,10 @@ add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -100,7 +101,7 @@ add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES olympus_control
-#  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp message_runtime
 #  DEPENDS system_lib
 )
 

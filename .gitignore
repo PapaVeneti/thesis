@@ -22,3 +22,4 @@ leg_planner/*.asv
 
 
 /drake_sim/build_old
+test.cpp
