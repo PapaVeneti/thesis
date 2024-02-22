@@ -270,16 +270,16 @@ while( ros::ok() ){
 //     // (leg).FixValue(&plant_context,qd); //for pid joints
 // }
 
-// // auto& context2            = sim.get_mutable_context();
-// // Eigen::Vector3d p_W = {0.087722,0.13204,0.63377};
-// // drake_tfd T_W_Pnew(drake::math::RollPitchYawd(0,0,0),p_W);
-// // AddPoint(T_W_Pnew,mescat_ptr.get(),"New Goal Position",drake::geometry::Rgba(1,0,0,1));
-// // Eigen::Vector3d new_goal = T_W_MH.inverse()*p_W ; 
-// // std::cout << "New goal position in {MH} frame is:" << std::endl;
-// // std::cout << new_goal << std::endl;
-// // des_angles = pos_controller.IK(new_goal);
-// // qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
-// // diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context2,qd);
+// auto& context2            = sim.get_mutable_context();
+// Eigen::Vector3d p_W = {0.087722,0.13204,0.63377};
+// drake_tfd T_W_Pnew(drake::math::RollPitchYawd(0,0,0),p_W);
+// AddPoint(T_W_Pnew,mescat_ptr.get(),"New Goal Position",drake::geometry::Rgba(1,0,0,1));
+// Eigen::Vector3d new_goal = T_W_MH.inverse()*p_W ; 
+// std::cout << "New goal position in {MH} frame is:" << std::endl;
+// std::cout << new_goal << std::endl;
+// des_angles = pos_controller.IK(new_goal);
+// qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
+// diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context2,qd);
 
 // // while( sim_time < 3){
 // //     //realtime vis

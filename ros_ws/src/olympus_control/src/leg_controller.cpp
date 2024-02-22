@@ -1,117 +1,128 @@
 #include "ros/ros.h"
-// #include "std_msgs/Float64.h"
-// #include "std_msgs/Float64MultiArray.h"
-// #include "geometry_msgs/Vector3.h"
+
+#include "position_controller.hpp"
+
+//messages:
 #include "olympus_control/sphere_signature.h"
 #include "sensor_msgs/JointState.h"
-
 #include "olympus_control/leg_msg.h"
-#include "position_controller.hpp"
-#include <chrono>
+#include "geometry_msgs/Vector3.h"
 
 
-// class controller {
-// public:
-//     controller() : xd(0.0), n(), controller_interface(){
-//         controller_interface = n.subscribe("/goal_set", 1000, &controller::interfaceCallback, this);
-//         encoder_sub          = n.subscribe("/joint_states", 1000, &controller::encoderCallback, this);
-//         controller_pub       = n.advertise<std_msgs::Float64>("/joint1_position_controller", 1000,true); //latched publisher
-//         ROS_INFO("[Controller]: Initialized");
 
-//     }
+class leg_controller {
+public:
+    leg_controller() :Kinematics(2), n(), controller_interface(){
+        controller_interface = n.subscribe("/goal_set", 1000, &leg_controller::interfaceCallback, this);
+        encoder_sub          = n.subscribe("/joint_states", 1000, &leg_controller::encoderCallback, this);
+        controller_pub       = n.advertise<olympus_control::leg_msg>("/position_controller", 1000,true); //latched publisher
+        spherePub            = n.advertise<olympus_control::sphere_signature>("/publish_spheres",10,true);
+        ROS_INFO("[Controller]: Initialized");
+
+        //initialize leg_command
+        leg_command.joint_angles.assign(3,0);
+        leg_command.joint_velocities.assign(3,0);
+        leg_command.n_actuated_joints = 3;
+        leg_command.n_actuated_joints = 3;
+        leg_command.controller_id =1;
+    }
     
-//     void encoderCallback(const sensor_msgs::JointStateConstPtr & JointState){
-//         ROS_DEBUG("[Controller]: Pendulum position is: %.3lf", JointState->position[0]);
-//     }
+    void encoderCallback(const sensor_msgs::JointStateConstPtr & JointState){
+      q[0] = JointState->position[0];
+      q[1] = JointState->position[1];
+      q[2] = JointState->position[3];
 
-//     void interfaceCallback(const std_msgs::Float64::ConstPtr & setPoint){
-//         xd = setPoint->data; 
-//         ROS_INFO("[Controller]: New controller set point: %.3lf", xd);
-//         publishCommand();
-//     }
+      qt[0] = JointState->velocity[0];
+      qt[1] = JointState->velocity[1];
+      qt[2] = JointState->velocity[3];
+    }
 
-//     void publishCommand(){
-//         joint1_command.data = xd ; 
-//         controller_pub.publish(joint1_command);
-//     }
+    void interfaceCallback(const geometry_msgs::Vector3::ConstPtr & setPoint){
+      leg_command.joint_angles[0] = setPoint->x;
+      leg_command.joint_angles[1] = setPoint->y;
+      leg_command.joint_angles[2] = setPoint->z;
 
-// private:
-//     double xd;
-//     ros::NodeHandle n;
-//     std_msgs::Float64 joint1_command;
-//     ros::Subscriber controller_interface;
-//     ros::Subscriber encoder_sub;
-//     ros::Publisher controller_pub; 
-// };
+
+      auto  P_MH = Kinematics.DK(Eigen::Vector3d({setPoint->x,setPoint->x,setPoint->x}));
+
+      Eigen::Matrix3d rot_rr ;
+      rot_rr.setZero();
+
+      rot_rr(0,0) = -1;
+      rot_rr(1,2) =  1;
+      rot_rr(2,1) =  1;
+
+      Eigen::Isometry3d TF_W_RR;
+      TF_W_RR.translate(Eigen::Vector3d({0,0,1}));
+      TF_W_RR.rotate(rot_rr);
+
+      Eigen::Isometry3d TF_MH_P ;
+      TF_MH_P.rotate(Eigen::Matrix3d::Identity());;
+      TF_MH_P.translate(Eigen::Vector3d(P_MH));
+
+      // auto TF_D  = TF_W_RR*TF_MH_P; 
+      
+      auto TF_D = rot_rr*P_MH  + Eigen::Vector3d({0,0,1});
+
+      
+
+      sphere_sig.path_name = "rr_leg_goal";
+      sphere_sig.sphere_id = 2;
+      sphere_sig.translation.x = TF_D(0);
+      sphere_sig.translation.y = TF_D(1);
+      sphere_sig.translation.z = TF_D(2);
+      spherePub.publish(sphere_sig);
+
+      ROS_INFO("[Controller]: New controller set point: [%.3lf,%.3lf,%.3lf]", setPoint->x,setPoint->y,setPoint->z);
+      publishCommand();
+    }
+
+    void publishCommand(){
+        controller_pub.publish(leg_command);
+    }
+
+private:
+    position_controller Kinematics ;
+
+
+    //ROS
+    ros::NodeHandle n;
+
+    //Encode bus:
+    ros::Subscriber encoder_sub;
+    Eigen::Vector3d q;
+    Eigen::Vector3d qt;
+    // sensor_msgs::JointState joint_state; 
+
+    //Control bus:
+    olympus_control::leg_msg leg_command;
+    ros::Publisher  controller_pub; 
+
+    //Visualization
+    olympus_control::sphere_signature sphere_sig;
+    ros::Publisher  spherePub;
+
+    //ROS Interface  (this may change)
+    ros::Subscriber controller_interface;
+
+    
+    
+};
 
 int main(int argc, char **argv){
 
   ros::init(argc, argv, "Controller_placeholder");
-  // controller controller;
 
-  ros::NodeHandle n;
-  // ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/position_controller",10,true);
-  ros::Publisher pub  = n.advertise<olympus_control::leg_msg>("/position_controller",10,true);
-  ros::Publisher pub2 = n.advertise<olympus_control::sphere_signature>("/publish_spheres",10,true);
+
+  leg_controller rr_control; 
   ros::Rate loop_rate(10);
 
-  olympus_control::leg_msg msg;
-  olympus_control::sphere_signature sphere_sig;
-  if (argc != 4) {  
-    ROS_ERROR_STREAM("[Position Controller]: The number of arguments must be 3");
-    ROS_ERROR_STREAM("[Position Controller]: No command");
-    return 1;
-  }
 
+  while( ros::ok() ){
 
-  // msg.data.push_back(1);
-  // msg.data.push_back(1);
-  // msg.data.push_back(1);
-  ros::spinOnce();
-
-  msg.controller_id =1;
-  msg.n_actuated_joints = 3;
-  msg.joint_angles.push_back(atof(argv[1]));
-  msg.joint_angles.push_back(atof(argv[2]));
-  msg.joint_angles.push_back(atof(argv[3]));
-  msg.joint_velocities.assign(3,0);
-  pub.publish(msg);
-
-  // position_controller con(2);
-  // Eigen::Isometry3d tf;
-  // tf.translate(Eigen::Vector3d({0,0,1}));
-  // Eigen::Matrix3d rot;
-  // rot.setZero();
-  // rot(0,0)= 1;
-  // rot(1,2) = 1;
-  // rot(2,1) = -1;
-  // tf.rotate(rot);
-
-  // drake_tfd T_MH_P(drake::math::RollPitchYawd(0,0,0),pos_controller.DK(des_angles));
-// drake_tfd T_W_P = frleg_TF*T_MH_P; 
-
-  sphere_sig.path_name = "hey";
-  sphere_sig.sphere_id = 1;
-  sphere_sig.translation.x = 1;
-  sphere_sig.translation.y = 1;
-  sphere_sig.translation.z = 1;
-  pub2.publish(sphere_sig);
-
-
-
-  auto starting_time = std::chrono::system_clock::now();
-
-  while(true){
-    auto current_time = std::chrono::system_clock::now();
-
-    auto duration =  std::chrono::duration_cast<std::chrono::milliseconds> (current_time - starting_time) ;
-    if (duration >= std::chrono::milliseconds(500) ) {
-      break;
-    }
     ros::spinOnce();
+    loop_rate.sleep();
   }
-
-
 
 
 
