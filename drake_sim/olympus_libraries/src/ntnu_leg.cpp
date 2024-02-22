@@ -230,6 +230,6 @@ void ntnu_leg::connect_PID_system(drake_builder & builder, drake_plant & plant){
   builder.Connect(controller -> get_output_port_control(), plant.get_actuation_input_port(leg)        );
 
   controller_desired_state_port = builder.ExportInput(controller -> get_input_port_desired_state(),prefix+"leg_setpoint");
-  leg_output_state_port             = builder.ExportOutput(plant.get_state_output_port(leg)           ,prefix+"leg_state"   );
+  leg_output_state_port         = builder.ExportOutput(plant.get_state_output_port(leg)           ,prefix+"leg_state"   );
 
 }

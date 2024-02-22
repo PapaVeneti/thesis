@@ -25,9 +25,9 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 // #include "std_msgs/String.h"
 // #include "std_msgs/Float64.h"
 // #include "std_msgs/Float64.h"
-#include "std_msgs/Float64MultiArray.h" //1st way
+// #include "std_msgs/Float64MultiArray.h" //1st way
 #include "olympus_control/leg_msg.h"
-
+#include "drake_ros_interface.hpp"
 #include "rosgraph_msgs/Clock.h"
 #include "sensor_msgs/JointState.h"
 
@@ -45,102 +45,6 @@ struct sim_parameters {
   double sim_time = 5;
   double sim_update_rate = 0.01;
 };
-
-// Overload << operator to output vector data
-template <typename T>
-std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec) {
-    for (auto it = vec.begin() ; it < vec.end()-1 ; ++it ){
-      stream << *it << ",";
-    }
-    if (!vec.empty()) {
-        stream << *(vec.end() - 1); // Output the last element without a comma
-    }
-    return stream;
-}
-
-
-template<int nu>
-class simInterface{
-public:
-  // simInterface(const std::array<std::string,nu> & topic_names , drake::systems::Simulator<double> & deployed_simulator,const drake::systems::InputPort<double> * system_input_port): 
-  simInterface(const std::array<std::string,nu> & topic_names , drake::systems::Simulator<double> & deployed_simulator,std::array <const drake::systems::InputPort<double> *,nu> system_input_ports_): 
-  n(),
-  simulator(deployed_simulator),
-  input_ports(system_input_ports_)
-  {
-    controllerSub  = n.subscribe("/position_controller", 1000, &simInterface::controllerCallback,this);
-    encoderPub     = n.advertise<sensor_msgs::JointState>("/joint_states",10);
-
-  }
-
-  void encoderPublish(const sensor_msgs::JointState & CurrentJointState){
-    joint_state = CurrentJointState;
-    encoderPub.publish(joint_state);
-
-  } 
-
-  void set_Joint_states(const sensor_msgs::JointState & CurrentJointState){
-    joint_state = CurrentJointState;
-  }
-
-private:
-
-  // template< int control_index>
-  // void controllerCallback(const std_msgs::Float64MultiArray::ConstPtr& command){
-  // olympus_control::leg_msg::ConstPtr
-  void controllerCallback(const olympus_control::leg_msg::ConstPtr& msg){
-    // ROS_INFO("[simController]: New command for controller %d: [%.3lf,%.3lf,%.3lf]",nu, command->data[0],command->data[1],command->data[2]);
-    // control_set_points[nu].data   = command->data; 
-    // control_set_points[nu].layout = command->layout; 
-    const uint16_t& N   = msg->n_joints;
-    const uint16_t& id =  msg->controller_id;
-    ROS_INFO_STREAM(
-      "[simController]: New command for "<< 
-      "controller 1" << " : [" <<
-      msg->joint_angles << "]" );
-
-    const std::vector<double> & p=  msg->joint_angles;
-    const std::vector<double> & v=  msg->joint_velocities;
-    // Eigen::Vector3d qd({v[0],v[1],v[2]});
-    Eigen::VectorXd qd(2*N) ;
-    for(int i = 0; i<N ; i++){
-      qd[i]   = p[i];
-      qd[i+N] = v[i];
-    }
-    ROS_INFO_STREAM(qd);
-    auto& sim_context = simulator.get_mutable_context();
-    ROS_INFO("1");
-    input_ports[id]->FixValue(&sim_context,qd);
-    ROS_INFO("2");
-  }
-
-
-  int num_controllers = 1;
-  // std::vector< std_msgs::Float64MultiArray > control_msgs; 
-  
-
-  ros::NodeHandle n;
-  ros::Publisher  encoderPub; //one joint_states_topic
-  sensor_msgs::JointState joint_state; //corresponding msg
-
-  // std::array < ros::Subscriber,nu>              controllerSubscribers ;
-  // std::array < std_msgs::Float64MultiArray,nu>  control_set_points; 
-
-  ros::Subscriber controllerSub;
-  // std_msgs::Float64MultiArray  control_set_point; 
-
-  std::array<std::string,nu> controller_names ; 
-
-
-
-  //drake connection
-  // const drake::systems::InputPort<double> * input_port;
-  std::array <const drake::systems::InputPort<double> *,nu>  input_ports;
-  drake::systems::Simulator<double> & simulator;
-
-};
-
-
 
 
 int main(int argc, char **argv){
@@ -227,6 +131,7 @@ assert(sim_update_rate >= mb_time_step);
 
 
 //Initialization
+#pragma region
 auto& context            = sim.get_mutable_context();
 auto& plant_context      = diagram-> GetMutableSubsystemContext ( plant                       ,&context);
 auto& controller_context = diagram-> GetMutableSubsystemContext ( *( leg.get_leg_controller()),&context);
@@ -244,60 +149,45 @@ Eigen::Matrix<double,6,1> qd;
 qd.setZero();
 diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context,qd);
 
+#pragma endregion
 
+// Set up interface:
+#pragma region 
+const drake::systems::InputPort<double> * leg_input_port  = 
+  &diagram -> get_input_port(leg.get_controller_desired_state_port());
 
-sensor_msgs::JointState JointState;
+const drake_OutputPortd * leg_output_port  = 
+  &diagram -> get_output_port(leg.get_leg_output_state_port());
+
 std::vector<std::string> joint_names;
 for (auto joint_id : leg.get_plant().GetJointIndices(leg.get_leg_model_instance()) )
 {
   joint_names.push_back( leg.get_plant().get_joint(joint_id).name() );
 }
-JointState.name = joint_names;
-JointState.position.resize(5);
-JointState.velocity.resize(5);
 
-for (int i = 0; i < p0.size(); i++){
-  JointState.position[i] = p0[i];
-  JointState.velocity[i] = v0[i];
-}
-JointState.header.stamp = ros::Time(0);
 
-std::array < double,2> arr ({3,1});
+drake_ros_elements leg_interface_elements(sim,1,1,5);
+leg_interface_elements.system_input_ports_.push_back(leg_input_port);
+leg_interface_elements.system_output_ports_.push_back(leg_output_port);
+leg_interface_elements.joint_names_ = joint_names;
 
-std::array<std::string,1> names({"/position_controller"});
 
-const drake::systems::InputPort<double> * INPUT  = &diagram -> get_input_port(leg.get_controller_desired_state_port());
-std::array<const drake::systems::InputPort<double> *,1> input_({INPUT}) ;
-simInterface<1> simInterface(names,sim,input_);
-simInterface.set_Joint_states(JointState);
+simInterface simInterface(leg_interface_elements);
 
-Eigen::Matrix<double,10,1> state_vector;
+
+#pragma endregion
+
 
 // Simulate:
 sim.Initialize();
 double sim_time = 0; 
 while( ros::ok() ){ 
-  // auto& sim_context = sim.get_mutable_context();
-
-  //read joints
-  state_vector = diagram-> get_output_port ( leg.get_leg_output_state_port() ).Eval(sim.get_context())  ;
-  for (int i = 0; i < p0.size(); i++){
-  JointState.position[i] = state_vector[i];
-  JointState.velocity[i] = state_vector[i+5];  
-  }
-  JointState.header.stamp = ros::Time::now();
-  simInterface.encoderPublish(JointState);
-
-  //call callback to send commands:
-
-  // diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&sim_context,qd);
-
+  simInterface.encoderUpdate();
 
   //simulation takes place:
   sim_time +=sim_update_rate;
   sim.AdvanceTo(sim_time);   
 
-  // mescat_ptr -> Flush();
 
   ros::spinOnce(); //process callbacks
   if (!loop_rate.sleep()){ROS_DEBUG("Simulation is slower than realtime");} //returns false 

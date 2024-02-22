@@ -112,7 +112,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -120,6 +120,8 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/olympus_control.cpp
 # )
+add_library(drake_ros_interface src/drake_ros_interface.cpp )
+target_include_directories(drake_ros_interface PUBLIC include)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -142,12 +144,14 @@ add_executable(leg_controller src/leg_controller.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ros_leg_sim drake_ros_interface)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg position_controller)
+target_link_libraries(drake_ros_interface ${catkin_LIBRARIES}  drake::drake)
+target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg position_controller drake_ros_interface)
 target_link_libraries(leg_controller ${catkin_LIBRARIES}  position_controller)
 
 

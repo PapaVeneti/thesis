@@ -64,8 +64,8 @@ int main(int argc, char **argv){
   // msg.data.push_back(1);
   ros::spinOnce();
 
-  msg.controller_id =0;
-  msg.n_joints = 3;
+  msg.controller_id =1;
+  msg.n_actuated_joints = 3;
   msg.joint_angles.push_back(atof(argv[1]));
   msg.joint_angles.push_back(atof(argv[2]));
   msg.joint_angles.push_back(atof(argv[3]));
