@@ -1,0 +1,3 @@
+geometry_msgs/Vector3 translation
+uint16 sphere_id
+string path_name

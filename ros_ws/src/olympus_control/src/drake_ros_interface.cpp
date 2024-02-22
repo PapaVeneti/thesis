@@ -31,12 +31,15 @@ simInterface::simInterface(drake_ros_elements & param ):
     JointState.velocity.assign(num_joints,0);
     JointState.effort.assign(num_joints,0);
 
+    //Publish spheres:
     meshcat_ptr = param.meshcat_ptr;
     if (meshcat_ptr != nullptr)
     {
       publish_goal_points = true;
     }
-  
+    timer = n.createWallTimer(ros::WallDuration(5),&simInterface::delete_sphere_callback,this);
+    timer.stop();
+    sphereSub = n.subscribe("/publish_spheres", 1000, &simInterface::addSphereCallback,this);
 
   }
 
@@ -61,13 +64,6 @@ void simInterface::encoderUpdate(){
     index = i;
   
   }
-
-  // const Eigen::VectorXd  & state_vector = output_ports[0]->Eval(simulator.get_context());
-
-  // for (int i = 0; i < num_joints ;i++){
-  //   JointState.position[i] = state_vector[i];
-  //   JointState.velocity[i] = state_vector[i+num_joints];   
-  // }
 
   JointState.header.stamp = ros::Time::now();
   encoderPublish(JointState);
@@ -128,19 +124,58 @@ void simInterface::controllerCallback(const olympus_control::leg_msg::ConstPtr& 
   }
 }
 
-void  simInterface::add_sphere(Eigen::Vector3d Pw){
+void  simInterface::add_sphere(Eigen::Vector3d Pw, uint16_t id, std::string path_name){
   drake_tfd T_W_P;
   T_W_P.set_translation(Pw);
   T_W_P.set_rotation(Eigen::Quaterniond(1,0,0,0));
-  std::string  sphere_path =   AddPoint(T_W_P,meshcat_ptr.get(),"Goal Position"); 
-  sphere_stack.push_back( sphere_path);
-  ros::Timer timer = n.createTimer(ros::Duration(5),&simInterface::delete_sphere_callback,this);
+  std::string  sphere_path =   AddPoint(T_W_P,meshcat_ptr.get(),path_name); 
+
+  point_stack_element stack_el(sphere_path,ros::WallTime::now());
+  stack_el.id = id;
+
+  if (sphere_stack.empty()){
+    ROS_INFO("Started timer");
+    timer.setPeriod(ros::WallDuration(5));
+    timer.start();
+    sphere_stack.push_back( stack_el);
+  }else{
+    for (auto it = sphere_stack.begin(); it !=  sphere_stack.end(); ++it){
+      if (it->id == stack_el.id){ 
+        sphere_stack.erase(it);
+        ROS_INFO("successfully removed the same element from the stack");
+        ROS_INFO("Now i will reset the timer");
+        //Because of this process, only one element could have the same id
+        break;
+      }
+    }
+    sphere_stack.push_back( stack_el);
+    renew_sphere_timer();
+  }
+  
 }
 
-void simInterface::delete_sphere_callback(const ros::TimerEvent&){
+void simInterface::delete_sphere_callback(const ros::WallTimerEvent&){
   // auto last_sphere = sphere_stack.end();
   if ( ! sphere_stack.empty() ) {
-    meshcat_ptr->Delete(*sphere_stack.end());
-    sphere_stack.pop_back();
+    meshcat_ptr->Delete( sphere_stack.begin() ->path );
+    sphere_stack.erase( sphere_stack.begin() ); 
+    renew_sphere_timer();
+
+  }
+}
+
+void simInterface::addSphereCallback(const olympus_control::sphere_signature::ConstPtr& msg){
+  const geometry_msgs::Vector3 & t = msg->translation;
+  Eigen::Vector3d({t.x,t.y,t.z});
+  add_sphere(Eigen::Vector3d({t.x,t.y,t.z}),msg->sphere_id, msg->path_name );
+}
+
+void simInterface::renew_sphere_timer(){
+  if ( ! sphere_stack.empty() ) {
+    ros::WallDuration time_passed = ros::WallTime::now() - sphere_stack.begin()->initialization_time  ; 
+    timer.setPeriod(ros::WallDuration(5) - time_passed ) ; 
+    timer.start();
+  }else {
+    timer.stop();
   }
 }

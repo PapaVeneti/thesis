@@ -10,6 +10,7 @@ project(olympus_control)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs 
+  geometry_msgs
   message_generation
 )
 find_package(drake CONFIG REQUIRED PATHS /opt/drake)
@@ -47,6 +48,7 @@ add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../
 add_message_files(
   FILES
   leg_msg.msg
+  sphere_signature.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -67,6 +69,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
 )
 
 ################################################

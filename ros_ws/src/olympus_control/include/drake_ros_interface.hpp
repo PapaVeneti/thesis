@@ -1,15 +1,18 @@
 //ros
 #include "ros/ros.h"
 
+//messages:
 #include "olympus_control/leg_msg.h"
 #include "sensor_msgs/JointState.h"
+#include "olympus_control/sphere_signature.h"
+
+//drake specific
 #include "drake/systems/analysis/simulator.h"
 #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
 
-
+//custom:
 #include "drake_helpers.hpp"
 
-//1. add function to publish joint_states (done)
 //2. add spheres as target -> tf on ros -> available in rviz too
 //3. robot sim
 using drake_OutputPortd  = drake::systems::OutputPort<double> ;
@@ -18,6 +21,15 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 using drake_tfd          = drake::math::RigidTransform<double>;
 
 
+struct point_stack_element {
+  std::string path; //used for deletion by meshcat
+  uint16_t id = 0;
+  ros::WallTime initialization_time; 
+
+  point_stack_element(const std::string & path_,const ros::WallTime & time): 
+  path (path_),
+  initialization_time(time) {};
+};
 
 struct drake_ros_elements {
   drake::systems::Simulator<double> & simulator_;
@@ -66,26 +78,28 @@ public:
 private:
 
   void controllerCallback(const olympus_control::leg_msg::ConstPtr& msg);
-  void add_sphere(Eigen::Vector3d Pw);
-  void delete_sphere_callback(const ros::TimerEvent&);
+  void addSphereCallback(const olympus_control::sphere_signature::ConstPtr& msg);
+  void add_sphere(Eigen::Vector3d Pw, uint16_t id=0, std::string path_name = "Goal Position");
+  void delete_sphere_callback(const ros::WallTimerEvent&);
+  void renew_sphere_timer();
 
   bool publish_goal_points = false;
 
   const uint16_t num_controllers;// (uint16_t) nu;
-  const uint16_t num_outputs;// (uint16_t) nu;
-  const uint16_t num_joints;// (uint16_t) nu;
+  const uint16_t num_outputs;    // (uint16_t) nu;
+  const uint16_t num_joints;     // (uint16_t) nu;
   
   //ROS
   ros::NodeHandle n;
   ros::Publisher  encoderPub; //one joint_states_topic
   ros::Subscriber controllerSub;
+  ros::Subscriber sphereSub;
 
   sensor_msgs::JointState joint_state; 
   std::vector<std::string> controller_names ; 
 
-  ros::Timer timer;
-  std::vector<ros::Timer> timer_vector;
-  std::vector<std::string> sphere_stack; 
+  ros::WallTimer timer;
+  std::vector<point_stack_element> sphere_stack; 
 
   //sensors
   std::vector<std::string> joint_names;

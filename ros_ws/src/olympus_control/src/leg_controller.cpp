@@ -1,7 +1,8 @@
 #include "ros/ros.h"
 // #include "std_msgs/Float64.h"
 // #include "std_msgs/Float64MultiArray.h"
-#include "geometry_msgs/Vector3.h"
+// #include "geometry_msgs/Vector3.h"
+#include "olympus_control/sphere_signature.h"
 #include "sensor_msgs/JointState.h"
 
 #include "olympus_control/leg_msg.h"
@@ -50,12 +51,12 @@ int main(int argc, char **argv){
 
   ros::NodeHandle n;
   // ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/position_controller",10,true);
-  ros::Publisher pub = n.advertise<olympus_control::leg_msg>("/position_controller",10,true);
-  ros::Publisher pub2 = n.advertise<geometry_msgs::Vector3>("/point_transforms",10,true);
+  ros::Publisher pub  = n.advertise<olympus_control::leg_msg>("/position_controller",10,true);
+  ros::Publisher pub2 = n.advertise<olympus_control::sphere_signature>("/publish_spheres",10,true);
   ros::Rate loop_rate(10);
 
   olympus_control::leg_msg msg;
-  geometry_msgs::Vector3 vec;
+  olympus_control::sphere_signature sphere_sig;
   if (argc != 4) {  
     ROS_ERROR_STREAM("[Position Controller]: The number of arguments must be 3");
     ROS_ERROR_STREAM("[Position Controller]: No command");
@@ -76,21 +77,27 @@ int main(int argc, char **argv){
   msg.joint_velocities.assign(3,0);
   pub.publish(msg);
 
-  position_controller con(2);
-  Eigen::Isometry3d tf;
-  tf.translate(Eigen::Vector3d({0,0,1}));
-  Eigen::Matrix3d rot;
-  rot.setZero();
-  rot(0,0)= 1;
-  rot(1,2) = 1;
-  rot(2,1) = -1;
-  tf.rotate(rot);
+  // position_controller con(2);
+  // Eigen::Isometry3d tf;
+  // tf.translate(Eigen::Vector3d({0,0,1}));
+  // Eigen::Matrix3d rot;
+  // rot.setZero();
+  // rot(0,0)= 1;
+  // rot(1,2) = 1;
+  // rot(2,1) = -1;
+  // tf.rotate(rot);
 
   // drake_tfd T_MH_P(drake::math::RollPitchYawd(0,0,0),pos_controller.DK(des_angles));
 // drake_tfd T_W_P = frleg_TF*T_MH_P; 
 
-  vec.x =atof(argv[1]);
-  vec.x =atof(argv[1]);
+  sphere_sig.path_name = "hey";
+  sphere_sig.sphere_id = 1;
+  sphere_sig.translation.x = 1;
+  sphere_sig.translation.y = 1;
+  sphere_sig.translation.z = 1;
+  pub2.publish(sphere_sig);
+
+
 
   auto starting_time = std::chrono::system_clock::now();
 
