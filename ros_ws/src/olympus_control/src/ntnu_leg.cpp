@@ -6,13 +6,13 @@
 
 //Visualization
 #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
-#include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
-using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
+// #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
+// using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
 
 //Optional includes
 #include <iostream>
 #include <fstream> //to export diagram
-#include "drake_helpers.hpp"
+// #include "drake_helpers.hpp"
 #include "position_controller.hpp"
 
 #define get_graph false
@@ -170,7 +170,12 @@ drake_ros_elements leg_interface_elements(sim,1,1,5);
 leg_interface_elements.system_input_ports_.push_back(leg_input_port);
 leg_interface_elements.system_output_ports_.push_back(leg_output_port);
 leg_interface_elements.joint_names_ = joint_names;
-
+leg_interface_elements.meshcat_ptr = mescat_ptr;
+  if (mescat_ptr == nullptr)
+  {
+    std::cout <<"meshcat is null" <<std::endl;
+  }
+  
 
 simInterface simInterface(leg_interface_elements);
 

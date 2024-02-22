@@ -30,6 +30,14 @@ simInterface::simInterface(drake_ros_elements & param ):
     JointState.position.assign(num_joints,0);
     JointState.velocity.assign(num_joints,0);
     JointState.effort.assign(num_joints,0);
+
+    meshcat_ptr = param.meshcat_ptr;
+    if (meshcat_ptr != nullptr)
+    {
+      publish_goal_points = true;
+    }
+  
+
   }
 
 void simInterface::encoderPublish(const sensor_msgs::JointState & CurrentJointState){
@@ -107,6 +115,9 @@ void simInterface::controllerCallback(const olympus_control::leg_msg::ConstPtr& 
 
   auto& sim_context = simulator.get_mutable_context();
   input_ports[id-1]->FixValue(&sim_context,qd);
+  if (publish_goal_points) {
+    add_sphere(Eigen::Vector3d({1,1,1}));
+  }
   }
   else{
     ROS_INFO_STREAM(
@@ -117,3 +128,19 @@ void simInterface::controllerCallback(const olympus_control::leg_msg::ConstPtr& 
   }
 }
 
+void  simInterface::add_sphere(Eigen::Vector3d Pw){
+  drake_tfd T_W_P;
+  T_W_P.set_translation(Pw);
+  T_W_P.set_rotation(Eigen::Quaterniond(1,0,0,0));
+  std::string  sphere_path =   AddPoint(T_W_P,meshcat_ptr.get(),"Goal Position"); 
+  sphere_stack.push_back( sphere_path);
+  ros::Timer timer = n.createTimer(ros::Duration(5),&simInterface::delete_sphere_callback,this);
+}
+
+void simInterface::delete_sphere_callback(const ros::TimerEvent&){
+  // auto last_sphere = sphere_stack.end();
+  if ( ! sphere_stack.empty() ) {
+    meshcat_ptr->Delete(*sphere_stack.end());
+    sphere_stack.pop_back();
+  }
+}

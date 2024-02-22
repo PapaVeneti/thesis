@@ -51,18 +51,16 @@ std::string AddPoint(
   drake::geometry::Meshcat* mescat_ptr, 
   const std::string & point_name,
   const drake::geometry::Rgba &RGBA =  drake::geometry::Rgba(0,0,1,1),
-  const double radius = 0.025){
+  const double & radius = 0.025){
   // * Maybe return the path -> easier to delete afterwards
   std::string path_name = "/Helper symbols/Points/" + point_name;
 
-  // double radius = 0.025;
   auto sphere = std::make_unique<drake::geometry::Sphere>(0.1);
-
-  // Create a pose for the sphere. Replace x, y, z with the desired position.
 
 
   mescat_ptr->SetObject( path_name, drake::geometry::Sphere(radius),RGBA);
   mescat_ptr->SetTransform(path_name,TF);
+  std::cout << "Hello1" << std::endl;
 
   return path_name;
 }

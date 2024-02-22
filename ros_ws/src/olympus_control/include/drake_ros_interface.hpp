@@ -4,12 +4,19 @@
 #include "olympus_control/leg_msg.h"
 #include "sensor_msgs/JointState.h"
 #include "drake/systems/analysis/simulator.h"
+#include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
 
-//1. add function to publish joint_states
+
+#include "drake_helpers.hpp"
+
+//1. add function to publish joint_states (done)
 //2. add spheres as target -> tf on ros -> available in rviz too
 //3. robot sim
-using drake_OutputPortd = drake::systems::OutputPort<double> ;
-using drake_InputPortd  = drake::systems::InputPort<double> ;
+using drake_OutputPortd  = drake::systems::OutputPort<double> ;
+using drake_InputPortd   = drake::systems::InputPort<double> ;
+using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
+using drake_tfd          = drake::math::RigidTransform<double>;
+
 
 
 struct drake_ros_elements {
@@ -20,6 +27,7 @@ struct drake_ros_elements {
   std::vector <const drake_InputPortd *>  system_input_ports_  ;
   std::vector <const drake_OutputPortd *> system_output_ports_ ;
   std::vector <std::string >              joint_names_ ;
+  meshcat_shared_ptr meshcat_ptr;
 
   drake_ros_elements(
     drake::systems::Simulator<double> & deployed_simulator, 
@@ -32,6 +40,7 @@ struct drake_ros_elements {
   nj(n_joints)
   {
     joint_names_.assign(nj,"");
+    meshcat_ptr = nullptr;
   };
 
   void fill_with_nullptr(){
@@ -57,6 +66,10 @@ public:
 private:
 
   void controllerCallback(const olympus_control::leg_msg::ConstPtr& msg);
+  void add_sphere(Eigen::Vector3d Pw);
+  void delete_sphere_callback(const ros::TimerEvent&);
+
+  bool publish_goal_points = false;
 
   const uint16_t num_controllers;// (uint16_t) nu;
   const uint16_t num_outputs;// (uint16_t) nu;
@@ -70,6 +83,10 @@ private:
   sensor_msgs::JointState joint_state; 
   std::vector<std::string> controller_names ; 
 
+  ros::Timer timer;
+  std::vector<ros::Timer> timer_vector;
+  std::vector<std::string> sphere_stack; 
+
   //sensors
   std::vector<std::string> joint_names;
   sensor_msgs::JointState JointState;
@@ -79,4 +96,6 @@ private:
   std::vector <const drake_OutputPortd *> output_ports;
   drake::systems::Simulator<double> & simulator;
 
+
+  meshcat_shared_ptr meshcat_ptr ;
 };
