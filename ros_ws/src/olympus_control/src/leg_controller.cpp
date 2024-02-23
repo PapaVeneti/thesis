@@ -1,13 +1,13 @@
 #include "ros/ros.h"
 
-#include "position_controller.hpp"
+#include "leg_kinematics.hpp"
 #include "tf2/buffer_core.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2/LinearMath/Quaternion.h"
 //messages:
-#include "olympus_control/sphere_signature.h"
+#include "olympus_ros_drake_sim/sphere_signature.h"
 #include "sensor_msgs/JointState.h"
-#include "olympus_control/leg_msg.h"
+#include "olympus_ros_drake_sim/leg_msg.h"
 #include "olympus_control/leg_goal.h"
 // #include "geometry_msgs/Vector3.h"
 
@@ -62,8 +62,8 @@ public:
     {   
       controller_interface = n.subscribe("/goal_set", 1000, &leg_controller::userInterfaceCallback, this);
       encoder_sub          = n.subscribe("/joint_states", 1000, &leg_controller::encoderCallback, this);
-      controller_pub       = n.advertise<olympus_control::leg_msg>("/command_interface", 1000,true); //latched publisher
-      spherePub            = n.advertise<olympus_control::sphere_signature>("/publish_spheres",10,true);
+      controller_pub       = n.advertise<olympus_ros_drake_sim::leg_msg>("/command_interface", 1000,true); //latched publisher
+      spherePub            = n.advertise<olympus_ros_drake_sim::sphere_signature>("/publish_spheres",10,true);
 
       //initialize leg_command
       leg_command.joint_angles.assign(3,0);
@@ -138,7 +138,7 @@ public:
 
 private:
     //leg_specific
-    position_controller Kinematics ;
+    leg_kinematics Kinematics ;
 
     //part of larger_system
     const int index_offset = 0;
@@ -155,12 +155,12 @@ private:
     Eigen::Vector3d qt;
 
     //Control bus:
-    olympus_control::leg_msg leg_command;
+    olympus_ros_drake_sim::leg_msg leg_command;
     ros::Publisher  controller_pub; 
 
     //Visualization
     bool publishing_sphere_target =false;
-    olympus_control::sphere_signature sphere_sig;
+    olympus_ros_drake_sim::sphere_signature sphere_sig;
     ros::Publisher  spherePub;
 
     //ROS Interface  (this may change)

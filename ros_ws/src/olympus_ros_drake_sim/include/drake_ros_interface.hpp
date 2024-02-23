@@ -2,9 +2,9 @@
 #include "ros/ros.h"
 
 //messages:
-#include "olympus_control/leg_msg.h"
+#include "olympus_ros_drake_sim/leg_msg.h"
 #include "sensor_msgs/JointState.h"
-#include "olympus_control/sphere_signature.h"
+#include "olympus_ros_drake_sim/sphere_signature.h"
 
 //drake specific
 #include "drake/systems/analysis/simulator.h"
@@ -77,8 +77,8 @@ public:
   void set_joint_names(const std::vector<std::string> joint_names_);
 private:
 
-  void controllerCallback(const olympus_control::leg_msg::ConstPtr& msg);
-  void addSphereCallback(const olympus_control::sphere_signature::ConstPtr& msg);
+  void controllerCallback(const olympus_ros_drake_sim::leg_msg::ConstPtr& msg);
+  void addSphereCallback(const olympus_ros_drake_sim::sphere_signature::ConstPtr& msg);
   void add_sphere(Eigen::Vector3d Pw, uint16_t id=0, std::string path_name = "Goal Position");
   void delete_sphere_callback(const ros::WallTimerEvent&);
   void renew_sphere_timer();

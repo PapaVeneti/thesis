@@ -12,8 +12,6 @@
 //Optional includes
 #include <iostream>
 #include <fstream> //to export diagram
-// #include "drake_helpers.hpp"
-#include "position_controller.hpp"
 
 #define get_graph false
 #define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
@@ -26,7 +24,7 @@
 // #include "std_msgs/Float64.h"
 // #include "std_msgs/Float64.h"
 // #include "std_msgs/Float64MultiArray.h" //1st way
-#include "olympus_control/leg_msg.h"
+#include "olympus_ros_drake_sim/leg_msg.h"
 #include "drake_ros_interface.hpp"
 #include "rosgraph_msgs/Clock.h"
 #include "sensor_msgs/JointState.h"

@@ -86,7 +86,7 @@ void simInterface::set_joint_names(const std::vector<std::string> joint_names_){
   }
 }
 
-void simInterface::controllerCallback(const olympus_control::leg_msg::ConstPtr& msg){
+void simInterface::controllerCallback(const olympus_ros_drake_sim::leg_msg::ConstPtr& msg){
   const uint16_t& N   = msg->n_actuated_joints;
   const uint16_t& id =  msg->controller_id;
   if( id <= num_controllers && id > 0 ){
@@ -164,7 +164,7 @@ void simInterface::delete_sphere_callback(const ros::WallTimerEvent&){
   }
 }
 
-void simInterface::addSphereCallback(const olympus_control::sphere_signature::ConstPtr& msg){
+void simInterface::addSphereCallback(const olympus_ros_drake_sim::sphere_signature::ConstPtr& msg){
   const geometry_msgs::Vector3 & t = msg->translation;
   Eigen::Vector3d({t.x,t.y,t.z});
   add_sphere(Eigen::Vector3d({t.x,t.y,t.z}),msg->sphere_id, msg->path_name );

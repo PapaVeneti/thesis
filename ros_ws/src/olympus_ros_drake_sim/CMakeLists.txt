@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(olympus_control)
+project(olympus_ros_drake_sim)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,12 +10,21 @@ project(olympus_control)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs 
+  geometry_msgs
   message_generation
-  olympus_ros_drake_sim
-  tf2
 )
 
+find_package(drake CONFIG REQUIRED PATHS /opt/drake)
+add_subdirectory("../../../drake_sim/olympus_libraries" "${CMAKE_BINARY_DIR}/../../build/drake_libraries")
 
+## System dependencies are found with CMake's conventions
+# find_package(Boost REQUIRED COMPONENTS system)
+
+
+## Uncomment this if the package has a setup.py. This macro ensures
+## modules and global scripts declared therein get installed
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -44,7 +53,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  leg_goal.msg
+  leg_msg.msg
+  sphere_signature.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -65,6 +75,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
 )
 
 ################################################
@@ -98,7 +109,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES olympus_control
+#  LIBRARIES olympus_ros_drake_sim
   CATKIN_DEPENDS roscpp message_runtime
 #  DEPENDS system_lib
 )
@@ -116,10 +127,10 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/olympus_control.cpp
+#   src/${PROJECT_NAME}/olympus_ros_drake_sim.cpp
 # )
-add_library(leg_kinematics src/leg_kinematics.cpp
-)
+add_library(drake_ros_interface src/drake_ros_interface.cpp )
+target_include_directories(drake_ros_interface PUBLIC include)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -129,8 +140,8 @@ add_library(leg_kinematics src/leg_kinematics.cpp
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/olympus_control_node.cpp)
-add_executable(leg_controller src/leg_controller.cpp)
+# add_executable(${PROJECT_NAME}_node src/olympus_ros_drake_sim_node.cpp)
+add_executable(ros_leg_sim src/ntnu_leg.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -141,13 +152,14 @@ add_executable(leg_controller src/leg_controller.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(leg_controller leg_kinematics)
+add_dependencies(ros_leg_sim drake_ros_interface)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(leg_controller ${catkin_LIBRARIES} leg_kinematics)
+target_link_libraries(drake_ros_interface ${catkin_LIBRARIES}  drake::drake)
+target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg drake_ros_interface)
 
 
 #############
@@ -197,7 +209,7 @@ target_link_libraries(leg_controller ${catkin_LIBRARIES} leg_kinematics)
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_olympus_control.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_olympus_ros_drake_sim.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
