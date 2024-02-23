@@ -83,8 +83,6 @@ private:
   void delete_sphere_callback(const ros::WallTimerEvent&);
   void renew_sphere_timer();
 
-  bool publish_goal_points = false;
-
   const uint16_t num_controllers;// (uint16_t) nu;
   const uint16_t num_outputs;    // (uint16_t) nu;
   const uint16_t num_joints;     // (uint16_t) nu;

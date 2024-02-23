@@ -23,7 +23,7 @@ simInterface::simInterface(drake_ros_elements & param ):
   { 
     assert(param.system_input_ports_.size()  == num_controllers);
     assert(param.system_output_ports_.size() == num_outputs);
-    controllerSub  = n.subscribe("/position_controller", 1000, &simInterface::controllerCallback,this);
+    controllerSub  = n.subscribe("/command_interface", 1000, &simInterface::controllerCallback,this);
     encoderPub     = n.advertise<sensor_msgs::JointState>("/joint_states",10);
 
     set_joint_names(param.joint_names_);
@@ -33,10 +33,6 @@ simInterface::simInterface(drake_ros_elements & param ):
 
     //Publish spheres:
     meshcat_ptr = param.meshcat_ptr;
-    if (meshcat_ptr != nullptr)
-    {
-      publish_goal_points = true;
-    }
     timer = n.createWallTimer(ros::WallDuration(5),&simInterface::delete_sphere_callback,this);
     timer.stop();
     sphereSub = n.subscribe("/publish_spheres", 1000, &simInterface::addSphereCallback,this);
@@ -94,26 +90,30 @@ void simInterface::controllerCallback(const olympus_control::leg_msg::ConstPtr& 
   const uint16_t& N   = msg->n_actuated_joints;
   const uint16_t& id =  msg->controller_id;
   if( id <= num_controllers && id > 0 ){
+    ROS_INFO_STREAM(
+      "[simController]: New command for "<< 
+      "controller 1" << " : [" <<
+      msg->joint_angles << "]" );
 
-  ROS_INFO_STREAM(
-    "[simController]: New command for "<< 
-    "controller 1" << " : [" <<
-    msg->joint_angles << "]" );
+    const std::vector<double> & p=  msg->joint_angles;
+    const std::vector<double> & v=  msg->joint_velocities;
 
-  const std::vector<double> & p=  msg->joint_angles;
-  const std::vector<double> & v=  msg->joint_velocities;
+    Eigen::VectorXd qd(2*N) ;
+    try {
+    for(int i = 0; i<N ; i++){
+      if ( std::isnan(p[i]) || std::isnan( v[i] ) ){
+        throw ros::Exception("nan value as setpoint. Aborting command");
+      }
+      qd[i]   = p[i];
+      qd[i+N] = v[i];
+    }
+    } catch (const ros::Exception& e) {
+        ROS_ERROR("[simController] exception: %s", e.what());
+        return;
+    }
 
-  Eigen::VectorXd qd(2*N) ;
-  for(int i = 0; i<N ; i++){
-    qd[i]   = p[i];
-    qd[i+N] = v[i];
-  }
-
-  auto& sim_context = simulator.get_mutable_context();
-  input_ports[id-1]->FixValue(&sim_context,qd);
-  if (publish_goal_points) {
-    add_sphere(Eigen::Vector3d({1,1,1}));
-  }
+    auto& sim_context = simulator.get_mutable_context();
+    input_ports[id-1]->FixValue(&sim_context,qd);
   }
   else{
     ROS_INFO_STREAM(

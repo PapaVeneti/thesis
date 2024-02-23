@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs 
   geometry_msgs
   message_generation
+  tf2
 )
 find_package(drake CONFIG REQUIRED PATHS /opt/drake)
 # message(STATUS "CMAKE_BINARY_DIR is: ${CMAKE_BINARY_DIR}" )
@@ -49,6 +50,7 @@ add_message_files(
   FILES
   leg_msg.msg
   sphere_signature.msg
+  leg_goal.msg
 )
 
 ## Generate services in the 'srv' folder

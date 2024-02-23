@@ -75,9 +75,10 @@ const drake_rigidBody &robot_base= plant.world_body();
   //create config structs for each leg
 // drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
 drake_rotMat R_W_FR = drake_rotMat::MakeXRotation(-M_PI_2);
-drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(-M_PI);
+// drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(-M_PI);
+drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(0);
 drake_tfd frleg_TF( R_W_FR* R_FR_RR, drake::Vector3<double>::UnitZ() ); //RR
-leg_config config_rr(leg_index::rr, robot_base,frleg_TF);
+leg_config config_rr(leg_index::fr, robot_base,frleg_TF);
 
 //1b. Instance of each leg
 ntnu_leg leg(builder,plant,config_rr); 

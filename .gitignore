@@ -19,6 +19,7 @@ leg_planner/*.asv
 /ros_ws/logs
 /ros_ws/src/build
 /ros_ws/src/.vscode
+/ros_ws/src/olympus_control/src/test_values
 
 
 /drake_sim/build_old
