@@ -33,8 +33,8 @@ $  ln -s $(pwd)/drake_sim/urdf $(pwd)/drake_sim/build/examples/urdf
 
 From root directory (In the repo root directory)
 ```bash
-$ ln -s  $(pwd)/drake_sim/urdf $(pwd)/ros_ws/src/olympus_control/urdf
+$ ln -s  $(pwd)/drake_sim/urdf $(pwd)/ros_ws/src/olympus_ros_drake_sim/urdf
 $ ln -s  $(pwd)/drake_sim/urdf <desired_directory>/urdf #for other directories
 ```
 
-Currently running the simulations is only possible from the `ros_ws/src/olympus_controller/` directory or any other directory you specified above in the `<desired_directory>`. 
+Currently running the simulations is only possible from the `ros_ws/src/olympus_ros_drake_sim/` directory or any other directory you specified above in the `<desired_directory>`. 
