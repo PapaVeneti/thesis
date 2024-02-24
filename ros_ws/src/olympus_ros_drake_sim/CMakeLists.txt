@@ -162,7 +162,7 @@ add_dependencies(olympus_sim drake_ros_interface)
 # )
 target_link_libraries(drake_ros_interface ${catkin_LIBRARIES}  drake::drake)
 target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg drake_ros_interface)
-target_link_libraries(olympus_sim ${catkin_LIBRARIES} drake::drake olympus  drake_ros_interface)
+target_link_libraries(olympus_sim ${catkin_LIBRARIES} drake::drake robot  drake_ros_interface)
 
 
 #############

@@ -58,7 +58,7 @@ void simInterface::encoderUpdate(){
       JointState.position[index + i] = state_vector[i];
       JointState.velocity[index + i] = state_vector[i + port_SO_state_size]; 
     }
-    index = i;
+    index += port_SO_state_size;
   
   }
 

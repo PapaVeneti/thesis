@@ -16,6 +16,9 @@ class olympus {
     void default_init(drake::systems::Diagram<double> & diagram, drake::systems::Context<double> & context);
     //getters
     drake_plant & get_plant();
+    std::vector<const drake::systems::InputPort<double> *> get_input_ports(drake::systems::Diagram<double> & diagram);
+    std::vector<const drake::systems::OutputPort<double> *> get_output_ports(drake::systems::Diagram<double> & diagram);
+    std::vector<std::string> get_joint_names();
 
   std::unique_ptr<ntnu_leg> fr_leg;  //pointer_as cannot be initialized initially
   std::unique_ptr<ntnu_leg> rr_leg;
@@ -161,6 +164,7 @@ drake_plant & olympus::get_plant(){
   return *plant;
 }
 
+//initialized both desired state and current state to 0
 void olympus::default_init(drake::systems::Diagram<double> & diagram, drake::systems::Context<double> & context){
     auto& fr_controller_context = diagram. GetMutableSubsystemContext ( *( fr_leg->get_leg_controller()),&context);
     auto& rr_controller_context = diagram. GetMutableSubsystemContext ( *( rr_leg->get_leg_controller()),&context);
@@ -174,4 +178,54 @@ void olympus::default_init(drake::systems::Diagram<double> & diagram, drake::sys
     plant->SetPositionsAndVelocities(&plant_context, rr_leg->get_leg_model_instance(), q0);
     plant->SetPositionsAndVelocities(&plant_context, fl_leg->get_leg_model_instance(), q0);
     plant->SetPositionsAndVelocities(&plant_context, rl_leg->get_leg_model_instance(), q0);
+
+    Eigen::Matrix<double,6,1> qd;
+    qd.setZero();
+    diagram. get_input_port( fr_leg->get_controller_desired_state_port()).FixValue(&context,qd);
+    diagram. get_input_port( rr_leg->get_controller_desired_state_port()).FixValue(&context,qd);
+    diagram. get_input_port( fl_leg->get_controller_desired_state_port()).FixValue(&context,qd);
+    diagram. get_input_port( rl_leg->get_controller_desired_state_port()).FixValue(&context,qd);
+}
+
+std::vector<const drake::systems::InputPort<double> *> olympus::get_input_ports(drake::systems::Diagram<double> & diagram){
+  std::vector<const drake::systems::InputPort<double> *> input_ports_vector;
+
+  input_ports_vector.push_back( & diagram.get_input_port(fr_leg->get_controller_desired_state_port()));
+  input_ports_vector.push_back( & diagram.get_input_port(rr_leg->get_controller_desired_state_port()));
+  input_ports_vector.push_back( & diagram.get_input_port(fl_leg->get_controller_desired_state_port()));
+  input_ports_vector.push_back( & diagram.get_input_port(rl_leg->get_controller_desired_state_port()));
+
+  return input_ports_vector ; 
+
+}
+std::vector<const drake::systems::OutputPort<double> *> olympus::get_output_ports(drake::systems::Diagram<double> & diagram){
+  std::vector<const drake::systems::OutputPort<double> *>  output_ports_vector;
+
+
+  output_ports_vector.push_back( & diagram.get_output_port(fr_leg->get_leg_output_state_port()));
+  output_ports_vector.push_back( & diagram.get_output_port(rr_leg->get_leg_output_state_port()));
+  output_ports_vector.push_back( & diagram.get_output_port(fl_leg->get_leg_output_state_port()));
+  output_ports_vector.push_back( & diagram.get_output_port(rl_leg->get_leg_output_state_port()));
+
+  return output_ports_vector ; 
+}
+
+std::vector<std::string> olympus::get_joint_names(){
+  std::vector<std::string> joint_names;
+
+  for (auto joint_id : plant->GetJointIndices(fr_leg->get_leg_model_instance()) ) {
+    joint_names.push_back( "fr_"+  plant->get_joint(joint_id).name() );
+  }
+  for (auto joint_id : plant->GetJointIndices(rr_leg->get_leg_model_instance()) ) {
+    joint_names.push_back( "rr_"+  plant->get_joint(joint_id).name() );
+  }
+  for (auto joint_id : plant->GetJointIndices(fl_leg->get_leg_model_instance()) ) {
+    joint_names.push_back( "fl_"+  plant->get_joint(joint_id).name() );
+  }
+  for (auto joint_id : plant->GetJointIndices(rl_leg->get_leg_model_instance()) ) {
+    joint_names.push_back( "rl_"+  plant->get_joint(joint_id).name() );
+  }
+  
+  
+  return joint_names;
 }

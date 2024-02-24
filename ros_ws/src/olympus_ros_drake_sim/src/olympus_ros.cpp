@@ -70,49 +70,26 @@ assert(sim_update_rate >= mb_time_step);
 //Initialization
 #pragma region
 auto& context            = sim.get_mutable_context();
-auto& plant_context      = diagram-> GetMutableSubsystemContext ( plant                       ,&context);
-auto& controller_context = diagram-> GetMutableSubsystemContext ( *( leg.get_leg_controller()),&context);
+auto& plant_context      = diagram-> GetMutableSubsystemContext ( robot.get_plant()                         ,&context);
 
-// Set initial conditions
-Eigen::VectorXd p0(5); 
-Eigen::VectorXd v0(5); 
-p0.setZero();
-v0.setZero(); 
-plant.SetPositions(&plant_context, fr_leg, p0);
-plant.SetVelocities(&plant_context, fr_leg, p0);
+robot.default_init(*diagram,context);
 
-//initial control keep it at the same position
-Eigen::Matrix<double,6,1> qd;
-qd.setZero();
-diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context,qd);
 
 #pragma endregion
 
 // Set up interface:
 #pragma region 
-const drake::systems::InputPort<double> * leg_input_port  = 
-  &diagram -> get_input_port(leg.get_controller_desired_state_port());
 
-const drake_OutputPortd * leg_output_port  = 
-  &diagram -> get_output_port(leg.get_leg_output_state_port());
-
-std::vector<std::string> joint_names;
-for (auto joint_id : leg.get_plant().GetJointIndices(leg.get_leg_model_instance()) )
-{
-  joint_names.push_back( leg.get_plant().get_joint(joint_id).name() );
-}
-
-
-drake_ros_elements leg_interface_elements(sim,1,1,5);
-leg_interface_elements.system_input_ports_.push_back(leg_input_port);
-leg_interface_elements.system_output_ports_.push_back(leg_output_port);
-leg_interface_elements.joint_names_ = joint_names;
+drake_ros_elements leg_interface_elements(sim,4,4,20);
+leg_interface_elements.system_input_ports_  = robot.get_input_ports(*diagram);
+leg_interface_elements.system_output_ports_ = robot.get_output_ports(*diagram);
+leg_interface_elements.joint_names_ = robot.get_joint_names();
 leg_interface_elements.meshcat_ptr = mescat_ptr;
-  if (mescat_ptr == nullptr)
-  {
-    std::cout <<"meshcat is null" <<std::endl;
-  }
-  
+
+if (mescat_ptr == nullptr)
+{
+  std::cout <<"meshcat is null" <<std::endl;
+}
 
 simInterface simInterface(leg_interface_elements);
 simInterface.set_monitor();
