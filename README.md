@@ -38,3 +38,7 @@ $ ln -s  $(pwd)/drake_sim/urdf <desired_directory>/urdf #for other directories
 ```
 
 Currently running the simulations is only possible from the `ros_ws/src/olympus_ros_drake_sim/` directory or any other directory you specified above in the `<desired_directory>`. 
+
+## Ideas for improvement:
+1. simulation parameters from interface class -> Set with parsing to avoid recompiling etc
+2. The drake simulation classes should provide a method for default initialization

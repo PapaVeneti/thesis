@@ -1,41 +1,21 @@
 //Simulation
-// #include <drake/math/rotation_matrix.h> //to set up first frame
 #include "drake/systems/analysis/simulator.h"
 #include "ntnu_leg.hpp"
 
-
 //Visualization
 #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
-// #include "drake/geometry/meshcat.h" //Access the visualizer (camera, recording etc)
-// using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
+
+// ros interface
+#include "drake_ros_interface.hpp"
 
 //Optional includes
 #include <iostream>
-#include <fstream> //to export diagram
 
+//flags
 #define get_graph false
 #define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
 #define integrator_time_step 1e-3
 #define simulation_update_rate 1e-2 //GCD ( controller update rate, sensor update rate) (GREATER THAN mb_timestep)
-
-// ros specific
-#include "ros/ros.h"
-// #include "std_msgs/String.h"
-// #include "std_msgs/Float64.h"
-// #include "std_msgs/Float64.h"
-// #include "std_msgs/Float64MultiArray.h" //1st way
-#include "olympus_ros_drake_sim/leg_msg.h"
-#include "drake_ros_interface.hpp"
-#include "rosgraph_msgs/Clock.h"
-#include "sensor_msgs/JointState.h"
-
-drake::systems::EventStatus publishClock(const ros::Publisher & pub, const drake::systems::Context<double> & context ){    
-  rosgraph_msgs::Clock clock_msg;
-  clock_msg.clock = ros::Time(context.get_time());
-  pub.publish(clock_msg);
-
-  return drake::systems::EventStatus::Succeeded();
-}
 
 struct sim_parameters {
   double realtime_rate = 1;
@@ -44,7 +24,6 @@ struct sim_parameters {
   double sim_update_rate = 0.01;
 };
 
-
 int main(int argc, char **argv){
 
 // Ros: node SETUP
@@ -52,7 +31,7 @@ int main(int argc, char **argv){
 // Node Set up 
 ros::init(argc, argv, "drake_leg_simulation");
 ros::NodeHandle n;
-ros::Publisher clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
+// ros::Publisher clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
 
 double loop_freq = 1/simulation_update_rate;
 ros::Rate loop_rate(loop_freq); //HZ
@@ -111,23 +90,13 @@ if (get_graph){ get_system_graph(diagram.get());  }
 #pragma region
 drake::systems::Simulator sim(*diagram);
 
-drake::systems::Simulator<double> & sim_reference  = sim; 
-
-//a. Monitor Function:
-auto bindedClockFun = std::bind(publishClock,clock_publisher,std::placeholders::_1);
-// Create a function object
-std::function<drake::systems::EventStatus(const drake::systems::Context<double> & )> monitor_func = bindedClockFun;
-// Pass the monitor function to the simulator
-sim.set_monitor(monitor_func);
-
-//b simulation parameters
+// simulation parameters
 sim.set_publish_every_time_step(false); // MUST BE FALSE, ELSE OUT OF MEMORY VERY FAST
 // sim.set_target_realtime_rate(2);  //no target, run as fast as possible
 sim.get_mutable_integrator().set_maximum_step_size(integrator_time_step);
 double sim_update_rate = simulation_update_rate; 
 assert(sim_update_rate >= mb_time_step);
 #pragma endregion
-
 
 //Initialization
 #pragma region
@@ -177,6 +146,7 @@ leg_interface_elements.meshcat_ptr = mescat_ptr;
   
 
 simInterface simInterface(leg_interface_elements);
+simInterface.set_monitor();
 
 
 #pragma endregion
@@ -196,100 +166,6 @@ while( ros::ok() ){
   ros::spinOnce(); //process callbacks
   if (!loop_rate.sleep()){ROS_DEBUG("Simulation is slower than realtime");} //returns false 
 }
-
-// while( sim_time < 1 ){
-
-
-//     //simulation takes place:
-//     sim_time +=sim_update_rate;
-//     sim.AdvanceTo(sim_time);   
-
-//     ros::spinOnce(); //process callbacks
-//     if (!loop_rate.sleep()){ROS_WARN("Simulation is slower than realtime");} //returns false 
-// }
-
-// position_controller pos_controller(2) ;
-// Eigen::Vector3d des_angles({1,1,1});
-// qd << des_angles[0],des_angles[1],des_angles[2],0,0,0 ;
-// diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context,qd);
-// drake_tfd T_MH_P(drake::math::RollPitchYawd(0,0,0),pos_controller.DK(des_angles));
-// drake_tfd T_W_P = frleg_TF*T_MH_P; 
-// auto goal1 = AddPoint(T_W_P,mescat_ptr.get(),"Goal Position");
-
-// while( sim_time < 5 ){
-
-
-//     //simulation takes place:
-//     sim_time +=sim_update_rate;
-//     sim.AdvanceTo(sim_time);   
-
-//     ros::spinOnce(); //process callbacks
-//     if (!loop_rate.sleep()){ROS_WARN("Simulation is slower than realtime");} //returns false 
-// }
-
-// mescat_ptr->Delete(goal1);
-// while( sim_time < 7 ){
-
-
-//     //simulation takes place:
-//     sim_time +=sim_update_rate;
-//     sim.AdvanceTo(sim_time);   
-
-//     ros::spinOnce(); //process callbacks
-//     if (!loop_rate.sleep()){ROS_WARN("Simulation is slower than realtime");} //returns false 
-// }
-
-//OLD CODE
-
-// Set desired positions
-// Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
-// Eigen::Vector3d des_angles{0,1.5,-1.5}; 
-// Eigen::VectorXd qd(6); 
-// qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
-// diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context,qd);
-
-//Visualize the postion
-// position_controller pos_controller(2) ;
-// pos_controller.q = p0;
-// pos_controller.DK(des_angles);
-
-// frleg_TF -> the transform to the {MH} frame at qMH=0 (T_W_MH) 
-// drake_tfd T_MH_P(drake::math::RollPitchYawd(0,0,0),pos_controller.DK(des_angles));
-// drake_tfd T_W_P = frleg_TF*T_MH_P; 
-// AddPoint(T_W_P,mescat_ptr.get(),"Goal Position");
-
-// // 6.  Simulate:
-// sim.Initialize();
-// double sim_time = 0; 
-// // mescat_ptr->StartRecording();
-// while( sim_time < 2.5){
-//     //realtime vis
-//     sim_time +=sim_update_rate;
-//     sim.AdvanceTo(sim_time);    
-//     // (leg).FixValue(&plant_context,qd); //for pid joints
-// }
-
-// auto& context2            = sim.get_mutable_context();
-// Eigen::Vector3d p_W = {0.087722,0.13204,0.63377};
-// drake_tfd T_W_Pnew(drake::math::RollPitchYawd(0,0,0),p_W);
-// AddPoint(T_W_Pnew,mescat_ptr.get(),"New Goal Position",drake::geometry::Rgba(1,0,0,1));
-// Eigen::Vector3d new_goal = T_W_MH.inverse()*p_W ; 
-// std::cout << "New goal position in {MH} frame is:" << std::endl;
-// std::cout << new_goal << std::endl;
-// des_angles = pos_controller.IK(new_goal);
-// qd<<  des_angles[0],des_angles[1],des_angles[2],0,0,0;
-// diagram -> get_input_port(leg.get_controller_desired_state_port()).FixValue(&context2,qd);
-
-// // while( sim_time < 3){
-// //     //realtime vis
-// //     sim_time +=sim_update_rate;
-// //     sim.AdvanceTo(sim_time);    
-// //     // (leg).FixValue(&plant_context,qd); //for pid joints
-// // }
-// //playback
-// mescat_ptr->PublishRecording();
-
-
 
   return 0;
 }

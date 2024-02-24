@@ -23,6 +23,7 @@ simInterface::simInterface(drake_ros_elements & param ):
   { 
     assert(param.system_input_ports_.size()  == num_controllers);
     assert(param.system_output_ports_.size() == num_outputs);
+    clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
     controllerSub  = n.subscribe("/command_interface", 1000, &simInterface::controllerCallback,this);
     encoderPub     = n.advertise<sensor_msgs::JointState>("/joint_states",10);
 
@@ -178,4 +179,21 @@ void simInterface::renew_sphere_timer(){
   }else {
     timer.stop();
   }
+}
+
+void simInterface::set_monitor(){
+  //a. Monitor Function:
+  auto bindedClockFun = std::bind(publishClock,clock_publisher,std::placeholders::_1);
+  // Create a function object
+  std::function<drake::systems::EventStatus(const drake::systems::Context<double> & )> monitor_func = bindedClockFun;
+  // Pass the monitor function to the simulator
+  simulator.set_monitor(monitor_func);
+}
+
+drake::systems::EventStatus publishClock(const ros::Publisher & pub, const drake::systems::Context<double> & context ){    
+  rosgraph_msgs::Clock clock_msg;
+  clock_msg.clock = ros::Time(context.get_time());
+  pub.publish(clock_msg);
+
+  return drake::systems::EventStatus::Succeeded();
 }

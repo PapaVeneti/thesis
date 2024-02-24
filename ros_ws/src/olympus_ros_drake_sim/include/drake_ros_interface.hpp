@@ -2,8 +2,9 @@
 #include "ros/ros.h"
 
 //messages:
-#include "olympus_ros_drake_sim/leg_msg.h"
+#include "rosgraph_msgs/Clock.h"
 #include "sensor_msgs/JointState.h"
+#include "olympus_ros_drake_sim/leg_msg.h"
 #include "olympus_ros_drake_sim/sphere_signature.h"
 
 //drake specific
@@ -13,13 +14,12 @@
 //custom:
 #include "drake_helpers.hpp"
 
-//2. add spheres as target -> tf on ros -> available in rviz too
-//3. robot sim
 using drake_OutputPortd  = drake::systems::OutputPort<double> ;
 using drake_InputPortd   = drake::systems::InputPort<double> ;
 using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>; 
 using drake_tfd          = drake::math::RigidTransform<double>;
 
+drake::systems::EventStatus publishClock(const ros::Publisher & pub, const drake::systems::Context<double> & context );
 
 struct point_stack_element {
   std::string path; //used for deletion by meshcat
@@ -70,6 +70,7 @@ public:
   //core functionality
   void encoderPublish(const sensor_msgs::JointState & CurrentJointState);
   void encoderUpdate();
+  void set_monitor();
 
   //setters
   void set_Joint_states(const sensor_msgs::JointState & CurrentJointState);
@@ -89,6 +90,7 @@ private:
   
   //ROS
   ros::NodeHandle n;
+  ros::Publisher clock_publisher;
   ros::Publisher  encoderPub; //one joint_states_topic
   ros::Subscriber controllerSub;
   ros::Subscriber sphereSub;
