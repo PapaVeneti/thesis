@@ -1,6 +1,6 @@
 //Simulation
 #include "drake/systems/analysis/simulator.h"
-#include "ntnu_leg.hpp"
+#include "olympus.hpp"
 
 //Visualization
 #include "drake/visualization/visualization_config_functions.h" //Needed for AddDefaultVisualization
@@ -29,7 +29,7 @@ int main(int argc, char **argv){
 // Ros: node SETUP
 #pragma region
 // Node Set up 
-ros::init(argc, argv, "drake_leg_simulation");
+ros::init(argc, argv, "olympus_ros_simulation");
 ros::NodeHandle n;
 
 double loop_freq = 1/simulation_update_rate;
@@ -42,37 +42,7 @@ ros::Rate loop_rate(loop_freq); //HZ
 //0. Builder class to create the system
 drake::systems::DiagramBuilder<double> builder; 
 
-//1. Add plant and populate it with the robot instances
-auto [plant,scene_graph]  = drake::multibody::AddMultibodyPlantSceneGraph(&builder,mb_time_step);
-
-//1a. Instace of robot body (FOR NOW WORLD)
-const drake_rigidBody &robot_base= plant.world_body();
-
-  //create config structs for each leg
-// drake_tfd frleg_TF( drake_rotMat::MakeXRotation(-M_PI/2), drake::Vector3<double>::UnitZ() ); //FR
-drake_rotMat R_W_FR = drake_rotMat::MakeXRotation(-M_PI_2);
-// drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(-M_PI);
-drake_rotMat R_FR_RR = drake_rotMat::MakeZRotation(0);
-drake_tfd frleg_TF( R_W_FR* R_FR_RR, drake::Vector3<double>::UnitZ() ); //RR
-leg_config config_rr(leg_index::fr, robot_base,frleg_TF);
-
-//1b. Instance of each leg
-ntnu_leg leg(builder,plant,config_rr); 
-auto fr_leg = leg.get_leg_model_instance();
-
-
-//1c. Finish plant
-plant.set_discrete_contact_approximation(drake::multibody::DiscreteContactApproximation::kSap);
-plant.Finalize();
-
-auto collision_manager = scene_graph.collision_filter_manager();
-collision_manager.Apply(
-  drake::geometry::CollisionFilterDeclaration().
-  ExcludeWithin(leg.get_shanks_collision())
-);
-
-//2. Wire up diagram
-leg.connect_PID_system(builder,plant); //Connections happen after the plant is finalized
+olympus robot(builder,mb_time_step); //robot plant creation
 
 //2b. Add visualization (connect scene_graph and set_up meshcat)
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();

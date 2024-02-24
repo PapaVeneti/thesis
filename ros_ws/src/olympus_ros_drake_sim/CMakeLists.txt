@@ -142,6 +142,7 @@ target_include_directories(drake_ros_interface PUBLIC include)
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/olympus_ros_drake_sim_node.cpp)
 add_executable(ros_leg_sim src/ntnu_leg.cpp)
+add_executable(olympus_sim src/olympus_ros.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +154,7 @@ add_executable(ros_leg_sim src/ntnu_leg.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ros_leg_sim drake_ros_interface)
+add_dependencies(olympus_sim drake_ros_interface)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -160,6 +162,7 @@ add_dependencies(ros_leg_sim drake_ros_interface)
 # )
 target_link_libraries(drake_ros_interface ${catkin_LIBRARIES}  drake::drake)
 target_link_libraries(ros_leg_sim ${catkin_LIBRARIES} drake::drake ntnu_leg drake_ros_interface)
+target_link_libraries(olympus_sim ${catkin_LIBRARIES} drake::drake olympus  drake_ros_interface)
 
 
 #############

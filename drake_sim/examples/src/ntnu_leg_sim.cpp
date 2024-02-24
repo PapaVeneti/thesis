@@ -33,17 +33,6 @@ struct sim_parameters {
 
 int main(int argc, char **argv){
 
-// Ros: node SETUP
-#pragma region
-// // Node Set up 
-// ros::init(argc, argv, "drake simulation");
-// ros::NodeHandle n;
-// ros::Publisher clock_publisher = n.advertise<rosgraph_msgs::Clock>("/clock",10);
-
-// double loop_freq = 100;
-// ros::Rate loop_rate(loop_freq); //HZ
-
-#pragma endregion
 
 // Drake: Plant set up
 #pragma region
@@ -85,10 +74,7 @@ leg.connect_PID_system(builder,plant); //Connections happen after the plant is f
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();
 drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
 
-//2c. Finish building. Never use builder again
-auto diagram = builder.Build(); //Connections before here
-#pragma endregion
-
+//2c. Finish buAddDefaultVisualization
 bool export_graph = true;
 // Write graph to file:
 #pragma region 

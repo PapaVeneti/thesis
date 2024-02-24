@@ -9,16 +9,14 @@ using meshcat_shared_ptr = std::shared_ptr<drake::geometry::Meshcat>;
 
 #define mb_time_step 0.0002 //in seconds!!!! -> must be as small as the simulation
 
-//2. DEFINE base_NAME
 //3. container for model instances
-
-
 
 int main() {
 
     //Define simulation plant:
     drake::systems::DiagramBuilder<double> builder; // Class responsible from creating the dynamic system.
     olympus robot(builder,mb_time_step); //robot plant creation
+    drake_plant & plant = robot.get_plant();
 
     meshcat_shared_ptr meshcat_ptr =  std::make_shared<drake::geometry::Meshcat> (); //pointer to visualization class
     drake::visualization::AddDefaultVisualization(&builder,meshcat_ptr); //add visualization
@@ -27,12 +25,22 @@ int main() {
     
     get_system_graph(diagram.get()); 
 
-    // Begin Simulation:
-
+    // Simulation Initialization:
     drake::systems::Simulator sim(*diagram);
-    auto& context = sim.get_mutable_context();
-    sim.set_publish_every_time_step(true); // publish simulation as it happens
-    sim.set_target_realtime_rate(1);
+
+    auto& context            = sim.get_mutable_context();
+    auto& plant_context      = diagram-> GetMutableSubsystemContext ( plant                       ,&context);
+    auto& fr_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.fr_leg->get_leg_controller()),&context);
+    auto& rr_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.rr_leg->get_leg_controller()),&context);
+    auto& fl_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.fl_leg->get_leg_controller()),&context);
+    auto& rl_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.rl_leg->get_leg_controller()),&context);
+
+    Eigen::VectorXd q0(10);
+    q0.setZero(); 
+    plant.SetPositionsAndVelocities(&plant_context, robot.fr_leg->get_leg_model_instance(), q0);
+    plant.SetPositionsAndVelocities(&plant_context, robot.rr_leg->get_leg_model_instance(), q0);
+    plant.SetPositionsAndVelocities(&plant_context, robot.fl_leg->get_leg_model_instance(), q0);
+    plant.SetPositionsAndVelocities(&plant_context, robot.rl_leg->get_leg_model_instance(), q0);
 
     // Set desired positions
     // Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
@@ -49,7 +57,9 @@ int main() {
     diagram -> get_input_port(robot.rl_leg->get_controller_desired_state_port()).FixValue(&context,qd1);
 
 
-
+    // Simulation Parameters:
+    sim.set_publish_every_time_step(true); // publish simulation as it happens
+    sim.set_target_realtime_rate(1);
     sim.Initialize();
     double sim_time = 0; 
     double sim_update_rate = 0.01; 
