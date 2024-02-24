@@ -12,6 +12,8 @@ class olympus {
   public:		
     olympus(drake_builder & builder, const double & time_step_ );
     
+    // void default_init(const drake::systems::System<double> & system);
+    void default_init(drake::systems::Diagram<double> & diagram, drake::systems::Context<double> & context);
     //getters
     drake_plant & get_plant();
 
@@ -157,4 +159,19 @@ rl_leg->connect_PID_system(builder,*plant);
 
 drake_plant & olympus::get_plant(){
   return *plant;
+}
+
+void olympus::default_init(drake::systems::Diagram<double> & diagram, drake::systems::Context<double> & context){
+    auto& fr_controller_context = diagram. GetMutableSubsystemContext ( *( fr_leg->get_leg_controller()),&context);
+    auto& rr_controller_context = diagram. GetMutableSubsystemContext ( *( rr_leg->get_leg_controller()),&context);
+    auto& fl_controller_context = diagram. GetMutableSubsystemContext ( *( fl_leg->get_leg_controller()),&context);
+    auto& rl_controller_context = diagram. GetMutableSubsystemContext ( *( rl_leg->get_leg_controller()),&context);
+
+    auto& plant_context      = diagram. GetMutableSubsystemContext ( *plant,&context);
+    Eigen::VectorXd q0(10);
+    q0.setZero(); 
+    plant->SetPositionsAndVelocities(&plant_context, fr_leg->get_leg_model_instance(), q0);
+    plant->SetPositionsAndVelocities(&plant_context, rr_leg->get_leg_model_instance(), q0);
+    plant->SetPositionsAndVelocities(&plant_context, fl_leg->get_leg_model_instance(), q0);
+    plant->SetPositionsAndVelocities(&plant_context, rl_leg->get_leg_model_instance(), q0);
 }

@@ -74,6 +74,8 @@ leg.connect_PID_system(builder,plant); //Connections happen after the plant is f
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();
 drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
 
+auto diagram = builder.Build(); //Connections before here
+
 //2c. Finish buAddDefaultVisualization
 bool export_graph = true;
 // Write graph to file:

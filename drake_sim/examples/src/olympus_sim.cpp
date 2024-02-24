@@ -30,17 +30,7 @@ int main() {
 
     auto& context            = sim.get_mutable_context();
     auto& plant_context      = diagram-> GetMutableSubsystemContext ( plant                       ,&context);
-    auto& fr_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.fr_leg->get_leg_controller()),&context);
-    auto& rr_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.rr_leg->get_leg_controller()),&context);
-    auto& fl_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.fl_leg->get_leg_controller()),&context);
-    auto& rl_controller_context = diagram-> GetMutableSubsystemContext ( *( robot.rl_leg->get_leg_controller()),&context);
-
-    Eigen::VectorXd q0(10);
-    q0.setZero(); 
-    plant.SetPositionsAndVelocities(&plant_context, robot.fr_leg->get_leg_model_instance(), q0);
-    plant.SetPositionsAndVelocities(&plant_context, robot.rr_leg->get_leg_model_instance(), q0);
-    plant.SetPositionsAndVelocities(&plant_context, robot.fl_leg->get_leg_model_instance(), q0);
-    plant.SetPositionsAndVelocities(&plant_context, robot.rl_leg->get_leg_model_instance(), q0);
+    robot.default_init(*diagram,context);
 
     // Set desired positions
     // Eigen::Vector3d des_angles{-M_PI_2,0,0}; 
