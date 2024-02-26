@@ -47,6 +47,7 @@ olympus robot(builder,mb_time_step); //robot plant creation
 //2b. Add visualization (connect scene_graph and set_up meshcat)
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();
 drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
+mescat_ptr->SetTransform("/Helper symbols/Points",drake_tfd(Eigen::Vector3d({0,0,1-0.0056}))); //This must be updated with the current transform of the body
 
 //2c. Finish building. Never use builder again
 auto diagram = builder.Build(); //Connections before here

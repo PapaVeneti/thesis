@@ -48,7 +48,7 @@ struct leg_controller_parameters{
 
 };
 
-tf2::Transform set_tf_transform(const tf2::Vector3 & translation, const tf2::Vector3 & rpy)
+tf2::Transform set_tf_transform(const tf2::Vector3 & translation, const tf2::Vector3 & rpy);
 
 class leg_controller {
 public:
