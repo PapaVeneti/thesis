@@ -76,6 +76,7 @@ leg.connect_PID_system(builder,plant); //Connections happen after the plant is f
 
 //2b. Add visualization (connect scene_graph and set_up meshcat)
 meshcat_shared_ptr mescat_ptr =  std::make_shared<drake::geometry::Meshcat> ();
+mescat_ptr->SetTransform("/Helper symbols/Points",drake_tfd(Eigen::Vector3d({0,0,0}))); //This must be updated with the current transform of the body
 drake::visualization::AddDefaultVisualization(&builder,mescat_ptr);
 
 //2c. Finish building. Never use builder again

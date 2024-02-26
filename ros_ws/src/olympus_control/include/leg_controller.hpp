@@ -1,14 +1,13 @@
 #include "ros/ros.h"
 
+//Kinematics
 #include "leg_kinematics.hpp"
-
+//tf2
 #include "tf2/LinearMath/Transform.h"
 #include "tf2/LinearMath/Quaternion.h"
 //messages:
 #include "olympus_ros_drake_sim/sphere_signature.h"
-#include "sensor_msgs/JointState.h"
 #include "olympus_ros_drake_sim/leg_msg.h"
-#include "olympus_control/leg_goal.h"
 
 
 //joint_states : {legfr,legrr,legfl,legrl,body}
@@ -19,7 +18,7 @@ struct leg_controller_parameters{
   int leg_id = 0;
   int configuration = 0;
   std::string prefix = "";
-  tf2::Transform tf_W_MH ; 
+  tf2::Transform tf_B_MH ; 
 
   leg_controller_parameters() = default ;
   leg_controller_parameters(const leg_index & id_ ){
@@ -49,19 +48,31 @@ struct leg_controller_parameters{
 
 };
 
+tf2::Transform set_tf_transform(const tf2::Vector3 & translation, const tf2::Vector3 & rpy)
+
 class leg_controller {
 public:
     leg_controller(const leg_controller_parameters & params);
-    
-    void encoderCallback(const sensor_msgs::JointStateConstPtr & JointState);
 
-    void userInterfaceCallback(const olympus_control::leg_goal::ConstPtr & setPoint);
+    //setters:
+    void set_state(const Eigen::Vector3d & q_,const Eigen::Vector3d & qt_);
+    void set_state(const std::vector<double> & q_,const std::vector<double> & qt_);
+    void set_command(const Eigen::Vector3d & qd_);
+    void set_command(const std::vector<double> & qd_);
 
-    void publishCommand();
-
-    void publish_sphere_target();
-
+    //option setters:
     void Do_publish_sphere_target(const bool & value);
+
+    //getters:
+    const int  get_leg_id() const ;
+
+    //Functional: Kinematics
+    Eigen::Vector3d  IK_querry(const Eigen::Vector3d & xd_);
+    Eigen::Vector3d  IK_querry(const std::vector<double> & xd_);
+
+    //Functional: Publishing
+    void publishCommand();
+    void publish_sphere_target();
 
 private:
     //leg_specific
@@ -73,11 +84,12 @@ private:
     const int configuration = 0;
     const std::string prefix ;
 
+    tf2::Transform T_B_MH;
+
     //ROS
     ros::NodeHandle n;
 
-    //Encode bus:
-    ros::Subscriber encoder_sub;
+    //Current State:
     Eigen::Vector3d q;
     Eigen::Vector3d qt;
 
@@ -89,9 +101,4 @@ private:
     bool publishing_sphere_target =false;
     olympus_ros_drake_sim::sphere_signature sphere_sig;
     ros::Publisher  spherePub;
-
-    //ROS Interface  (this may change)
-    ros::Subscriber controller_interface;
-
-    tf2::Transform T_W_MH;
 };

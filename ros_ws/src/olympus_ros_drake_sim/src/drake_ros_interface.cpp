@@ -37,7 +37,6 @@ simInterface::simInterface(drake_ros_elements & param ):
     timer = n.createWallTimer(ros::WallDuration(5),&simInterface::delete_sphere_callback,this);
     timer.stop();
     sphereSub = n.subscribe("/publish_spheres", 1000, &simInterface::addSphereCallback,this);
-
   }
 
 void simInterface::encoderPublish(const sensor_msgs::JointState & CurrentJointState){

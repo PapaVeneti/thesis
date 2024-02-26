@@ -132,6 +132,8 @@ add_dependencies(leg_controller leg_kinematics)
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/olympus_control_node.cpp)
 add_executable(leg_controller_node src/leg_controller_node.cpp)
+add_executable(olympus_controller src/olympus_controller.cpp)
+add_executable(kinematics_test src/kinematics_test.cpp) #temporary
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -143,13 +145,17 @@ add_executable(leg_controller_node src/leg_controller_node.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(leg_controller_node leg_controller)
+add_dependencies(olympus_controller leg_controller)
+add_dependencies(kinematics_test leg_kinematics) #temporary
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(leg_controller ${catkin_LIBRARIES} leg_kinematics)
+target_link_libraries(kinematics_test leg_kinematics) #temporary
 target_link_libraries(leg_controller_node ${catkin_LIBRARIES} leg_controller)
+target_link_libraries(olympus_controller ${catkin_LIBRARIES} leg_controller)
 
 
 #############
