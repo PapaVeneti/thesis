@@ -54,7 +54,7 @@
 #define NTNU_LEG_NSBXN  10
 #define NTNU_LEG_NS     0
 #define NTNU_LEG_NSN    10
-#define NTNU_LEG_NG     0
+#define NTNU_LEG_NG     2
 #define NTNU_LEG_NBXN   10
 #define NTNU_LEG_NGN    0
 #define NTNU_LEG_NY0    13

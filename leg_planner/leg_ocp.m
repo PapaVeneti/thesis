@@ -143,6 +143,23 @@ end
 
 %4.  Path constraints 
 %TBD:
+n_pc = 2; %number of path constraints
+constraint_coefficients;
+C_c      = zeros(n_pc,nx);
+D_c      = zeros(n_pc,nu);
+C_c(1,:) = [cc_1,zeros(1,nx/2)];
+C_c(2,:) = [cc_2,zeros(1,nx/2)];
+
+upper_g = [cb_1;cb_2];
+lower_g = [-1e5;-1e5];
+
+ocp_model.set('constr_C',C_c);
+ocp_model.set('constr_D',D_c);
+ocp_model.set('constr_ug',upper_g);
+ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
+
+
+
 %    a. Angular momentum constraints
 %    b. Norm constraints on torques
 
@@ -266,7 +283,8 @@ if solver_statistics
         pause(1)
         if it == 2
 %             xref_new  = [-0.3,1.2,0,1.32,0];
-            xref_new  = [-0.5,-1.5,0,-1.5,0];
+%             xref_new  = [-0.5,-1.5,0,-1.5,0]; %out of bounds for new constraints
+            xref_new  = [-0.5,-0.99,0,-1.5,0];
             xref_new  = [xref_new';0;0;0;0;0];
             y_ref_new = [Qc,zeros(nx,nu);zeros(nu,nx),Rc]*[xref_new;tau_ref] ; %Important to give it like that.
             ocp.set('cost_y_ref', y_ref_new);

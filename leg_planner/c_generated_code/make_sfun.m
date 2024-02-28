@@ -121,6 +121,12 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [90]\n ');
 sfun_input_names = [sfun_input_names; 'ubu [90]'];
 i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [60]\n ');
+sfun_input_names = [sfun_input_names; 'lg [60]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [60]\n ');
+sfun_input_names = [sfun_input_names; 'ug [60]'];
+i_in = i_in + 1;
 
 fprintf(input_note)
 

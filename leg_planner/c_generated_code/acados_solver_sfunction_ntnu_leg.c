@@ -55,7 +55,7 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetNumDiscStates(S, 0);
 
     int N = NTNU_LEG_N;// specify the number of input ports
-    if ( !ssSetNumInputPorts(S, 11) )
+    if ( !ssSetNumInputPorts(S, 13) )
         return;
 
     // specify the number of output ports
@@ -84,7 +84,11 @@ static void mdlInitializeSizes (SimStruct *S)
     // lbu
     ssSetInputPortVectorDimension(S, 9, 90);
     // ubu
-    ssSetInputPortVectorDimension(S, 10, 90);/* specify dimension information for the OUTPUT ports */
+    ssSetInputPortVectorDimension(S, 10, 90);
+    // lg
+    ssSetInputPortVectorDimension(S, 11, 60);
+    // ug
+    ssSetInputPortVectorDimension(S, 12, 60);/* specify dimension information for the OUTPUT ports */
     ssSetOutputPortVectorDimension(S, 0, 3 );
     ssSetOutputPortVectorDimension(S, 1, 90 );
     ssSetOutputPortVectorDimension(S, 2, 310 );
@@ -107,6 +111,8 @@ static void mdlInitializeSizes (SimStruct *S)
     ssSetInputPortDirectFeedThrough(S, 8, 1);
     ssSetInputPortDirectFeedThrough(S, 9, 1);
     ssSetInputPortDirectFeedThrough(S, 10, 1);
+    ssSetInputPortDirectFeedThrough(S, 11, 1);
+    ssSetInputPortDirectFeedThrough(S, 12, 1);
 
     // one sample time
     ssSetNumSampleTimes(S, 1);
@@ -249,6 +255,24 @@ static void mdlOutputs(SimStruct *S, int_T tid)
         for (int jj = 0; jj < 3; jj++)
             buffer[jj] = (double)(*in_sign[ii*3+jj]);
         ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ubu", (void *) buffer);
+    }
+    // lg
+    in_sign = ssGetInputPortRealSignalPtrs(S, 11);
+
+    for (int ii = 0; ii < N; ii++)
+    {
+        for (int jj = 0; jj < 2; jj++)
+            buffer[jj] = (double)(*in_sign[ii*2+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "lg", (void *) buffer);
+    }
+    // ug
+    in_sign = ssGetInputPortRealSignalPtrs(S, 12);
+
+    for (int ii = 0; ii < N; ii++)
+    {
+        for (int jj = 0; jj < 2; jj++)
+            buffer[jj] = (double)(*in_sign[ii*2+jj]);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, ii, "ug", (void *) buffer);
     }
 
     /* call solver */

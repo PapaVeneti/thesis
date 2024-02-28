@@ -80,11 +80,19 @@ expr_f_impl = [sym_xdot(1:5)-qt;(Nc')*(M*sym_xdot(6:10) + (C+D)*qt + G -u_gen)];
 %1. state constraints
 state_constraints = zeros(10,2);
 
-state_constraints(1,:) = [-pi   ,pi  ];
-state_constraints(2,:) = [-pi   ,1.65];
-state_constraints(3,:) = [-2.5  ,1.58];
-state_constraints(4,:) = [-1.65 ,pi  ];
-state_constraints(5,:) = [-1.51 ,2.5 ];
+%initial but wrong:
+% state_constraints(1,:) = [-pi   ,pi  ];
+% state_constraints(2,:) = [-pi   ,1.65];
+% state_constraints(3,:) = [-2.5  ,1.58];
+% state_constraints(4,:) = [-1.65 ,pi  ];
+% state_constraints(5,:) = [-1.51 ,2.5 ];
+
+%Revised
+state_constraints(1,:) = [-2    ,1.31];
+state_constraints(2,:) = [-1.2  ,1.65];   %1.65 to hit MH, 1.2 to not hit the base at full swing of qmh
+state_constraints(3,:) = [-1.323,1.42]; %changed for convex shapes (-1.323
+state_constraints(4,:) = [-1.65 ,1.2 ];     %1.65 to hit MH, 1.2 to not hit the base at full swing of qmh
+state_constraints(5,:) = [-1.42 ,1.323];   %changed for convex shapes
 
 
 %velocity constraints

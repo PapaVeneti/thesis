@@ -664,16 +664,16 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     double* lbx = lubx;
     double* ubx = lubx + NBX;
     
-    lbx[0] = -3.141592654;
-    ubx[0] = 3.141592654;
-    lbx[1] = -3.141592654;
+    lbx[0] = -2;
+    ubx[0] = 1.31;
+    lbx[1] = -1.2;
     ubx[1] = 1.65;
-    lbx[2] = -2.5;
-    ubx[2] = 1.58;
+    lbx[2] = -1.323;
+    ubx[2] = 1.42;
     lbx[3] = -1.65;
-    ubx[3] = 3.141592654;
-    lbx[4] = -1.51;
-    ubx[4] = 2.5;
+    ubx[3] = 1.2;
+    lbx[4] = -1.42;
+    ubx[4] = 1.323;
     lbx[5] = -32;
     ubx[5] = 32;
     lbx[6] = -32;
@@ -695,6 +695,39 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(lubx);
 
 
+    // set up general constraints for stage 0 to N-1
+    double* D = calloc(NG*NU, sizeof(double));
+    double* C = calloc(NG*NX, sizeof(double));
+    double* lug = calloc(2*NG, sizeof(double));
+    double* lg = lug;
+    double* ug = lug + NG;
+
+    
+
+    
+    C[0+NG * 0] = -0.4889;
+    C[0+NG * 1] = -1;
+    C[1+NG * 1] = -1.7756;
+    C[1+NG * 2] = -1;
+
+    
+    lg[0] = -100000;
+    lg[1] = -100000;
+
+    
+    ug[0] = 1.5878;
+    ug[1] = 1.7929;
+
+    for (int i = 0; i < N; i++)
+    {
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "D", D);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "C", C);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "lg", lg);
+        ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, i, "ug", ug);
+    }
+    free(D);
+    free(C);
+    free(lug);
 
 
 
