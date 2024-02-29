@@ -51,16 +51,16 @@
 #define NTNU_LEG_NSHN   0
 #define NTNU_LEG_NSGN   0
 #define NTNU_LEG_NSPHIN 0
-#define NTNU_LEG_NSBXN  10
+#define NTNU_LEG_NSBXN  0
 #define NTNU_LEG_NS     0
-#define NTNU_LEG_NSN    10
+#define NTNU_LEG_NSN    0
 #define NTNU_LEG_NG     2
-#define NTNU_LEG_NBXN   10
+#define NTNU_LEG_NBXN   0
 #define NTNU_LEG_NGN    0
-#define NTNU_LEG_NY0    13
-#define NTNU_LEG_NY     13
+#define NTNU_LEG_NY0    3
+#define NTNU_LEG_NY     3
 #define NTNU_LEG_NYN    10
-#define NTNU_LEG_N      30
+#define NTNU_LEG_N      180
 #define NTNU_LEG_NH     0
 #define NTNU_LEG_NPHI   0
 #define NTNU_LEG_NHN    0
@@ -99,7 +99,15 @@ typedef struct ntnu_leg_solver_capsule
 
     // cost
 
+    external_function_param_casadi *cost_y_fun;
+    external_function_param_casadi *cost_y_fun_jac_ut_xt;
+    external_function_param_casadi *cost_y_hess;
 
+
+
+    external_function_param_casadi cost_y_0_fun;
+    external_function_param_casadi cost_y_0_fun_jac_ut_xt;
+    external_function_param_casadi cost_y_0_hess;
 
 
 

@@ -39,9 +39,52 @@ extern "C" {
 
 // Cost at initial shooting node
 
+int ntnu_leg_cost_y_0_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_0_fun_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_0_fun_sparsity_in(int);
+const int *ntnu_leg_cost_y_0_fun_sparsity_out(int);
+int ntnu_leg_cost_y_0_fun_n_in(void);
+int ntnu_leg_cost_y_0_fun_n_out(void);
+
+int ntnu_leg_cost_y_0_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_0_fun_jac_ut_xt_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_0_fun_jac_ut_xt_sparsity_in(int);
+const int *ntnu_leg_cost_y_0_fun_jac_ut_xt_sparsity_out(int);
+int ntnu_leg_cost_y_0_fun_jac_ut_xt_n_in(void);
+int ntnu_leg_cost_y_0_fun_jac_ut_xt_n_out(void);
+
+int ntnu_leg_cost_y_0_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_0_hess_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_0_hess_sparsity_in(int);
+const int *ntnu_leg_cost_y_0_hess_sparsity_out(int);
+int ntnu_leg_cost_y_0_hess_n_in(void);
+int ntnu_leg_cost_y_0_hess_n_out(void);
+
 
 
 // Cost at path shooting node
+
+int ntnu_leg_cost_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_fun_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_fun_sparsity_in(int);
+const int *ntnu_leg_cost_y_fun_sparsity_out(int);
+int ntnu_leg_cost_y_fun_n_in(void);
+int ntnu_leg_cost_y_fun_n_out(void);
+
+int ntnu_leg_cost_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_fun_jac_ut_xt_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_fun_jac_ut_xt_sparsity_in(int);
+const int *ntnu_leg_cost_y_fun_jac_ut_xt_sparsity_out(int);
+int ntnu_leg_cost_y_fun_jac_ut_xt_n_in(void);
+int ntnu_leg_cost_y_fun_jac_ut_xt_n_out(void);
+
+int ntnu_leg_cost_y_hess(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+int ntnu_leg_cost_y_hess_work(int *, int *, int *, int *);
+const int *ntnu_leg_cost_y_hess_sparsity_in(int);
+const int *ntnu_leg_cost_y_hess_sparsity_out(int);
+int ntnu_leg_cost_y_hess_n_in(void);
+int ntnu_leg_cost_y_hess_n_out(void);
+
 
 
 // Cost at terminal shooting node

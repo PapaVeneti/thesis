@@ -69,6 +69,12 @@ add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 # optimal control problem - mostly CasADi exports
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMPLE})
     set(OCP_SRC
+        ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c
+        ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c
+        ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c
+        ntnu_leg_cost/ntnu_leg_cost_y_fun.c
+        ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c
+        ntnu_leg_cost/ntnu_leg_cost_y_hess.c
         acados_solver_ntnu_leg.c)
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()

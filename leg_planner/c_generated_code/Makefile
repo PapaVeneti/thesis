@@ -43,6 +43,12 @@ MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_fun.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_hess.c
 
 OCP_SRC+= acados_solver_ntnu_leg.c
 OCP_OBJ := $(OCP_SRC:.c=.o)

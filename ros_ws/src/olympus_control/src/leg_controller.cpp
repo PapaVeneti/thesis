@@ -29,7 +29,7 @@ void leg_controller::set_state(const Eigen::Vector3d & q_,const Eigen::Vector3d 
   qt=qt_;
 }
 void leg_controller::set_state(const std::vector<double> & q_,const std::vector<double> & qt_){
-  if ( q_.size() == 3 && qt_.size() ) {
+  if ( q_.size() >= 3 && qt_.size() >=3 ) {
     q[0] = q_[0];
     q[1] = q_[1];
     q[2] = q_[2];

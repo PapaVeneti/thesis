@@ -33,6 +33,12 @@
 SOURCES = { ...
             'ntnu_leg_model/ntnu_leg_expl_ode_fun.c', ...
             'ntnu_leg_model/ntnu_leg_expl_vde_forw.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_fun.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_hess.c',...
             'acados_solver_sfunction_ntnu_leg.c', ...
             'acados_solver_ntnu_leg.c'
           };
@@ -93,39 +99,33 @@ input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for s
                     ' size [10]\n ');
 sfun_input_names = [sfun_input_names; 'ubx_0 [10]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [13]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref_0 [13]'];
+input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [3]\n ');
+sfun_input_names = [sfun_input_names; 'y_ref_0 [3]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
-                    ' size [377]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref [377]'];
+                    ' size [537]\n ');
+sfun_input_names = [sfun_input_names; 'y_ref [537]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [10]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_e [10]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [290]\n ');
-sfun_input_names = [sfun_input_names; 'lbx [290]'];
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [1790]\n ');
+sfun_input_names = [sfun_input_names; 'lbx [1790]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [290]\n ');
-sfun_input_names = [sfun_input_names; 'ubx [290]'];
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [1790]\n ');
+sfun_input_names = [sfun_input_names; 'ubx [1790]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbx_e (lbx at shooting node N), size [10]\n ');
-sfun_input_names = [sfun_input_names; 'lbx_e [10]'];
+input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [540]\n ');
+sfun_input_names = [sfun_input_names; 'lbu [540]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N), size [10]\n ');
-sfun_input_names = [sfun_input_names; 'ubx_e [10]'];
+input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [540]\n ');
+sfun_input_names = [sfun_input_names; 'ubu [540]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [90]\n ');
-sfun_input_names = [sfun_input_names; 'lbu [90]'];
+input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [360]\n ');
+sfun_input_names = [sfun_input_names; 'lg [360]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [90]\n ');
-sfun_input_names = [sfun_input_names; 'ubu [90]'];
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [60]\n ');
-sfun_input_names = [sfun_input_names; 'lg [60]'];
-i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [60]\n ');
-sfun_input_names = [sfun_input_names; 'ug [60]'];
+input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [360]\n ');
+sfun_input_names = [sfun_input_names; 'ug [360]'];
 i_in = i_in + 1;
 
 fprintf(input_note)
@@ -141,11 +141,11 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [3]\n ');
 sfun_output_names = [sfun_output_names; 'u0 [3]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [90]\n ');
-sfun_output_names = [sfun_output_names; 'utraj [90]'];
+output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [540]\n ');
+sfun_output_names = [sfun_output_names; 'utraj [540]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [310]\n ');
-sfun_output_names = [sfun_output_names; 'xtraj [310]'];
+output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [1810]\n ');
+sfun_output_names = [sfun_output_names; 'xtraj [1810]'];
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
 sfun_output_names = [sfun_output_names; 'solver_status'];
