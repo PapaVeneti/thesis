@@ -22,25 +22,53 @@ simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;
 simulink_opts.samplingtime = '-1'; %rate of mpc is determined by rate of inputs. Set ZOH before
 %% INPUT1: initialization and reference
-% initial state:
-q0 = zeros(5,1);
-q0 = [0;1.45;0;1.1;0];
-% w0 = zeros(5,1);
-x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
+reference_mode = 'pitch';
 
-% reference:
-qref = [-1;1;0;1;0];
-wref = [0;0;0;0;0];
-xref = [qref;wref];
-xref = x0;
+switch reference_mode
+    case 'roll'
+        % initial state:
+        q0 = [0;0;0;0;0];
+        x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
+        xref =[];
 
-tau_mh_ref = [0.0;0;1];
+
+        %roll reference:
+        tau_mh_ref = [0.0;0;1]; %From Body to Leg
+        Wpitch     = [0.1, 0.2,1];
+        
+    case 'pitch'
+        % initial state:
+        q0 = [0;1.45;0;1.1;0];
+        x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
+        xref =[];
+
+
+        %pitch reference:
+        tau_mh_ref = [0.0;0;1]; %From Body to Leg
+        Wpitch     = [0.1, 0.2,1];
+
+    case 'pos'
+        % reference:
+        qref = [-1;1;0;1;0];
+        wref = [0;0;0;0;0];
+        xref = [qref;wref];
+        x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
+        xref = x0;
+end
+
+
+
+
+
+
+
+
 
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
-N = 180;
-Th = 0.4; % time horizon length
+N = 100;
+Th = 0.75; % time horizon length
 
 nlp_solver = 'sqp'; % Choose from ['sqp', 'sqp_rti']
 qp_solver = 'partial_condensing_hpipm';
@@ -92,6 +120,16 @@ ocp_model.set('constr_lbx',model.state_constraints(:,1))
 ocp_model.set('constr_ubx',model.state_constraints(:,2))
 ocp_model.set('constr_Jbx',eye(nx))
 
+% ocp_model.set('constr_lbx_e',model.state_constraints(:,1))
+% ocp_model.set('constr_ubx_e',model.state_constraints(:,2))
+% ocp_model.set('constr_Jbx_e',eye(nx))
+
+% ocp_model.set('constr_Jsbx',eye(nx))
+% ocp_model.set('constr_Jsbx_e',eye(nx))
+% Z_x = diag([10*ones(nx/2,1);1*ones(nx/2,1)]);
+% z_x  = [10*ones(nx/2,1);1*ones(nx/2,1)];
+Z_x = [];
+z_x = [];
 
 %3.  Terminal constraints (on state)
 slack_pos = 10;
@@ -161,22 +199,37 @@ C_c(2,:) = [cc_2,zeros(1,nx/2)];
 upper_g = [cb_1;cb_2];
 lower_g = [-1e5;-1e5];
 
-% % rate constraints
-% C_r  = zeros(N-1,nx);
-% D_r  = eye(N) - circshift(eye(N),-1);
-% D_r(N,:)=[];
-% DULIM = (10*0.25)*(Th/N)*ones(N-1,1);
-% 
-% %cummulative path constraints:
-% C_p = [C_c;C_r];
-% D_p = [D_c;D_r];
-
-
 ocp_model.set('constr_C',C_c);
 ocp_model.set('constr_D',D_c);
 ocp_model.set('constr_ug',upper_g);
 ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
 
+% loop closure constraints
+% ns_h =2;
+% Z_h = 1*eye(ns_h);
+% z_h  = 1*ones(ns_h,1);
+% 
+% ocp_model.set('constr_expr_h',1e-2*model.path_constraints);
+% ocp_model.set('constr_lh',zeros(ns_h,1));
+% ocp_model.set('constr_uh',zeros(ns_h,1));
+% ocp_model.set('constr_Jsh',eye(2));
+% 
+% ocp_model.set('constr_expr_h_e',model.path_constraints);
+% ocp_model.set('constr_lh_e',zeros(ns_h,1));
+% ocp_model.set('constr_uh_e',zeros(ns_h,1));
+% ocp_model.set('constr_Jsh_e',eye(2));
+% % Z_h = [];
+% % z_h = [];
+% 
+% %Set slack variables for terminal constraint
+% 
+% Z = blkdiag(Z_x,Z_h);
+% z = [z_x;z_h];
+% 
+% ocp_model.set('cost_Z',Z);
+% ocp_model.set('cost_z',z);
+% ocp_model.set('cost_Z_e',Z);
+% ocp_model.set('cost_z_e',z);
 
 
 %    a. Angular momentum constraints
@@ -208,27 +261,68 @@ ocp_model.set('cost_y_ref_e',y_ref(1:nx))
 
     case 'torque'
 ocp_model.set('cost_type','nonlinear_ls')
-% non linear torque cost term:
+
+% non linear torque cost term (track torque and penalize u):
 qmh    = model.sym_x(1);
 tau    = model.sym_u;
-y_expr = [tau(1);( tau(2)+tau(3) ) *[-sin(qmh);cos(qmh)]];
+actual_torque   = [tau(1); -( tau(2)+tau(3) ) *[-sin(qmh);cos(qmh)]];
+input_torque23  = [tau(2);tau(3)];
+velocities      = [model.sym_x(6);model.sym_x(7);model.sym_x(8);model.sym_x(9);model.sym_x(10)];
+
+%box constraints as penalties
+penalize_constr =qmh*zeros(10,1);
+for i =1:nx/2
+%     penalize_constr(i,1) =  0.5*log(1e-3+ model.sym_x(i) +(- round(model.state_constraints(i,1),1,TieBreaker="plusinf")  )    );
+%     penalize_constr(i+nx/2,1) = 0.5*log(1e-3 -model.sym_x(i) + round(model.state_constraints(i,2),1,TieBreaker="minusinf"));
+    penalize_constr(i,1) =  0.5*log(1e-3+ model.sym_x(i) +(- model.state_constraints(i,1)  )    );
+    penalize_constr(i+nx/2,1) = 0.5*log(1e-3 -model.sym_x(i) + model.state_constraints(i,2));
+end
+for i =[1,3,4] %lower
+    penalize_constr(i,1) =  0.6*log(1e-3+ model.sym_x(i) +(- model.state_constraints(i,1)  )    );
+end
+for i =[1,2,5]
+    penalize_constr(i+nx/2,1) = 0.6*log(1e-3 -model.sym_x(i) + model.state_constraints(i,2));
+end
+%loop closure as penalty
+loop_closure =   model.path_constraints.^2;
+
+
+
+y_expr = [actual_torque;input_torque23; sum( penalize_constr) ];
+y_ref  = [tau_mh_ref ; 0;0;zeros(1,1)];
+W = diag( [0.1, 0.2,1,0.1,0.1,0.3*ones(1,1)]); 
+W = diag( [0.1, 0.2,1,0.1,0.1,0.35*ones(1,1)]); % works 
+% W = diag( [0.1, 0.2,0.8,0.1,0.1,0.35*ones(1,1)]); % wip
+
+% W = diag( [0.1, 0.2,0.25,0.1,0.1]); 
+
+%with velocity   penalty
+% y_expr = [actual_torque;input_torque23;sum(velocities);sum( penalize_constr) ];
+% y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(1,1)];
+% W = diag( [0.1, 0.2,1,0.1,0.1,0.00001*ones(1,1),0.35*ones(1,1)]); 
+
+
+%with loop closure penalty:
+y_expr = [actual_torque;input_torque23; sum( penalize_constr);loop_closure ];
+y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(2,1)];
+W = diag( [0.1, 0.2,1,0.1,0.1,0.35*ones(1,1),20*ones(1,2)]); 
 
 ocp_model.set('cost_expr_y',y_expr)
-ocp_model.set('cost_y_ref' ,tau_mh_ref)
-Rweight = abs( tau_mh_ref/norm(tau_mh_ref) )';
-ocp_model.set('cost_W'   , diag( [1,1,10])/25);
+ocp_model.set('cost_y_ref' ,y_ref)
+ocp_model.set('cost_W'     , W);
 
-%linear mayer cost term:
+%linear mayer cost term -> reach initial position:
 ocp_model.set('cost_type_e','linear_ls')
 
+% Q = diag( [100,100,100,100,100,10,10,10,10,10 ] );
 Q = diag( [100,100,100,100,100,10,10,10,10,10 ] );
-% Q = 10*diag( ones(1,10));
+
 
 Qc = sqrt(Q); %nx * nx %chol
-y_ref = Qc*x0 ;
-ocp_model.set('cost_y_ref_e',y_ref)
-ocp_model.set('cost_W_e' , eye(nx));
-ocp_model.set('cost_Vx_e', Qc);
+y_ref_e = Qc*x0 ;
+ocp_model.set('cost_y_ref_e',y_ref_e)
+ocp_model.set('cost_W_e'    ,eye(nx));
+ocp_model.set('cost_Vx_e'   ,Qc);
 
     otherwise 
         error_msg = ['Wrong cost type.',newline, 'Select `cost_type` from: ["LS"]'];
@@ -241,7 +335,7 @@ end
 ocp_model.set('T', Th); %Time Horizon
 
 ocp_opts = acados_ocp_opts();
-ocp_opts.set('qp_solver_iter_max', 1000); %usually goes max 15-20 -> if 50 it fails too with tc
+ocp_opts.set('qp_solver_iter_max', 200); %usually goes max 15-20 -> if 50 it fails too with tc
 ocp_opts.set('nlp_solver_max_iter', 100);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
@@ -252,9 +346,10 @@ ocp_opts.set('ext_fun_compile_flags', ''); % '-O2'
 
 %extra options:
 %globalization: 
+% ocp_opts.set('nlp_solver_step_length', 0.9);
 % ocp_opts.set('levenberg_marquardt', 1e-2);
 % ocp_opts.set('globalization', 'MERIT_BACKTRACKING');
-% ocp_opts.set('alpha_min', 0.05);
+% ocp_opts.set('alpha_min', 0.8);
 % ocp_opts.set('alpha_min', 100);
 
 %fidelity:
@@ -291,30 +386,30 @@ ubu_sim = repmat(model.input_constraints(:,2),N,1);
 ocp.set('constr_x0', x0);
 ocp.set('constr_lbx', x0, 0)
 % 
-if strcmp(cost_type,'torque')
-    Ncutoff = floor( N*0.75);
-    Nrest   = N-Ncutoff;
-    treturn = -tau_mh_ref*(Ncutoff/Nrest);
-    tref_plot = zeros(N,nu);
-
-    
-    x_traj_init = zeros(nx,N+1);
-    x_retrun = consistent_x0([x0(1),-x0(2),-x0(4)],[0,0,0]);
-    steps = Ncutoff ;                             %// number of steps
-    x_traj_init(:,1:Ncutoff) = bsxfun(@plus,((x_retrun(:)-x0(:))./(steps-1))*[0:steps-1],x0(:));
-    steps = Nrest+1 ;
-    x_traj_init(:,Ncutoff+1:end) = bsxfun(@plus,((x0(:)-x_retrun(:))./(steps-1))*[0:steps-1],x_retrun(:));
-
-    for iN = 0:N-1
-        if iN< Ncutoff
-            tref_current = tau_mh_ref;
-        else
-            tref_current = treturn;
-        end
-        tref_plot(iN+1,:) = tref_current';
-        ocp.set('cost_y_ref',tref_current ,iN)
-    end
-end
+% if strcmp(cost_type,'torque')
+%     Ncutoff = floor( N*0.75);
+%     Nrest   = N-Ncutoff;
+%     treturn = -tau_mh_ref*(Ncutoff/Nrest);
+%     tref_plot = zeros(N,nu);
+% 
+%     
+%     x_traj_init = zeros(nx,N+1);
+%     x_retrun = consistent_x0([x0(1),-x0(2),-x0(4)],[0,0,0]);
+%     steps = Ncutoff ;                             %// number of steps
+%     x_traj_init(:,1:Ncutoff) = bsxfun(@plus,((x_retrun(:)-x0(:))./(steps-1))*[0:steps-1],x0(:));
+%     steps = Nrest+1 ;
+%     x_traj_init(:,Ncutoff+1:end) = bsxfun(@plus,((x0(:)-x_retrun(:))./(steps-1))*[0:steps-1],x_retrun(:));
+% 
+%     for iN = 0:N-1
+%         if iN< Ncutoff
+%             tref_current = tau_mh_ref;
+%         else
+%             tref_current = treturn;
+%         end
+%         tref_plot(iN+1,:) = tref_current';
+%         ocp.set('cost_y_ref',[tref_current;0;0] ,iN)
+%     end
+% end
 % 
 
 
@@ -499,7 +594,9 @@ sim_names    = naming_automation('q',indices,'$','$');
 simu_names    = naming_automation('q',indices,'$simulink:\ ','$');
 
 initialize_plot(5,"title",title_str ,"ylab",ylabel_names )
+if strcmp(cost_type,'LS')
 populate_plot(5,[],xref_plot(1:5)',"reference",true,linestyle='--',color='g',display_names=ref_names)
+end
 populate_plot(5,tmpc,xtraj(1:5,:)',"display_names",sim_names)
 
 
@@ -514,7 +611,9 @@ sim_names    = naming_automation('\omega',indices,'$sim:\ ','$');
 simu_names   = naming_automation('\omega',indices,'$simulink:\ ','$');
 
 initialize_plot(5,"title",title_str ,"ylab",ylabel_names )
+if strcmp(cost_type,'LS')
 populate_plot(5,[],xref_plot(6:10)',"reference",true,linestyle='--',color='g',display_names=ref_names)
+end
 populate_plot(5,tmpc,xtraj(6:10,:)',"display_names",sim_names)
 
 % populate_plot(5,tsimulink,q_sim,"color",'b',linestyle='--',display_names=simu_names)
@@ -547,10 +646,17 @@ simu_names   = naming_automation('\tau',mh_index,'$simulink:\ ','$');
 TMH = base_torque_calc(xtraj(1,1:end-1)',utraj');
 
 initialize_plot(3,"title",title_str ,"ylab",ylabel_names )
-% populate_plot(3,tmpc(1:end-1),tref_plot,linestyle='--',color='g',display_names=ref_names)
+populate_plot(3,[],tau_mh_ref',reference=1,linestyle='--',color='g',display_names=ref_names)
 % populate_plot(3,tmpc(1:end-1),ones(N,1)*tref_plot',linestyle='--',color='g',display_names=ref_names)
 populate_plot(3,tmpc(1:end-1),TMH,"display_names",sim_names)
 
+Tintegral = trapz(linspace(0,Th,N),TMH);
+subplot(3,1,1)
+text(0.005,max(TMH(:,1)),0,['$\int{ \tau_{x} dt} = ',num2str(Tintegral(1)),'[Nm \ s] $'],Interpreter='latex',FontSize=25,BackgroundColor='w',VerticalAlignment='cap')
+subplot(3,1,2)
+text(0.005,max(TMH(:,2)),0,['$\int{ \tau_{y} dt} = ',num2str(Tintegral(2)),'[Nm \ s] $'],Interpreter='latex',FontSize=25,BackgroundColor='w',VerticalAlignment='cap')
+subplot(3,1,3)
+text(0.005,max(TMH(:,3)),0,['$\int{ \tau_{z} dt} = ',num2str(Tintegral(3)),'[Nm \ s] $'],Interpreter='latex',FontSize=25,BackgroundColor='w',VerticalAlignment='cap')
 
 %%
 % load handel

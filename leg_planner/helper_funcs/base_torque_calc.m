@@ -6,5 +6,5 @@ function tmh = base_torque_calc(qmh,t)
 tmh = t;
 
 % tmh(:,1) = t(:,1);
-tmh(:,2) = -sin(qmh).* ( t(:,2)+t(:,3) ) ;
-tmh(:,3) =  cos(qmh).* ( t(:,2)+t(:,3) )  ;
+tmh(:,2) = -sin(qmh).*(- ( t(:,2)+t(:,3) ) );
+tmh(:,3) =  cos(qmh).*(- ( t(:,2)+t(:,3) ) );

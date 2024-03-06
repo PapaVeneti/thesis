@@ -57,10 +57,10 @@
 #define NTNU_LEG_NG     2
 #define NTNU_LEG_NBXN   0
 #define NTNU_LEG_NGN    0
-#define NTNU_LEG_NY0    3
-#define NTNU_LEG_NY     3
+#define NTNU_LEG_NY0    8
+#define NTNU_LEG_NY     8
 #define NTNU_LEG_NYN    10
-#define NTNU_LEG_N      180
+#define NTNU_LEG_N      100
 #define NTNU_LEG_NH     0
 #define NTNU_LEG_NPHI   0
 #define NTNU_LEG_NHN    0

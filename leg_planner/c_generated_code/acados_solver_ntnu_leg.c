@@ -375,7 +375,7 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     if (new_time_steps) {
         ntnu_leg_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
-        double time_step = 0.002222222222;
+        double time_step = 0.0075;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -416,16 +416,26 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(yref_e);
    double* W_0 = calloc(NY0*NY0, sizeof(double));
     // change only the non-zero elements:
-    W_0[0+(NY0) * 0] = 0.04;
-    W_0[1+(NY0) * 1] = 0.04;
-    W_0[2+(NY0) * 2] = 0.4;
+    W_0[0+(NY0) * 0] = 0.1;
+    W_0[1+(NY0) * 1] = 0.2;
+    W_0[2+(NY0) * 2] = 1;
+    W_0[3+(NY0) * 3] = 0.1;
+    W_0[4+(NY0) * 4] = 0.1;
+    W_0[5+(NY0) * 5] = 0.35;
+    W_0[6+(NY0) * 6] = 20;
+    W_0[7+(NY0) * 7] = 20;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
     double* W = calloc(NY*NY, sizeof(double));
     // change only the non-zero elements:
-    W[0+(NY) * 0] = 0.04;
-    W[1+(NY) * 1] = 0.04;
-    W[2+(NY) * 2] = 0.4;
+    W[0+(NY) * 0] = 0.1;
+    W[1+(NY) * 1] = 0.2;
+    W[2+(NY) * 2] = 1;
+    W[3+(NY) * 3] = 0.1;
+    W[4+(NY) * 4] = 0.1;
+    W[5+(NY) * 5] = 0.35;
+    W[6+(NY) * 6] = 20;
+    W[7+(NY) * 7] = 20;
 
     for (int i = 1; i < N; i++)
     {
@@ -714,7 +724,7 @@ void ntnu_leg_acados_create_6_set_opts(ntnu_leg_solver_capsule* capsule)
     /* options QP solver */
     int qp_solver_cond_N;
 
-    const int qp_solver_cond_N_ori = 180;
+    const int qp_solver_cond_N_ori = 100;
     qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
@@ -743,7 +753,7 @@ void ntnu_leg_acados_create_6_set_opts(ntnu_leg_solver_capsule* capsule)
     int initialize_t_slacks = 0;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "initialize_t_slacks", &initialize_t_slacks);
 
-    int qp_solver_iter_max = 1000;
+    int qp_solver_iter_max = 200;
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_iter_max", &qp_solver_iter_max);
 
 int print_level = 0;

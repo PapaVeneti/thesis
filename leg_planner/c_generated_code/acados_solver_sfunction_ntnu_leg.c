@@ -68,26 +68,26 @@ static void mdlInitializeSizes (SimStruct *S)
     // ubx_0
     ssSetInputPortVectorDimension(S, 1, 10);
     // y_ref_0
-    ssSetInputPortVectorDimension(S, 2, 3);
+    ssSetInputPortVectorDimension(S, 2, 8);
     // y_ref
-    ssSetInputPortVectorDimension(S, 3, 537);
+    ssSetInputPortVectorDimension(S, 3, 792);
     // y_ref_e
     ssSetInputPortVectorDimension(S, 4, 10);
     // lbx
-    ssSetInputPortVectorDimension(S, 5, 1790);
+    ssSetInputPortVectorDimension(S, 5, 990);
     // ubx
-    ssSetInputPortVectorDimension(S, 6, 1790);
+    ssSetInputPortVectorDimension(S, 6, 990);
     // lbu
-    ssSetInputPortVectorDimension(S, 7, 540);
+    ssSetInputPortVectorDimension(S, 7, 300);
     // ubu
-    ssSetInputPortVectorDimension(S, 8, 540);
+    ssSetInputPortVectorDimension(S, 8, 300);
     // lg
-    ssSetInputPortVectorDimension(S, 9, 360);
+    ssSetInputPortVectorDimension(S, 9, 200);
     // ug
-    ssSetInputPortVectorDimension(S, 10, 360);/* specify dimension information for the OUTPUT ports */
+    ssSetInputPortVectorDimension(S, 10, 200);/* specify dimension information for the OUTPUT ports */
     ssSetOutputPortVectorDimension(S, 0, 3 );
-    ssSetOutputPortVectorDimension(S, 1, 540 );
-    ssSetOutputPortVectorDimension(S, 2, 1810 );
+    ssSetOutputPortVectorDimension(S, 1, 300 );
+    ssSetOutputPortVectorDimension(S, 2, 1010 );
     ssSetOutputPortVectorDimension(S, 3, 1 );
     ssSetOutputPortVectorDimension(S, 4, 1 );
     ssSetOutputPortVectorDimension(S, 5, 10 ); // state at shooting node 1
@@ -182,7 +182,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // y_ref_0
     in_sign = ssGetInputPortRealSignalPtrs(S, 2);
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 8; i++)
         buffer[i] = (double)(*in_sign[i]);
 
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", (void *) buffer);
@@ -193,8 +193,8 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
     for (int ii = 1; ii < N; ii++)
     {
-        for (int jj = 0; jj < 3; jj++)
-            buffer[jj] = (double)(*in_sign[(ii-1)*3+jj]);
+        for (int jj = 0; jj < 8; jj++)
+            buffer[jj] = (double)(*in_sign[(ii-1)*8+jj]);
         ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, ii, "yref", (void *) buffer);
     }
 
@@ -279,7 +279,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
   
 
     out_xtraj = ssGetOutputPortRealSignal(S, 2);
-    for (int ii = 0; ii < 181; ii++)
+    for (int ii = 0; ii < 101; ii++)
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii,
                         "x", (void *) (out_xtraj + ii * 10));
     out_status = ssGetOutputPortRealSignal(S, 3);

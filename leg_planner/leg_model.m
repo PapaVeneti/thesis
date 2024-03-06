@@ -43,6 +43,8 @@ G  = SX.sym('G',5,1);
 H  = SX.sym('H',2,5);
 Ht = SX.sym('Ht',2,5);
 
+%constraint matrix:
+HQ  = SX.sym('HQ',2,1);
 
 Dyn = SX.sym('Dyn',nx,1);
 matrices
@@ -64,6 +66,7 @@ f=  -finv2( H*Minv*H' )  *   (H*vel_dyn + Ht*qt);
 %% 4.b Explicit dynamics:
 derivatives = [qt(1);qt(2);qt(3);qt(4);qt(5)];
 dynamics    = Minv* (u_gen - C*qt - G + (H')*f -D*qt);
+% dynamics    = Minv* (u_gen - C*qt - G -D*qt);
 
 
 expr_f_expl = vertcat(derivatives,dynamics);
@@ -103,6 +106,9 @@ state_constraints(6:10,:) = max_vel*ones(5,2)*[-1,0;0,1];
 %2. input constraints
 input_constraints = [10;10;10]*[-1,1];
 
+%3. kinematic loop closure constraint
+path_constraints = HQ;
+
 %% 6.  populate structure:
 model.name = 'ntnu_leg';
 
@@ -115,4 +121,5 @@ model.expr_f_expl = expr_f_expl;
 model.expr_f_impl = expr_f_impl;
 model.input_constraints = input_constraints;
 model.state_constraints = state_constraints;
+model.path_constraints = path_constraints;
 end

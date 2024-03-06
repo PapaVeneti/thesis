@@ -158,7 +158,17 @@ ocp_model.set('constr_D',D_c);
 ocp_model.set('constr_ug',upper_g);
 ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
 
+% loop closure constraints
+ns_h =2;
+Z_h = 100*eye(ns_h);
+z_h  = 100*ones(ns_h,1);
 
+ocp_model.set('constr_expr_h',model.path_constraints);
+ocp_model.set('constr_lh',zeros(ns_h,1));
+ocp_model.set('constr_uh',zeros(ns_h,1));
+ocp_model.set('constr_Jsh',eye(2));
+ocp_model.set('cost_Z',Z_h);
+ocp_model.set('cost_z',z_h);
 
 %    a. Angular momentum constraints
 %    b. Norm constraints on torques
