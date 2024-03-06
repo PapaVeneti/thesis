@@ -375,7 +375,7 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     if (new_time_steps) {
         ntnu_leg_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
-        double time_step = 0.0075;
+        double time_step = 0.01;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -394,12 +394,12 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     /**** Cost ****/
     double* yref_0 = calloc(NY0, sizeof(double));
     // change only the non-zero elements:
-    yref_0[2] = 1;
+    yref_0[0] = -1;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
     double* yref = calloc(NY, sizeof(double));
     // change only the non-zero elements:
-    yref[2] = 1;
+    yref[0] = -1;
 
     for (int i = 1; i < N; i++)
     {
@@ -408,17 +408,16 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(yref);
     double* yref_e = calloc(NYN, sizeof(double));
     // change only the non-zero elements:
-    yref_e[1] = 14.5;
-    yref_e[2] = -7.434528511;
-    yref_e[3] = 11;
-    yref_e[4] = -0.1097185567;
+    yref_e[0] = 10;
+    yref_e[2] = -0.08435366906;
+    yref_e[4] = 0.08435366906;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
     free(yref_e);
    double* W_0 = calloc(NY0*NY0, sizeof(double));
     // change only the non-zero elements:
-    W_0[0+(NY0) * 0] = 0.1;
-    W_0[1+(NY0) * 1] = 0.2;
-    W_0[2+(NY0) * 2] = 1;
+    W_0[0+(NY0) * 0] = 1;
+    W_0[1+(NY0) * 1] = 0.1;
+    W_0[2+(NY0) * 2] = 0.25;
     W_0[3+(NY0) * 3] = 0.1;
     W_0[4+(NY0) * 4] = 0.1;
     W_0[5+(NY0) * 5] = 0.35;
@@ -428,9 +427,9 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(W_0);
     double* W = calloc(NY*NY, sizeof(double));
     // change only the non-zero elements:
-    W[0+(NY) * 0] = 0.1;
-    W[1+(NY) * 1] = 0.2;
-    W[2+(NY) * 2] = 1;
+    W[0+(NY) * 0] = 1;
+    W[1+(NY) * 1] = 0.1;
+    W[2+(NY) * 2] = 0.25;
     W[3+(NY) * 3] = 0.1;
     W[4+(NY) * 4] = 0.1;
     W[5+(NY) * 5] = 0.35;
@@ -503,14 +502,12 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     double* lbx0 = lubx0;
     double* ubx0 = lubx0 + NBX0;
     // change only the non-zero elements:
-    lbx0[1] = 1.45;
-    ubx0[1] = 1.45;
-    lbx0[2] = -0.7434528511;
-    ubx0[2] = -0.7434528511;
-    lbx0[3] = 1.1;
-    ubx0[3] = 1.1;
-    lbx0[4] = -0.01097185567;
-    ubx0[4] = -0.01097185567;
+    lbx0[0] = 1;
+    ubx0[0] = 1;
+    lbx0[2] = -0.008435366906;
+    ubx0[2] = -0.008435366906;
+    lbx0[4] = 0.008435366906;
+    ubx0[4] = 0.008435366906;
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
@@ -785,10 +782,9 @@ void ntnu_leg_acados_create_7_set_nlp_out(ntnu_leg_solver_capsule* capsule)
 
     // initialize with x0
     
-    x0[1] = 1.45;
-    x0[2] = -0.7434528511;
-    x0[3] = 1.1;
-    x0[4] = -0.01097185567;
+    x0[0] = 1;
+    x0[2] = -0.008435366906;
+    x0[4] = 0.008435366906;
 
 
     double* u0 = xu0 + NX;

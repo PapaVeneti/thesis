@@ -74,7 +74,7 @@ int ntnu_leg_acados_sim_create(ntnu_leg_sim_solver_capsule * capsule)
     bool tmp_bool;
 
     
-    double Tsim = 0.0075;
+    double Tsim = 0.01;
 
     
     // explicit ode

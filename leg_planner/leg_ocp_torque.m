@@ -22,19 +22,20 @@ simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;
 simulink_opts.samplingtime = '-1'; %rate of mpc is determined by rate of inputs. Set ZOH before
 %% INPUT1: initialization and reference
-reference_mode = 'pitch';
+reference_mode = 'roll';
 
 switch reference_mode
     case 'roll'
         % initial state:
-        q0 = [0;0;0;0;0];
+        q0 = [1;0;0;0;0];
         x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
         xref =[];
 
-
         %roll reference:
-        tau_mh_ref = [0.0;0;1]; %From Body to Leg
-        Wpitch     = [0.1, 0.2,1];
+        tau_mh_ref = [-1;0;0]; %From Body to Leg
+        Wtrack     = [1, 0.1,0.25];
+
+       % Th = 1s
         
     case 'pitch'
         % initial state:
@@ -42,10 +43,11 @@ switch reference_mode
         x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
         xref =[];
 
-
         %pitch reference:
         tau_mh_ref = [0.0;0;1]; %From Body to Leg
-        Wpitch     = [0.1, 0.2,1];
+        Wtrack     = [0.1, 0.2,1];
+
+        %Th = 0.75s
 
     case 'pos'
         % reference:
@@ -56,19 +58,11 @@ switch reference_mode
         xref = x0;
 end
 
-
-
-
-
-
-
-
-
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
 N = 100;
-Th = 0.75; % time horizon length
+Th = 1; % time horizon length
 
 nlp_solver = 'sqp'; % Choose from ['sqp', 'sqp_rti']
 qp_solver = 'partial_condensing_hpipm';
@@ -286,26 +280,25 @@ end
 %loop closure as penalty
 loop_closure =   model.path_constraints.^2;
 
+Wu       = 0.1*ones(1,2);
+Wpath    = 0.35; 
+Wclosure = 20*ones(1,2);
 
+% y_expr = [actual_torque;input_torque23; sum( penalize_constr) ];
+% y_ref  = [tau_mh_ref ; 0;0;zeros(1,1)];
+% W = diag( [Wtrack,Wu,Wpath]); % works 
 
-y_expr = [actual_torque;input_torque23; sum( penalize_constr) ];
-y_ref  = [tau_mh_ref ; 0;0;zeros(1,1)];
-W = diag( [0.1, 0.2,1,0.1,0.1,0.3*ones(1,1)]); 
-W = diag( [0.1, 0.2,1,0.1,0.1,0.35*ones(1,1)]); % works 
-% W = diag( [0.1, 0.2,0.8,0.1,0.1,0.35*ones(1,1)]); % wip
-
-% W = diag( [0.1, 0.2,0.25,0.1,0.1]); 
 
 %with velocity   penalty
 % y_expr = [actual_torque;input_torque23;sum(velocities);sum( penalize_constr) ];
 % y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(1,1)];
-% W = diag( [0.1, 0.2,1,0.1,0.1,0.00001*ones(1,1),0.35*ones(1,1)]); 
+% W = diag( [Wtrack,Wu,0.00001*ones(1,1),Wpath]); 
 
 
 %with loop closure penalty:
 y_expr = [actual_torque;input_torque23; sum( penalize_constr);loop_closure ];
 y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(2,1)];
-W = diag( [0.1, 0.2,1,0.1,0.1,0.35*ones(1,1),20*ones(1,2)]); 
+W = diag( [Wtrack,Wu,Wpath,Wclosure]); 
 
 ocp_model.set('cost_expr_y',y_expr)
 ocp_model.set('cost_y_ref' ,y_ref)
