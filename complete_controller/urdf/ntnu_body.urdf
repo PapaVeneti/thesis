@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-1-g15f4949  Build Version: 1.6.7594.29634
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="ntnu_leg">
+  <link name="world"/>
+
+  <link name="main_body">
+    <inertial>
+      <origin
+        xyz="-0.00716131 -0.00065373 0.0070715"
+        rpy="-0.0013   0.0004   0.0056" />
+      <mass
+        value="6.7053012" />
+      <inertia
+        ixx="0.06193997"
+        ixy="0"
+        ixz="0"
+        iyy="0.21302968"
+        iyz="0"
+        izz="0.26562956" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision name="Front_MH_1">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/body_MH_front_motors.stl" />
+      </geometry>
+    </collision>
+    <collision name="Front_MH_2">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/body_MH_front_cover.stl" />
+      </geometry>
+    </collision>
+    <collision name="Rear_MH_1">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/body_MH_rear_motors.stl" />
+      </geometry>
+    </collision>
+    <collision name="Rear_MH_2">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/body_MH_rear_cover.stl" />
+      </geometry>
+    </collision>
+    <collision name="main_body_width">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/main_body_collision.stl" />
+      </geometry>
+    </collision>
+    <collision name="main_body_length">
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ntnu_leg/meshes/main_body_collision_2.stl" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint  name="world_joint" type="fixed">
+    <origin
+      xyz="0 0 1"
+      rpy="0 0 0" />
+    <parent link="world" />
+    <child  link="main_body" />
+  </joint>
+
+
+  
+
+
+</robot>
