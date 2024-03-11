@@ -1,3 +1,5 @@
+%% simparameters
+quadruped_params_init
 %% BODY PLANNER : initialization and setup
 % initial state:
 q0_b = [1; 0; 0;0]; 
