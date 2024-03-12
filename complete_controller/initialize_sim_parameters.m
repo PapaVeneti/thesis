@@ -95,11 +95,11 @@ tau_ref = [0;0;0];
 KD_definition
 constraint_coefficients
 leg_model_obj = leg_model;
-Nl = 5;
-Thl = 0.1;
+Nl = 40;
+Thl = 0.2;
 nu_l = 3;
 nx_l = 10;
-size_of_ref = 6;
+size_of_ref = 8;
 output_size = size_of_ref*(Nl-1)
 
 % %export for simulink
