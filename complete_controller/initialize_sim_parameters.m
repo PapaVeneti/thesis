@@ -95,8 +95,8 @@ tau_ref = [0;0;0];
 KD_definition
 constraint_coefficients
 leg_model_obj = leg_model;
-Nl = 40;
-Thl = 0.2;
+Nl = 15;
+Thl = 0.1;
 nu_l = 3;
 nx_l = 10;
 size_of_ref = 8;

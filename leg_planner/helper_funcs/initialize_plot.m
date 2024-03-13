@@ -33,6 +33,7 @@ arguments
     Nplot {mustBeInteger,mustBeNonnegative}
 
     options.title     = '$$'
+    options.subplot_titles = cell(Nplot,1)
     options.ylabel      = cell(Nplot,1)
     options.xlabel      = '$t\ [s]$'
     options.fontsize  = 25
@@ -56,11 +57,12 @@ end
 
 for index = 1:Nplot
     subplot(Nplot,1,index)
+    title(options.subplot_titles{index},Interpreter='latex',FontSize=options.fontsize)
     set(gca,'Fontsize',options.axis_size)
     %title
-    if index == 1
-        title(options.title,Interpreter='latex',FontSize=options.fontsize)
-    end
+%     if index == 1
+%         title(options.title,Interpreter='latex',FontSize=options.fontsize)
+%     end
     
     %limits
     if add_limits
@@ -72,6 +74,6 @@ for index = 1:Nplot
     grid(options.grid)
 end
 
-
+sgtitle(options.title,Interpreter='latex',FontSize=options.fontsize) 
 xlabel(options.xlabel,Interpreter='latex',FontSize=options.fontsize)
 end
