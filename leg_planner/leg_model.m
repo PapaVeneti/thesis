@@ -39,7 +39,7 @@ sym_u = tau;
 %% 4.a dynamics helpers: 
 M  = SX.sym('M',5,5);
 C  = SX.sym('C',5,5);
-G  = SX.sym('G',5,1);
+% G  = SX.sym('G',5,1);
 H  = SX.sym('H',2,5);
 Ht = SX.sym('Ht',2,5);
 
@@ -55,8 +55,8 @@ D = diag(D);
 
 
 Minv = finv5(M);
-% vel_dyn  = inv(M)* (u_gen - C*qt - G -D*qt);
-vel_dyn  = Minv* (u_gen - C*qt - G -D*qt);
+% vel_dyn  = inv(M)* (u_gen - C*qt  -D*qt);
+vel_dyn  = Minv* (u_gen - C*qt  -D*qt); %no grav
 
 
 %f=  -pinv( H*(  inv(M) *H' ))  *   (H*vel_dyn + Ht*qt);
@@ -65,8 +65,8 @@ f=  -finv2( H*Minv*H' )  *   (H*vel_dyn + Ht*qt);
 
 %% 4.b Explicit dynamics:
 derivatives = [qt(1);qt(2);qt(3);qt(4);qt(5)];
-dynamics    = Minv* (u_gen - C*qt - G + (H')*f -D*qt);
-% dynamics    = Minv* (u_gen - C*qt - G -D*qt);
+dynamics    = Minv* (u_gen - C*qt  + (H')*f -D*qt);
+% dynamics    = Minv* (u_gen - C*qt  -D*qt);
 
 
 expr_f_expl = vertcat(derivatives,dynamics);
@@ -77,7 +77,7 @@ temp = inv(H*Minv*H');
 Nc = eye(5) - Minv*(H')*temp*H ; % constraint null-space matrix
 
 
-expr_f_impl = [sym_xdot(1:5)-qt;(Nc')*(M*sym_xdot(6:10) + (C+D)*qt + G -u_gen)];
+expr_f_impl = [sym_xdot(1:5)-qt;(Nc')*(M*sym_xdot(6:10) + (C+D)*qt +  -u_gen)];
 
 %% 5.  system constraints:
 %1. state constraints

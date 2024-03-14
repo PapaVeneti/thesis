@@ -11,18 +11,20 @@ check_acados_requirements()
 
 %% INPUT0: ocp definition options - Simulink outputs
 Do_make_acados_simulink_files = false;
-cost_type = 'torque'; %['LS','torque']
+cost_type = 'short_Th'; %['short_Th']
 solver_statistics = false;
 same_init = false;
-terminal_constr = 0; 
-%0: no tc, 1: pos(1,2,4) + vel, 2:pos(1,2,4), 3 full state tc
 
 % simulink outputs:
 simulink_opts.outputs.utraj = 1;
 simulink_opts.outputs.xtraj = 1;
+simulink_opts.inputs.cost_W = 1; %for gain scheduling
+simulink_opts.inputs.cost_W_e = 1; %for gain scheduling
+% simulink_opts.inputs.x_init = 1; for initialization
+% simulink_opts.inputs.u_init = 1; for initialization
 simulink_opts.samplingtime = '-1'; %rate of mpc is determined by rate of inputs. Set ZOH before
 %% INPUT1: initialization and reference
-reference_mode = 'roll';
+reference_mode = 'pitch';
 
 switch reference_mode
     case 'roll'
@@ -31,38 +33,43 @@ switch reference_mode
         x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
         xref =[];
 
+        %rep1
+%         x0  = [ -0.9111   -0.5096    0.9842    1.0809   -1.0948         0         0         0         0         0]';
+
         %roll reference:
-        tau_mh_ref = [-1;0;0]; %From Body to Leg
+        tau_mh_ref = [-0.2;0;0]; %From Body to Leg
         Wtrack     = [1, 0.1,0.25];
+%         Wtrack     = [0.1, 0.1,0.1];
+
 
        % Th = 1s
         
     case 'pitch'
         % initial state:
-        q0 = [0;1.45;0;1.1;0];
-        x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
+        q0 = [0;1.45;0;1.1;0]; %initial
+        w0 = [0;0;0];
+        x0 = consistent_x0(q0([1,2,4]),w0);
+
         xref =[];
 
         %pitch reference:
-        tau_mh_ref = [0.0;0;1]; %From Body to Leg
-        Wtrack     = [0.1, 0.2,1];
+        tau_mh_ref = [0.0;0;-1]; %From Body to Leg
+        Wtrack     = [0.075, 0.0,5];
 
-        %Th = 0.75s
 
-    case 'pos'
-        % reference:
-        qref = [-1;1;0;1;0];
-        wref = [0;0;0;0;0];
-        xref = [qref;wref];
-        x0 = consistent_x0(q0([1,2,4]),[0;0;0]);
-        xref = x0;
+%with gravity settings
+%         Wtrack     = [0.1, 0.2,1]; %for gravity
+%         x0 =[0.7907   -0.9357   -0.1250   -1.5430    0.9750         0         0         0         0         0]';
+%         x0 =[0.0231   -0.9027   -0.1319   -1.5104    0.9615         0         0         0         0         0]';
+%         %Th = 0.75s
+
 end
 
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
-N = 100;
-Th = 1; % time horizon length
+N = 15;
+Th = 0.1; % time horizon length
 
 nlp_solver = 'sqp'; % Choose from ['sqp', 'sqp_rti']
 qp_solver = 'partial_condensing_hpipm';
@@ -100,6 +107,8 @@ else % irk irk_gnsf
     ocp_model.set('dyn_expr_f', model.expr_f_impl);
 end
 
+
+
 %% 3. Constraints:
 %0.  Initial State
 ocp_model.set('constr_x0', x0);
@@ -114,72 +123,12 @@ ocp_model.set('constr_lbx',model.state_constraints(:,1))
 ocp_model.set('constr_ubx',model.state_constraints(:,2))
 ocp_model.set('constr_Jbx',eye(nx))
 
+%3.  Terminal constraints (on state)
+
+% MUST ADD
 % ocp_model.set('constr_lbx_e',model.state_constraints(:,1))
 % ocp_model.set('constr_ubx_e',model.state_constraints(:,2))
 % ocp_model.set('constr_Jbx_e',eye(nx))
-
-% ocp_model.set('constr_Jsbx',eye(nx))
-% ocp_model.set('constr_Jsbx_e',eye(nx))
-% Z_x = diag([10*ones(nx/2,1);1*ones(nx/2,1)]);
-% z_x  = [10*ones(nx/2,1);1*ones(nx/2,1)];
-Z_x = [];
-z_x = [];
-
-%3.  Terminal constraints (on state)
-slack_pos = 10;
-slack_vel = 10;
-
-if strcmp(cost_type,'torque')
-slack_pos = 1e-1;
-end
-
-if terminal_constr
-    switch terminal_constr
-        case 1
-        %a. pos1,2,4 full vel
-        Jbx_e = eye(nx); 
-        Jbx_e(5,:) =[]; 
-        Jbx_e(3,:) =[]; 
-    
-        xref_tc = xref; 
-        xref_tc(5)= [];
-        xref_tc(3)= [];
-    
-        ns_e  = 8;%number of slack variables for terminal constraint
-        Z_e = diag([slack_pos*ones(3,1);slack_vel*ones(5,1)]);
-    
-        case 2
-        %b. pos1,2,4
-        Jbx_e = [eye(3),zeros(3,10)];
-        xref_tc = xref([1,2,4]);
-    
-        ns_e = 3;
-        Z_e = diag(slack_pos*ones(3,1));
-        
-        
-        case 3
-        %c. full state
-        Jbx_e = eye(nx); 
-        xref_tc = consistent_x0(xref([1,2,4]),xref([6,7,9]));
-
-        ns_e  = 10;
-        Z_e = diag([slack_pos*ones(5,1);slack_vel*ones(5,1)]);
-    
-        otherwise 
-    
-    end
-
-    %Set terminal constraint
-    ocp_model.set('constr_Jbx_e',Jbx_e)
-    ocp_model.set('constr_lbx_e',xref_tc)
-    ocp_model.set('constr_ubx_e',xref_tc)
-    
-    %Set slack variables for terminal constraint
-    ocp_model.set('constr_Jsbx_e',eye(ns_e));
-    ocp_model.set('cost_Z_e',Z_e);
-    ocp_model.set('cost_z_e',ones(ns_e,1));
-    
-end
 
 %4.  Path constraints 
 %TBD:
@@ -198,12 +147,13 @@ ocp_model.set('constr_D',D_c);
 ocp_model.set('constr_ug',upper_g);
 ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
 
+% 5. Non linear constraints: 
 % loop closure constraints
 % ns_h =2;
-% Z_h = 1*eye(ns_h);
-% z_h  = 1*ones(ns_h,1);
+% Z_h = 10*eye(ns_h);
+% z_h  = 10*ones(ns_h,1);
 % 
-% ocp_model.set('constr_expr_h',1e-2*model.path_constraints);
+% ocp_model.set('constr_expr_h',model.path_constraints);
 % ocp_model.set('constr_lh',zeros(ns_h,1));
 % ocp_model.set('constr_uh',zeros(ns_h,1));
 % ocp_model.set('constr_Jsh',eye(2));
@@ -225,100 +175,81 @@ ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
 % ocp_model.set('cost_Z_e',Z);
 % ocp_model.set('cost_z_e',z);
 
-
-%    a. Angular momentum constraints
-%    b. Norm constraints on torques
-
 %% 4. Cost:
 
 switch cost_type
-    case 'LS'
-% Linear LS
-ocp_model.set('cost_type','linear_ls')
-ocp_model.set('cost_type_e','linear_ls')
 
-Q = diag( [100,100,0,100,0,10,10,10,10,10 ] ); 
-R = diag( [10,10,10 ] );
+    case 'short_Th'
 
-Qc = sqrt(Q); %nx * nx %chol
-Rc = sqrt(R); %nu * nu
-y_ref = [Qc,zeros(nx,nu);zeros(nu,nx),Rc]*[xref;tau_ref] ; %Important to give it like that.
-
-ocp_model.set('cost_Vx'  , [Qc;zeros(nu,nx)] );
-ocp_model.set('cost_Vx_e', Qc                );
-ocp_model.set('cost_Vu'  , [zeros(nx,nu);Rc] );
-ocp_model.set('cost_W'   , eye(nx+nu)        );
-ocp_model.set('cost_W_e' , eye(nx)           );
-
-ocp_model.set('cost_y_ref'  ,y_ref      )
-ocp_model.set('cost_y_ref_e',y_ref(1:nx))
-
-    case 'torque'
 ocp_model.set('cost_type','nonlinear_ls')
+% ---------------------------------
+% A. Construct Objective Functions
+% ---------------------------------
 
-% non linear torque cost term (track torque and penalize u):
+%1. Torque Reference: 
 qmh    = model.sym_x(1);
 tau    = model.sym_u;
-actual_torque   = [tau(1); -( tau(2)+tau(3) ) *[-sin(qmh);cos(qmh)]];
+actual_torque   = [tau(1); ( tau(2)+tau(3) ) *[sin(qmh);-cos(qmh)]];
+
+%2.  Penalize u norm
 input_torque23  = [tau(2);tau(3)];
-velocities      = [model.sym_x(6);model.sym_x(7);model.sym_x(8);model.sym_x(9);model.sym_x(10)];
 
-%box constraints as penalties
-penalize_constr =qmh*zeros(10,1);
-for i =1:nx/2
-%     penalize_constr(i,1) =  0.5*log(1e-3+ model.sym_x(i) +(- round(model.state_constraints(i,1),1,TieBreaker="plusinf")  )    );
-%     penalize_constr(i+nx/2,1) = 0.5*log(1e-3 -model.sym_x(i) + round(model.state_constraints(i,2),1,TieBreaker="minusinf"));
-    penalize_constr(i,1) =  0.5*log(1e-3+ model.sym_x(i) +(- model.state_constraints(i,1)  )    );
-    penalize_constr(i+nx/2,1) = 0.5*log(1e-3 -model.sym_x(i) + model.state_constraints(i,2));
-end
-for i =[1,3,4] %lower
-    penalize_constr(i,1) =  0.6*log(1e-3+ model.sym_x(i) +(- model.state_constraints(i,1)  )    );
-end
-for i =[1,2,5]
-    penalize_constr(i+nx/2,1) = 0.6*log(1e-3 -model.sym_x(i) + model.state_constraints(i,2));
-end
-%loop closure as penalty
-loop_closure =   model.path_constraints.^2;
+%3. Loop closure constraint as penalty
+loop_closure =   model.path_constraints;
 
-Wu       = 0.1*ones(1,2);
-Wpath    = 0.35; 
-Wclosure = 20*ones(1,2);
+%4. Optional:
 
-% y_expr = [actual_torque;input_torque23; sum( penalize_constr) ];
-% y_ref  = [tau_mh_ref ; 0;0;zeros(1,1)];
-% W = diag( [Wtrack,Wu,Wpath]); % works 
+%4a. Penalize velocities:
+% velocities      = [model.sym_x(6);model.sym_x(7);model.sym_x(8);model.sym_x(9);model.sym_x(10)];
 
+%4b. Penalize going close to limits:
+% penalize_constr =qmh*zeros(10,1);
+% for i =1:nx/2
+%     penalize_constr(i,1)      = -1*log(1e-3+ model.sym_x(i) + ( -model.state_constraints(i,1) ) );
+%     penalize_constr(i+nx/2,1) = -1*log(1e-3 -model.sym_x(i) +    model.state_constraints(i,2)   );
+% end
 
-%with velocity   penalty
-% y_expr = [actual_torque;input_torque23;sum(velocities);sum( penalize_constr) ];
-% y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(1,1)];
-% W = diag( [Wtrack,Wu,0.00001*ones(1,1),Wpath]); 
+% ---------------------------------
+% B. Set weights
+% ---------------------------------
 
+Wu       = 0.075*ones(1,2);
+Wclosure = 1*ones(1,2);
 
-%with loop closure penalty:
-y_expr = [actual_torque;input_torque23; sum( penalize_constr);loop_closure ];
-y_ref  = [tau_mh_ref ; 0;0;zeros(1,1);zeros(2,1)];
-W = diag( [Wtrack,Wu,Wpath,Wclosure]); 
+% ---------------------------------
+% C. Set Reference - Objective collection and weights
+% ---------------------------------
+
+y_expr = [actual_torque;input_torque23; loop_closure ];
+y_ref  = [tau_mh_ref ; 0;0;zeros(2,1)];
+W = diag( [Wtrack,Wu,Wclosure]); 
+
 
 ocp_model.set('cost_expr_y',y_expr)
 ocp_model.set('cost_y_ref' ,y_ref)
 ocp_model.set('cost_W'     , W);
 
-%linear mayer cost term -> reach initial position:
+% ---------------------------------
+% D. Set Mayer term
+% ---------------------------------
+
+%1. linear mayer cost term -> reach initial position:
 ocp_model.set('cost_type_e','linear_ls')
 
-% Q = diag( [100,100,100,100,100,10,10,10,10,10 ] );
-Q = diag( [100,100,100,100,100,10,10,10,10,10 ] );
+Q = diag( [100,100,100,100,100,10,10,10,10,10 ] )/1000;
 
+%2. Guess for reset 
+xguess= [0,-1,-1];      %reset  -> /100
+% xguess = [0,1,1];     %torque -> /100
+xretrun =consistent_x0(xguess',[0;0;0]);
+y_ref_e = xretrun;
 
-Qc = sqrt(Q); %nx * nx %chol
-y_ref_e = Qc*x0 ;
 ocp_model.set('cost_y_ref_e',y_ref_e)
-ocp_model.set('cost_W_e'    ,eye(nx));
-ocp_model.set('cost_Vx_e'   ,Qc);
+ocp_model.set('cost_W_e'    ,Q);
+ocp_model.set('cost_Vx_e'   ,eye(nx));
 
     otherwise 
-        error_msg = ['Wrong cost type.',newline, 'Select `cost_type` from: ["LS"]'];
+        error_msg = ['Wrong cost type.',newline, 'Select `cost_type` from: ["short_Th"]'];
         error(error_msg)
 end
 
@@ -360,16 +291,6 @@ if Do_make_acados_simulink_files
     make_sfun_sim; % integrator
     cd ..
 end
-
-y_ref_sim = repmat(y_ref,N-1,1);
-lbu_sim = repmat(model.input_constraints(:,1),N,1);
-ubu_sim = repmat(model.input_constraints(:,2),N,1);
-
-% bx_e_sim = repmat(xref_tc,N,1);
-% ubx_e_sim = repmat(xref_tc,N,1);
-
-
-
 %% 7. Call solver
 % q0 = zeros(5,1); 
 % w0 = zeros(5,1);
@@ -378,9 +299,11 @@ ubu_sim = repmat(model.input_constraints(:,2),N,1);
 %1. update initial state
 ocp.set('constr_x0', x0);
 ocp.set('constr_lbx', x0, 0)
+
+%Initialization algorihtm (WIP)
 % 
 % if strcmp(cost_type,'torque')
-%     Ncutoff = floor( N*0.75);
+%     Ncutoff = floor( N*0.5);
 %     Nrest   = N-Ncutoff;
 %     treturn = -tau_mh_ref*(Ncutoff/Nrest);
 %     tref_plot = zeros(N,nu);
@@ -411,11 +334,8 @@ ocp.set('constr_lbx', x0, 0)
 % ocp.set('init_u', u_traj_init);
 % ocp.set('init_pi', zeros(nx, N))
 
-%3. change values for specific shooting node using:
-%   ocp.set('field', value, optional: stage_index)
-% ocp.set('constr_lbx', x0, 0)
 
-%4.  solve and get statistics
+%3.  solve and get statistics
 ocp.solve();
 ocp.print('stat')
 
@@ -425,7 +345,7 @@ time_tot = ocp.get('time_tot'); % 0 - success
 
 disp(['Solution status is: ', num2str(status)]);
 disp(['Solution time is: ', num2str( 1e3*ocp.get('time_tot'),3 ),'ms' ]);
-%% 7a. Solver statistics:
+%% 7a. Solver statistics -> Maybe usefull for longer Horizons:
 TESTS = 2;
 NTEST = 100;
 status = 4; %init guess
@@ -556,20 +476,17 @@ if solver_statistics
     end
 end
 
-%% 8. Plot
+%% 8. Process Results
 % get solution
 utraj = ocp.get('u');
 xtraj = ocp.get('x');
-
-% Xref = [qref,nan,nan,nan];
-
-%% visualize trajectoryy:
 tmpc    = linspace(0,Th,N+1)';
+%% 8.a. visualize trajectoryy:
 qin =  [tmpc,xtraj(1:5,:)'];
 win =  [tmpc,xtraj(6:10,:)'];
 out = sim('simulink/ntnu_leg_motion_generation.slx',tmpc(end));
 
-%% Comparison plots: [q]
+%% 8.b. Comparison plots: [q]
 indices = {'MH','11','21','12','22'};
 tmpc    = linspace(0,Th,N+1)';
 xref_plot = xref;
@@ -587,6 +504,9 @@ sim_names    = naming_automation('q',indices,'$','$');
 simu_names    = naming_automation('q',indices,'$simulink:\ ','$');
 
 initialize_plot(5,"title",title_str ,"ylab",ylabel_names )
+populate_plot(5,[],model.state_constraints(1:5,1)',"reference",true,linestyle='--',color='r')
+populate_plot(5,[],model.state_constraints(1:5,2)',"reference",true,linestyle='--',color='r')
+
 if strcmp(cost_type,'LS')
 populate_plot(5,[],xref_plot(1:5)',"reference",true,linestyle='--',color='g',display_names=ref_names)
 end
@@ -595,7 +515,7 @@ populate_plot(5,tmpc,xtraj(1:5,:)',"display_names",sim_names)
 
 % populate_plot(5,tsimulink,q_sim,"color",'b',linestyle='--',display_names=simu_names)
 
-%% Comparison plots: [w]
+%% 8.c. Comparison plots: [w]
 figure(Name= 'Comparison: [w]')
 
 title_str   = '$Acados \ optimized\ trajectory:\ [\omega] $';
@@ -613,7 +533,7 @@ populate_plot(5,tmpc,xtraj(6:10,:)',"display_names",sim_names)
 
 
 
-%% Comparison plots: [u]
+%% 8.d. Comparison plots: [u]
 figure(Name= 'Comparison: [u]')
 
 title_str   = '$Acados \ optimized\ trajectory:\ [\tau] $';
@@ -626,7 +546,7 @@ populate_plot(3,tmpc(1:end-1),utraj',"display_names",sim_names)
 
 % populate_plot(5,tsimulink,q_sim,"color",'b',linestyle='--',display_names=simu_names)
 
-%% Comparison plots: [t_MH]
+%% 8.e. Comparison plots: [t_MH]
 figure(Name= 'Comparison: [u]')
 mh_index = {'X','Y','Z'};
 
@@ -651,6 +571,6 @@ text(0.005,max(TMH(:,2)),0,['$\int{ \tau_{y} dt} = ',num2str(Tintegral(2)),'[Nm 
 subplot(3,1,3)
 text(0.005,max(TMH(:,3)),0,['$\int{ \tau_{z} dt} = ',num2str(Tintegral(3)),'[Nm \ s] $'],Interpreter='latex',FontSize=25,BackgroundColor='w',VerticalAlignment='cap')
 
-%%
+%% 9. Notification for Finish after long runs
 % load handel
 % sound(y,Fs)

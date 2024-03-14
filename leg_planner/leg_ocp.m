@@ -10,7 +10,7 @@ end
 check_acados_requirements()
 
 %% INPUT0: ocp definition options - Simulink outputs
-Do_make_acados_simulink_files = false;
+Do_make_acados_simulink_files = true;
 cost_type = 'LS'; %['LS']
 solver_statistics = true;
 same_init = true;
@@ -58,7 +58,7 @@ nu = model.nu;
 %% 0. Formulation: 
 %% 1. State-input variables:
 ocp_model = acados_ocp_model();
-ocp_model.set('name', model.name);
+ocp_model.set('name', [model.name , '_pos']);
 
 
 ocp_model.set('sym_x', model.sym_x);

@@ -16,14 +16,7 @@ ylim([0,3])
 title('$Torque-Reset \  algorithm$',interpreter ='latex',fontsize=25)
 legend('$mpc\ solution\ status$','$reset \ state$',interpreter ='latex',fontsize=20)
 
-%% sol  time
-
-mean_sol_time   = mean(out.solution_time.Data,'omitnan');
-std_sol_time    = std (out.solution_time.Data,'omitnan');
-max_sol_time    = max (out.solution_time.Data);
-disp(['Mean solution time is: ', num2str( 1e3*mean_sol_time,3 ),'ms']);
-disp(['Standard deviation is: ', num2str( 1e3*std_sol_time ,3 ),'ms']);
-disp(['Max solution time is: ' , num2str( 1e3*max_sol_time ,3 ),'ms']);
+mean( out.solution_time.Data 
 
 %% Produced torque read
 time_tau_sim = out.t_fr_comp.Time;

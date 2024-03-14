@@ -99,7 +99,7 @@ Nl = 15;
 Thl = 0.1;
 nu_l = 3;
 nx_l = 10;
-size_of_ref = 8;
+size_of_ref = 7;
 output_size = size_of_ref*(Nl-1)
 
 % %export for simulink
