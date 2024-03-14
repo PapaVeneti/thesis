@@ -74,43 +74,43 @@ int ntnu_leg_acados_sim_create(ntnu_leg_sim_solver_capsule * capsule)
     bool tmp_bool;
 
     
-    double Tsim = 0.1;
+    double Tsim = 0.005;
 
     
-    capsule->sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    capsule->sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    capsule->sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    // external functions (implicit model)
-    capsule->sim_impl_dae_fun->casadi_fun = &ntnu_leg_impl_dae_fun;
-    capsule->sim_impl_dae_fun->casadi_work = &ntnu_leg_impl_dae_fun_work;
-    capsule->sim_impl_dae_fun->casadi_sparsity_in = &ntnu_leg_impl_dae_fun_sparsity_in;
-    capsule->sim_impl_dae_fun->casadi_sparsity_out = &ntnu_leg_impl_dae_fun_sparsity_out;
-    capsule->sim_impl_dae_fun->casadi_n_in = &ntnu_leg_impl_dae_fun_n_in;
-    capsule->sim_impl_dae_fun->casadi_n_out = &ntnu_leg_impl_dae_fun_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_fun, np);
+    // explicit ode
+    capsule->sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    capsule->sim_vde_adj_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    capsule->sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
 
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &ntnu_leg_impl_dae_fun_jac_x_xdot_z;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &ntnu_leg_impl_dae_fun_jac_x_xdot_z_work;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &ntnu_leg_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &ntnu_leg_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &ntnu_leg_impl_dae_fun_jac_x_xdot_z_n_in;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &ntnu_leg_impl_dae_fun_jac_x_xdot_z_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_fun_jac_x_xdot_z, np);
+    capsule->sim_forw_vde_casadi->casadi_fun = &ntnu_leg_expl_vde_forw;
+    capsule->sim_forw_vde_casadi->casadi_n_in = &ntnu_leg_expl_vde_forw_n_in;
+    capsule->sim_forw_vde_casadi->casadi_n_out = &ntnu_leg_expl_vde_forw_n_out;
+    capsule->sim_forw_vde_casadi->casadi_sparsity_in = &ntnu_leg_expl_vde_forw_sparsity_in;
+    capsule->sim_forw_vde_casadi->casadi_sparsity_out = &ntnu_leg_expl_vde_forw_sparsity_out;
+    capsule->sim_forw_vde_casadi->casadi_work = &ntnu_leg_expl_vde_forw_work;
+    external_function_param_casadi_create(capsule->sim_forw_vde_casadi, np);
 
-    // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &ntnu_leg_impl_dae_jac_x_xdot_u_z;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_work = &ntnu_leg_impl_dae_jac_x_xdot_u_z_work;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &ntnu_leg_impl_dae_jac_x_xdot_u_z_sparsity_in;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &ntnu_leg_impl_dae_jac_x_xdot_u_z_sparsity_out;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &ntnu_leg_impl_dae_jac_x_xdot_u_z_n_in;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &ntnu_leg_impl_dae_jac_x_xdot_u_z_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_jac_x_xdot_u_z, np);
+    capsule->sim_vde_adj_casadi->casadi_fun = &ntnu_leg_expl_vde_adj;
+    capsule->sim_vde_adj_casadi->casadi_n_in = &ntnu_leg_expl_vde_adj_n_in;
+    capsule->sim_vde_adj_casadi->casadi_n_out = &ntnu_leg_expl_vde_adj_n_out;
+    capsule->sim_vde_adj_casadi->casadi_sparsity_in = &ntnu_leg_expl_vde_adj_sparsity_in;
+    capsule->sim_vde_adj_casadi->casadi_sparsity_out = &ntnu_leg_expl_vde_adj_sparsity_out;
+    capsule->sim_vde_adj_casadi->casadi_work = &ntnu_leg_expl_vde_adj_work;
+    external_function_param_casadi_create(capsule->sim_vde_adj_casadi, np);
+
+    capsule->sim_expl_ode_fun_casadi->casadi_fun = &ntnu_leg_expl_ode_fun;
+    capsule->sim_expl_ode_fun_casadi->casadi_n_in = &ntnu_leg_expl_ode_fun_n_in;
+    capsule->sim_expl_ode_fun_casadi->casadi_n_out = &ntnu_leg_expl_ode_fun_n_out;
+    capsule->sim_expl_ode_fun_casadi->casadi_sparsity_in = &ntnu_leg_expl_ode_fun_sparsity_in;
+    capsule->sim_expl_ode_fun_casadi->casadi_sparsity_out = &ntnu_leg_expl_ode_fun_sparsity_out;
+    capsule->sim_expl_ode_fun_casadi->casadi_work = &ntnu_leg_expl_ode_fun_work;
+    external_function_param_casadi_create(capsule->sim_expl_ode_fun_casadi, np);
 
     
 
     // sim plan & config
     sim_solver_plan_t plan;
-    plan.sim_solver = IRK;
+    plan.sim_solver = ERK;
 
     // create correct config based on plan
     sim_config * ntnu_leg_sim_config = sim_config_create(plan);
@@ -154,11 +154,11 @@ int ntnu_leg_acados_sim_create(ntnu_leg_sim_solver_capsule * capsule)
 
     // model functions
     ntnu_leg_sim_config->model_set(ntnu_leg_sim_in->model,
-                 "impl_ode_fun", capsule->sim_impl_dae_fun);
+                 "expl_vde_forw", capsule->sim_forw_vde_casadi);
     ntnu_leg_sim_config->model_set(ntnu_leg_sim_in->model,
-                 "impl_ode_fun_jac_x_xdot", capsule->sim_impl_dae_fun_jac_x_xdot_z);
+                 "expl_vde_adj", capsule->sim_vde_adj_casadi);
     ntnu_leg_sim_config->model_set(ntnu_leg_sim_in->model,
-                 "impl_ode_jac_x_xdot_u", capsule->sim_impl_dae_jac_x_xdot_u_z);
+                 "expl_ode_fun", capsule->sim_expl_ode_fun_casadi);
 
     // sim solver
     sim_solver *ntnu_leg_sim_solver = sim_solver_create(ntnu_leg_sim_config,
@@ -225,12 +225,12 @@ int ntnu_leg_acados_sim_free(ntnu_leg_sim_solver_capsule *capsule)
     sim_config_destroy(capsule->acados_sim_config);
 
     // free external function
-    external_function_param_casadi_free(capsule->sim_impl_dae_fun);
-    external_function_param_casadi_free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
-    external_function_param_casadi_free(capsule->sim_impl_dae_jac_x_xdot_u_z);
-    free(capsule->sim_impl_dae_fun);
-    free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
-    free(capsule->sim_impl_dae_jac_x_xdot_u_z);
+    external_function_param_casadi_free(capsule->sim_forw_vde_casadi);
+    external_function_param_casadi_free(capsule->sim_vde_adj_casadi);
+    external_function_param_casadi_free(capsule->sim_expl_ode_fun_casadi);
+    free(capsule->sim_forw_vde_casadi);
+    free(capsule->sim_vde_adj_casadi);
+    free(capsule->sim_expl_ode_fun_casadi);
 
     return 0;
 }
@@ -246,9 +246,9 @@ int ntnu_leg_acados_sim_update_params(ntnu_leg_sim_solver_capsule *capsule, doub
             " External function has %i parameters. Exiting.\n", np, casadi_np);
         exit(1);
     }
-    capsule->sim_impl_dae_fun[0].set_param(capsule->sim_impl_dae_fun, p);
-    capsule->sim_impl_dae_fun_jac_x_xdot_z[0].set_param(capsule->sim_impl_dae_fun_jac_x_xdot_z, p);
-    capsule->sim_impl_dae_jac_x_xdot_u_z[0].set_param(capsule->sim_impl_dae_jac_x_xdot_u_z, p);
+    capsule->sim_forw_vde_casadi[0].set_param(capsule->sim_forw_vde_casadi, p);
+    capsule->sim_vde_adj_casadi[0].set_param(capsule->sim_vde_adj_casadi, p);
+    capsule->sim_expl_ode_fun_casadi[0].set_param(capsule->sim_expl_ode_fun_casadi, p);
 
     return status;
 }

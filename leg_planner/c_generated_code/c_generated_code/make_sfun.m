@@ -31,9 +31,18 @@
 
 
 SOURCES = { ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_fun.c', ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_fun_jac_x_xdot_z.c', ...
-            'ntnu_leg_model/ntnu_leg_impl_dae_jac_x_xdot_u_z.c', ...
+            'ntnu_leg_model/ntnu_leg_expl_ode_fun.c', ...
+            'ntnu_leg_model/ntnu_leg_expl_vde_forw.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_fun.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c',...
+            'ntnu_leg_cost/ntnu_leg_cost_y_hess.c',...
+            'ntnu_leg_constraints/ntnu_leg_constr_h_fun.c', ...
+            'ntnu_leg_constraints/ntnu_leg_constr_h_fun_jac_uxt_zt.c', ...
+            'ntnu_leg_constraints/ntnu_leg_constr_h_e_fun.c', ...
+            'ntnu_leg_constraints/ntnu_leg_constr_h_e_fun_jac_uxt_zt.c', ...
             'acados_solver_sfunction_ntnu_leg.c', ...
             'acados_solver_ntnu_leg.c'
           };
@@ -94,21 +103,48 @@ input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for s
                     ' size [10]\n ');
 sfun_input_names = [sfun_input_names; 'ubx_0 [10]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [13]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref_0 [13]'];
+input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [8]\n ');
+sfun_input_names = [sfun_input_names; 'y_ref_0 [8]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
-                    ' size [637]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref [637]'];
+                    ' size [312]\n ');
+sfun_input_names = [sfun_input_names; 'y_ref [312]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [10]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_e [10]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [150]\n ');
-sfun_input_names = [sfun_input_names; 'lbu [150]'];
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [390]\n ');
+sfun_input_names = [sfun_input_names; 'lbx [390]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [150]\n ');
-sfun_input_names = [sfun_input_names; 'ubu [150]'];
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [390]\n ');
+sfun_input_names = [sfun_input_names; 'ubx [390]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [120]\n ');
+sfun_input_names = [sfun_input_names; 'lbu [120]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [120]\n ');
+sfun_input_names = [sfun_input_names; 'ubu [120]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [80]\n ');
+sfun_input_names = [sfun_input_names; 'lg [80]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [80]\n ');
+sfun_input_names = [sfun_input_names; 'ug [80]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lh for shooting nodes 0 to N-1, size [80]\n ');
+sfun_input_names = [sfun_input_names; 'lh [80]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') uh for shooting nodes 0 to N-1, size [80]\n ');
+sfun_input_names = [sfun_input_names; 'uh [80]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lh_e, size [2]\n ');
+sfun_input_names = [sfun_input_names; 'lh_e [2]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') uh_e, size [2]\n ');
+sfun_input_names = [sfun_input_names; 'uh_e [2]'];
+i_in = i_in + 1;  
+input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1, size [64]\n ');
+sfun_input_names = [sfun_input_names; 'cost_W [64]'];
 i_in = i_in + 1;
 
 fprintf(input_note)
@@ -124,11 +160,11 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [3]\n ');
 sfun_output_names = [sfun_output_names; 'u0 [3]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [150]\n ');
-sfun_output_names = [sfun_output_names; 'utraj [150]'];
+output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [120]\n ');
+sfun_output_names = [sfun_output_names; 'utraj [120]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [510]\n ');
-sfun_output_names = [sfun_output_names; 'xtraj [510]'];
+output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [410]\n ');
+sfun_output_names = [sfun_output_names; 'xtraj [410]'];
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
 sfun_output_names = [sfun_output_names; 'solver_status'];

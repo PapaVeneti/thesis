@@ -375,7 +375,7 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     if (new_time_steps) {
         ntnu_leg_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
-        double time_step = 0.01;
+        double time_step = 0.006666666667;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -394,12 +394,12 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     /**** Cost ****/
     double* yref_0 = calloc(NY0, sizeof(double));
     // change only the non-zero elements:
-    yref_0[0] = -1;
+    yref_0[2] = -1;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "yref", yref_0);
     free(yref_0);
     double* yref = calloc(NY, sizeof(double));
     // change only the non-zero elements:
-    yref[0] = -1;
+    yref[2] = -1;
 
     for (int i = 1; i < N; i++)
     {
@@ -408,33 +408,30 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(yref);
     double* yref_e = calloc(NYN, sizeof(double));
     // change only the non-zero elements:
-    yref_e[0] = 10;
-    yref_e[2] = -0.08435366906;
-    yref_e[4] = 0.08435366906;
+    yref_e[1] = -1;
+    yref_e[2] = 0.1861075081;
+    yref_e[3] = -1;
+    yref_e[4] = 0.3271000596;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "yref", yref_e);
     free(yref_e);
    double* W_0 = calloc(NY0*NY0, sizeof(double));
     // change only the non-zero elements:
-    W_0[0+(NY0) * 0] = 1;
-    W_0[1+(NY0) * 1] = 0.1;
-    W_0[2+(NY0) * 2] = 0.25;
-    W_0[3+(NY0) * 3] = 0.1;
-    W_0[4+(NY0) * 4] = 0.1;
-    W_0[5+(NY0) * 5] = 0.35;
-    W_0[6+(NY0) * 6] = 20;
-    W_0[7+(NY0) * 7] = 20;
+    W_0[0+(NY0) * 0] = 0.075;
+    W_0[2+(NY0) * 2] = 5;
+    W_0[3+(NY0) * 3] = 0.075;
+    W_0[4+(NY0) * 4] = 0.075;
+    W_0[5+(NY0) * 5] = 1;
+    W_0[6+(NY0) * 6] = 1;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "W", W_0);
     free(W_0);
     double* W = calloc(NY*NY, sizeof(double));
     // change only the non-zero elements:
-    W[0+(NY) * 0] = 1;
-    W[1+(NY) * 1] = 0.1;
-    W[2+(NY) * 2] = 0.25;
-    W[3+(NY) * 3] = 0.1;
-    W[4+(NY) * 4] = 0.1;
-    W[5+(NY) * 5] = 0.35;
-    W[6+(NY) * 6] = 20;
-    W[7+(NY) * 7] = 20;
+    W[0+(NY) * 0] = 0.075;
+    W[2+(NY) * 2] = 5;
+    W[3+(NY) * 3] = 0.075;
+    W[4+(NY) * 4] = 0.075;
+    W[5+(NY) * 5] = 1;
+    W[6+(NY) * 6] = 1;
 
     for (int i = 1; i < N; i++)
     {
@@ -443,31 +440,31 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     free(W);
     double* W_e = calloc(NYN*NYN, sizeof(double));
     // change only the non-zero elements:
-    W_e[0+(NYN) * 0] = 1;
-    W_e[1+(NYN) * 1] = 1;
-    W_e[2+(NYN) * 2] = 1;
-    W_e[3+(NYN) * 3] = 1;
-    W_e[4+(NYN) * 4] = 1;
-    W_e[5+(NYN) * 5] = 1;
-    W_e[6+(NYN) * 6] = 1;
-    W_e[7+(NYN) * 7] = 1;
-    W_e[8+(NYN) * 8] = 1;
-    W_e[9+(NYN) * 9] = 1;
+    W_e[0+(NYN) * 0] = 0.1;
+    W_e[1+(NYN) * 1] = 0.1;
+    W_e[2+(NYN) * 2] = 0.1;
+    W_e[3+(NYN) * 3] = 0.1;
+    W_e[4+(NYN) * 4] = 0.1;
+    W_e[5+(NYN) * 5] = 0.01;
+    W_e[6+(NYN) * 6] = 0.01;
+    W_e[7+(NYN) * 7] = 0.01;
+    W_e[8+(NYN) * 8] = 0.01;
+    W_e[9+(NYN) * 9] = 0.01;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
     free(W_e);
     double* Vx_e = calloc(NYN*NX, sizeof(double));
     // change only the non-zero elements:
     
-    Vx_e[0+(NYN) * 0] = 10;
-    Vx_e[1+(NYN) * 1] = 10;
-    Vx_e[2+(NYN) * 2] = 10;
-    Vx_e[3+(NYN) * 3] = 10;
-    Vx_e[4+(NYN) * 4] = 10;
-    Vx_e[5+(NYN) * 5] = 3.16227766;
-    Vx_e[6+(NYN) * 6] = 3.16227766;
-    Vx_e[7+(NYN) * 7] = 3.16227766;
-    Vx_e[8+(NYN) * 8] = 3.16227766;
-    Vx_e[9+(NYN) * 9] = 3.16227766;
+    Vx_e[0+(NYN) * 0] = 1;
+    Vx_e[1+(NYN) * 1] = 1;
+    Vx_e[2+(NYN) * 2] = 1;
+    Vx_e[3+(NYN) * 3] = 1;
+    Vx_e[4+(NYN) * 4] = 1;
+    Vx_e[5+(NYN) * 5] = 1;
+    Vx_e[6+(NYN) * 6] = 1;
+    Vx_e[7+(NYN) * 7] = 1;
+    Vx_e[8+(NYN) * 8] = 1;
+    Vx_e[9+(NYN) * 9] = 1;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "Vx", Vx_e);
     free(Vx_e);
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, 0, "nls_y_fun", &capsule->cost_y_0_fun);
@@ -502,12 +499,14 @@ void ntnu_leg_acados_create_5_set_nlp_in(ntnu_leg_solver_capsule* capsule, const
     double* lbx0 = lubx0;
     double* ubx0 = lubx0 + NBX0;
     // change only the non-zero elements:
-    lbx0[0] = 1;
-    ubx0[0] = 1;
-    lbx0[2] = -0.008435366906;
-    ubx0[2] = -0.008435366906;
-    lbx0[4] = 0.008435366906;
-    ubx0[4] = 0.008435366906;
+    lbx0[1] = 1.45;
+    ubx0[1] = 1.45;
+    lbx0[2] = -0.7434528511;
+    ubx0[2] = -0.7434528511;
+    lbx0[3] = 1.1;
+    ubx0[3] = 1.1;
+    lbx0[4] = -0.01097185567;
+    ubx0[4] = -0.01097185567;
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
@@ -721,7 +720,7 @@ void ntnu_leg_acados_create_6_set_opts(ntnu_leg_solver_capsule* capsule)
     /* options QP solver */
     int qp_solver_cond_N;
 
-    const int qp_solver_cond_N_ori = 100;
+    const int qp_solver_cond_N_ori = 15;
     qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
@@ -782,9 +781,10 @@ void ntnu_leg_acados_create_7_set_nlp_out(ntnu_leg_solver_capsule* capsule)
 
     // initialize with x0
     
-    x0[0] = 1;
-    x0[2] = -0.008435366906;
-    x0[4] = 0.008435366906;
+    x0[1] = 1.45;
+    x0[2] = -0.7434528511;
+    x0[3] = 1.1;
+    x0[4] = -0.01097185567;
 
 
     double* u0 = xu0 + NX;

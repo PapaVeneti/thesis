@@ -36,13 +36,23 @@
 
 # model
 MODEL_SRC=
-MODEL_SRC+= ntnu_leg_model/ntnu_leg_impl_dae_fun.c
-MODEL_SRC+= ntnu_leg_model/ntnu_leg_impl_dae_fun_jac_x_xdot_z.c
-MODEL_SRC+= ntnu_leg_model/ntnu_leg_impl_dae_jac_x_xdot_u_z.c
+MODEL_SRC+= ntnu_leg_model/ntnu_leg_expl_ode_fun.c
+MODEL_SRC+= ntnu_leg_model/ntnu_leg_expl_vde_forw.c
+MODEL_SRC+= ntnu_leg_model/ntnu_leg_expl_vde_adj.c
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
+OCP_SRC+= ntnu_leg_constraints/ntnu_leg_constr_h_fun_jac_uxt_zt.c
+OCP_SRC+= ntnu_leg_constraints/ntnu_leg_constr_h_fun.c
+OCP_SRC+= ntnu_leg_constraints/ntnu_leg_constr_h_e_fun_jac_uxt_zt.c
+OCP_SRC+= ntnu_leg_constraints/ntnu_leg_constr_h_e_fun.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_fun.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c
+OCP_SRC+= ntnu_leg_cost/ntnu_leg_cost_y_hess.c
 
 OCP_SRC+= acados_solver_ntnu_leg.c
 OCP_OBJ := $(OCP_SRC:.c=.o)

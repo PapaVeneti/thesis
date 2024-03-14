@@ -40,30 +40,30 @@
 #define NTNU_LEG_NZ     0
 #define NTNU_LEG_NU     3
 #define NTNU_LEG_NP     0
-#define NTNU_LEG_NBX    0
+#define NTNU_LEG_NBX    10
 #define NTNU_LEG_NBX0   10
 #define NTNU_LEG_NBU    3
 #define NTNU_LEG_NSBX   0
 #define NTNU_LEG_NSBU   0
-#define NTNU_LEG_NSH    0
+#define NTNU_LEG_NSH    2
 #define NTNU_LEG_NSG    0
 #define NTNU_LEG_NSPHI  0
-#define NTNU_LEG_NSHN   0
+#define NTNU_LEG_NSHN   2
 #define NTNU_LEG_NSGN   0
 #define NTNU_LEG_NSPHIN 0
 #define NTNU_LEG_NSBXN  0
-#define NTNU_LEG_NS     0
-#define NTNU_LEG_NSN    0
-#define NTNU_LEG_NG     0
+#define NTNU_LEG_NS     2
+#define NTNU_LEG_NSN    2
+#define NTNU_LEG_NG     2
 #define NTNU_LEG_NBXN   0
 #define NTNU_LEG_NGN    0
-#define NTNU_LEG_NY0    13
-#define NTNU_LEG_NY     13
+#define NTNU_LEG_NY0    8
+#define NTNU_LEG_NY     8
 #define NTNU_LEG_NYN    10
-#define NTNU_LEG_N      50
-#define NTNU_LEG_NH     0
+#define NTNU_LEG_N      40
+#define NTNU_LEG_NH     2
 #define NTNU_LEG_NPHI   0
-#define NTNU_LEG_NHN    0
+#define NTNU_LEG_NHN    2
 #define NTNU_LEG_NPHIN  0
 #define NTNU_LEG_NR     0
 
@@ -91,24 +91,35 @@ typedef struct ntnu_leg_solver_capsule
     /* external functions */
     // dynamics
 
-    external_function_param_casadi *impl_dae_fun;
-    external_function_param_casadi *impl_dae_fun_jac_x_xdot_z;
-    external_function_param_casadi *impl_dae_jac_x_xdot_u_z;
+    external_function_param_casadi *forw_vde_casadi;
+    external_function_param_casadi *expl_ode_fun;
 
 
 
 
     // cost
 
+    external_function_param_casadi *cost_y_fun;
+    external_function_param_casadi *cost_y_fun_jac_ut_xt;
+    external_function_param_casadi *cost_y_hess;
 
+
+
+    external_function_param_casadi cost_y_0_fun;
+    external_function_param_casadi cost_y_0_fun_jac_ut_xt;
+    external_function_param_casadi cost_y_0_hess;
 
 
 
 
     // constraints
+    external_function_param_casadi *nl_constr_h_fun_jac;
+    external_function_param_casadi *nl_constr_h_fun;
 
 
 
+    external_function_param_casadi nl_constr_h_e_fun_jac;
+    external_function_param_casadi nl_constr_h_e_fun;
 
 } ntnu_leg_solver_capsule;
 

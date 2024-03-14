@@ -1,0 +1,42 @@
+Torque  Simulink Usage: 
+
+
+acados_solver_sfunction_ntnu_leg.mexa64
+
+Note: Usage of Sfunction is as follows:
+Inputs are:
+1) lbx_0 - lower bound on x for stage 0, size [10]
+2) ubx_0 - upper bound on x for stage 0, size [10]
+3) y_ref_0, size [6]
+4) y_ref - concatenated for shooting nodes 1 to N-1, size [24]
+5) lbx for shooting nodes 1 to N-1, size [40]
+6) ubx for shooting nodes 1 to N-1, size [40]
+7) lbu for shooting nodes 0 to N-1, size [15]
+8) ubu for shooting nodes 0 to N-1, size [15]
+9) lg for shooting nodes 0 to N-1, size [10]
+10) ug for shooting nodes 0 to N-1, size [10]
+11) lh for shooting nodes 0 to N-1, size [10]
+12) uh for shooting nodes 0 to N-1, size [10]
+13) lh_e, size [2]
+14) uh_e, size [2]
+ 
+Outputs are:
+1) u0, control input at node 0, size [3]
+2) utraj, control input concatenated for nodes 0 to N-1, size [15]
+3) xtraj, state concatenated for nodes 0 to N, size [60]
+4) acados solver status (0 = SUCCESS)
+5) KKT residual
+6) x1, state at node 1
+7) CPU time
+8) SQP iterations
+Building with 'gcc'.
+MEX completed successfully.
+
+
+Successfully created sfunction:
+acados_sim_solver_sfunction_ntnu_leg.mexa64
+
+Note: Usage of Sfunction is as follows:
+Inputs are:
+1) x0, initial state, size [10]
+2) u, size [3]

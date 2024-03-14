@@ -108,16 +108,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double lbx0[10];
     double ubx0[10];
     
-    lbx0[0] = 1;
-    ubx0[0] = 1;
-    lbx0[1] = 0;
-    ubx0[1] = 0;
-    lbx0[2] = -0.008435366906;
-    ubx0[2] = -0.008435366906;
-    lbx0[3] = 0;
-    ubx0[3] = 0;
-    lbx0[4] = 0.008435366906;
-    ubx0[4] = 0.008435366906;
+    lbx0[0] = 0;
+    ubx0[0] = 0;
+    lbx0[1] = 1.45;
+    ubx0[1] = 1.45;
+    lbx0[2] = -0.7434528511;
+    ubx0[2] = -0.7434528511;
+    lbx0[3] = 1.1;
+    ubx0[3] = 1.1;
+    lbx0[4] = -0.01097185567;
+    ubx0[4] = -0.01097185567;
     lbx0[5] = 0;
     ubx0[5] = 0;
     lbx0[6] = 0;
@@ -159,8 +159,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double elapsed_time;
     int sqp_iter;
 
-    double xtraj[10 * (100+1)];
-    double utraj[3 * (100)];
+    double xtraj[10 * (15+1)];
+    double utraj[3 * (15)];
 
     // solve ocp in loop
     for (int ii = 0; ii < NTIMINGS; ii++)
@@ -183,9 +183,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ocp_nlp_out_get(nlp_config, nlp_dims, nlp_out, ii, "u", &utraj[ii*3]);
 
     mexPrintf("\n--- xtraj ---\n");
-    MEX_print_exp_tran_mat( 10, 100+1, xtraj, 10 );
+    MEX_print_exp_tran_mat( 10, 15+1, xtraj, 10 );
     mexPrintf("\n--- utraj ---\n");
-    MEX_print_exp_tran_mat( 3, 100, utraj, 3 );
+    MEX_print_exp_tran_mat( 3, 15, utraj, 3 );
 
     mexPrintf("\nsolved ocp %d times, solution printed above\n\n", NTIMINGS);
 

@@ -60,15 +60,25 @@ set(SIM_OBJ sim_ntnu_leg)
 
 # model
 set(MODEL_SRC
-    ntnu_leg_model/ntnu_leg_impl_dae_fun.c
-    ntnu_leg_model/ntnu_leg_impl_dae_fun_jac_x_xdot_z.c
-    ntnu_leg_model/ntnu_leg_impl_dae_jac_x_xdot_u_z.c
+    ntnu_leg_model/ntnu_leg_expl_ode_fun.c
+    ntnu_leg_model/ntnu_leg_expl_vde_forw.c
+    ntnu_leg_model/ntnu_leg_expl_vde_adj.c
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 
 # optimal control problem - mostly CasADi exports
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMPLE})
     set(OCP_SRC
+        ntnu_leg_constraints/ntnu_leg_constr_h_fun_jac_uxt_zt.c
+        ntnu_leg_constraints/ntnu_leg_constr_h_fun.c
+        ntnu_leg_constraints/ntnu_leg_constr_h_e_fun_jac_uxt_zt.c
+        ntnu_leg_constraints/ntnu_leg_constr_h_e_fun.c
+        ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c
+        ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c
+        ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c
+        ntnu_leg_cost/ntnu_leg_cost_y_fun.c
+        ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c
+        ntnu_leg_cost/ntnu_leg_cost_y_hess.c
         acados_solver_ntnu_leg.c)
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()
