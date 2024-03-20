@@ -9,7 +9,8 @@ ylim([0,4])
 
 yyaxis right
 plot(out.reset_state,'b',Linewidth=2)
-set(gca,"Ytick",[0,1])
+set(gca,"Ytick",[0,1], "YTickLabel",{'TORQUE','RESET'},"FontSize",15)
+
 grid on
 ylim([0,3])
 
@@ -98,7 +99,7 @@ ylim([-15,15])
 
 %% torque in each cycle
 Tsim    = max(time_tau_sim);
-Thl     = 0.2;
+Thl     = 0.1;
 Ncycles = floor(Tsim/Thl);
 n_cycle = floor( (length(time_tau_sim)-1)/Ncycles );
 

@@ -92,6 +92,11 @@ end
 tau_ref = [0;0;0];
 
 %% add a single leg in the simulation to see it
+Kp =   1;
+Kd = 0.2;
+% 
+% Kp = 2;
+% Kd = 0.4;
 KD_definition
 constraint_coefficients
 leg_model_obj = leg_model;
@@ -100,7 +105,10 @@ Thl = 0.1;
 nu_l = 3;
 nx_l = 10;
 size_of_ref = 7;
-output_size = size_of_ref*(Nl-1)
+output_size = size_of_ref*(Nl-1);
+
+%roll limits
+% leg_model_obj.state_constraints(1,2) = 0.8; %for roll - pitch
 
 % %export for simulink
 lbu_leg   = repmat(leg_model_obj.input_constraints(:,1),Nl,1);

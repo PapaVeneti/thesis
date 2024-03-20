@@ -39,7 +39,6 @@ a = ( (d*d) + (l21*l21) - (l22*l22) )/( 2*d );
 h = sqrt( (l21*l21) - (a*a));
 
 p_EE_22d = p1c + (a*vc) + (h*vn);
-p_EE_22d = [0.379, 0.264];
 
 
 %% joint angles
