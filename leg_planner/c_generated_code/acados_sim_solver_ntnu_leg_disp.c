@@ -137,7 +137,7 @@ int ntnu_leg_disp_acados_sim_create(ntnu_leg_disp_sim_solver_capsule * capsule)
  
     tmp_int = 4;
     sim_opts_set(ntnu_leg_disp_sim_config, ntnu_leg_disp_sim_opts, "num_stages", &tmp_int);
-    tmp_int = 2;
+    tmp_int = 1;
     sim_opts_set(ntnu_leg_disp_sim_config, ntnu_leg_disp_sim_opts, "num_steps", &tmp_int);
     tmp_bool = 0;
     sim_opts_set(ntnu_leg_disp_sim_config, ntnu_leg_disp_sim_opts, "jac_reuse", &tmp_bool);

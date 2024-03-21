@@ -49,13 +49,16 @@ switch reference_mode
         q0 = [0;1.45;0;1.1;0]; %initial
         w0 = [0;0;0];
         x0 = consistent_x0(q0([1,2,4]),w0);
-
-%         x0 = [-1.9868    1.0949   -0.2988    1.1791   -0.2524    1.3074  -10.8421   11.1028    0.1930   -6.5810]';
-%         q0 = x0(1:5);
-%         x0 = [-1.4801    1.5909   -0.8499    1.1743    0.0113   -8.7858    0.4852    0.1287    0.8320   -0.2196]';
-%         x0 = [-1.0376   -0.8850   -0.1774   -1.6499    1.1691    6.0746   -1.5448    0.4198   -1.4858    0.6467]';
-%         x0 = [-0.8582   -0.9460   -0.1131   -1.5208    0.9362    4.7058   -2.4400    4.0508    7.7659  -12.1355]';
+        
         xref =[];
+
+        %N=150,Th=0.75 -> disp= -0.245; \int_t = -0.06...; ->[] iters
+%         x0 = [ -0.6483   -0.5892    0.1474   -0.5486    0.1295    2.5638    3.2198   -2.3020    0.4081    1.7123]';
+        %N=150,Th=0.75 -> disp= -0.245; \int_t = -0.062; -> 92 iters
+        % ------
+%         x0 = [ -0.7855    1.2597   -0.6820    0.8998    0.0183   -0.0480    0.0423   -0.0045    0.0567   -0.0153]';
+%         x0([6:10]) = 0;
+        
 
         %pitch reference:
         tau_mh_ref = [0.0;0;-1]; %From Body to Leg
@@ -128,6 +131,16 @@ ocp_model.set('constr_ubx',model.state_constraints(:,2))
 ocp_model.set('constr_Jbx',eye(nx))
 
 %3.  Terminal constraints (on state)
+ocp_model.set('constr_lbx_e',x0)
+ocp_model.set('constr_ubx_e',x0)
+ocp_model.set('constr_Jbx_e',eye(nx))
+
+%slack terminal
+ocp_model.set('constr_Jsbx_e',eye(nx))
+Z_x = [];
+z_x = [];
+Z_x_e = 1e-1*eye(nx);
+z_x_e = zeros(10,1);
 
 % MUST ADD
 % ocp_model.set('constr_lbx_e',model.state_constraints(:,1))
@@ -154,8 +167,8 @@ ocp_model.set('constr_lg',lower_g); %cannot handle one sided constraints
 % 5. Non linear constraints: 
 % loop closure constraints
 ns_h =2;
-Z_h = 1*eye(ns_h);
-z_h  = 1*ones(ns_h,1);
+Z_h = 5*eye(ns_h); %5
+z_h  = 0*ones(ns_h,1);
 
 ocp_model.set('constr_expr_h',model.path_constraints);
 ocp_model.set('constr_lh',zeros(ns_h,1));
@@ -166,18 +179,18 @@ ocp_model.set('constr_expr_h_e',model.path_constraints);
 ocp_model.set('constr_lh_e',zeros(ns_h,1));
 ocp_model.set('constr_uh_e',zeros(ns_h,1));
 ocp_model.set('constr_Jsh_e',eye(2));
-Z_x = [];
-z_x = [];
 
 % Set slack variables for terminal constraint
 
 Z = blkdiag(Z_x,Z_h);
 z = [z_x;z_h];
+Z_e = blkdiag(Z_x_e,Z_h);
+z_e = [z_x_e;z_h];
 
 ocp_model.set('cost_Z',Z);
 ocp_model.set('cost_z',z);
-ocp_model.set('cost_Z_e',Z);
-ocp_model.set('cost_z_e',z);
+ocp_model.set('cost_Z_e',Z_e);
+ocp_model.set('cost_z_e',z_e);
 
 %% 4. Cost:
 
@@ -212,6 +225,8 @@ penalize_constr =qmh*zeros(5,1);
 Kl = [1e-4,6e-4,6e-4,4e-4,4e-4];
 Ku = [1e-4,4e-4,4e-4,6e-4,6e-4]; 
 deg = 8;
+% Kl = 0*Kl;
+% Ku=0*Ku;
 
 qq  =  model.sym_x;
 qub = model.state_constraints(1:5,2);
@@ -264,9 +279,9 @@ xretrun =consistent_x0(xguess',[0;0;0]);
 y_ref_e = xretrun;
 y_ref_e=x0
 
-ocp_model.set('cost_y_ref_e',y_ref_e)
-ocp_model.set('cost_W_e'    ,Q);
-ocp_model.set('cost_Vx_e'   ,eye(nx));
+% ocp_model.set('cost_y_ref_e',y_ref_e)
+% ocp_model.set('cost_W_e'    ,Q);
+% ocp_model.set('cost_Vx_e'   ,eye(nx));
 
     otherwise 
         error_msg = ['Wrong cost type.',newline, 'Select `cost_type` from: ["short_Th"]'];
@@ -280,7 +295,7 @@ ocp_model.set('T', Th); %Time Horizon
 
 ocp_opts = acados_ocp_opts();
 ocp_opts.set('qp_solver_iter_max', 200); %usually goes max 15-20 -> if 50 it fails too with tc
-ocp_opts.set('nlp_solver_max_iter', 100);
+ocp_opts.set('nlp_solver_max_iter', 200);
 ocp_opts.set('param_scheme_N', N);
 ocp_opts.set('nlp_solver', nlp_solver);
 ocp_opts.set('sim_method', sim_method);
@@ -293,11 +308,11 @@ ocp_opts.set('ext_fun_compile_flags', ''); % '-O2'
 % ocp_opts.set('nlp_solver_step_length', 0.9);
 % ocp_opts.set('levenberg_marquardt', 1e-2);
 ocp_opts.set('globalization', 'MERIT_BACKTRACKING');
-% ocp_opts.set('alpha_min', 0.8);
+% ocp_opts.set('alpha_min', 0.05);
 % ocp_opts.set('alpha_min', 100);
 
 %fidelity:
-ocp_opts.set('sim_method_num_steps', 2); %Default 1
+ocp_opts.set('sim_method_num_steps', 1); %Default 1
 % ... see ocp_opts.opts_struct to see what other fields can be set
 
 %% 6. Finalize:
@@ -328,7 +343,8 @@ izz= 1.00669705;
 
 DT = Th/(N-1);
 Kgain =[0.015e4 1e-2 1e4 ];%initial
-Kgain =[0.002e4 1e-2 1e4 ];
+Kgain =[0.002e4 1e-2 1e4 ]; %working
+
 
 for i=1:N  
     switch reference_mode
@@ -342,7 +358,6 @@ for i=1:N
             error('Other reference modes not implemented for stage weights')
     end
 
-
     W_i      = diag( [Wtrack_i,Wu,Wclosure,Wlim,Wvel]); 
     ocp.set('cost_W', W_i, i-1)
 end
@@ -351,7 +366,6 @@ Ncutoff = floor( N*0.5);
 Nrest   = N-Ncutoff;
 x_traj_init = zeros(nx,N+1);
 x_retrun = consistent_x0([x0(1),-x0(2),-x0(4)],[0;0;0]);
-% x_return = xright;
 steps = Ncutoff ;                             %// number of steps
 x_traj_init(:,1:Ncutoff) = bsxfun(@plus,((x_retrun(:)-x0(:))./(steps-1))*[0:steps-1],x0(:));
 steps = Nrest+1 ;

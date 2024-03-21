@@ -110,14 +110,17 @@ input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shoot
                     ' size [2533]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref [2533]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [10]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref_e [10]'];
-i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [1490]\n ');
 sfun_input_names = [sfun_input_names; 'lbx [1490]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [1490]\n ');
 sfun_input_names = [sfun_input_names; 'ubx [1490]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') lbx_e (lbx at shooting node N), size [10]\n ');
+sfun_input_names = [sfun_input_names; 'lbx_e [10]'];
+i_in = i_in + 1;
+input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N), size [10]\n ');
+sfun_input_names = [sfun_input_names; 'ubx_e [10]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [450]\n ');
 sfun_input_names = [sfun_input_names; 'lbu [450]'];
@@ -145,9 +148,6 @@ sfun_input_names = [sfun_input_names; 'uh_e [2]'];
 i_in = i_in + 1;  
 input_note = strcat(input_note, num2str(i_in), ') cost_W in column-major format, that is set for all intermediate shooting nodes: 1 to N-1, size [289]\n ');
 sfun_input_names = [sfun_input_names; 'cost_W [289]'];
-i_in = i_in + 1;  
-input_note = strcat(input_note, num2str(i_in), ') cost_W_e in column-major format, size [100]\n ');
-sfun_input_names = [sfun_input_names; 'cost_W_e [100]'];
 i_in = i_in + 1;
 
 fprintf(input_note)
