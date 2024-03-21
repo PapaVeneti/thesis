@@ -32,14 +32,14 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-project(ntnu_leg)
+project(ntnu_leg_disp)
 
 # build options.
-option(BUILD_ACADOS_SOLVER_LIB "Should the solver library acados_solver_ntnu_leg be build?" OFF)
-option(BUILD_ACADOS_OCP_SOLVER_LIB "Should the OCP solver library acados_ocp_solver_ntnu_leg be build?" OFF)
-option(BUILD_EXAMPLE "Should the example main_ntnu_leg be build?" OFF)
-option(BUILD_SIM_EXAMPLE "Should the simulation example main_sim_ntnu_leg be build?" OFF)
-option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_sim_solver_ntnu_leg be build?" OFF)
+option(BUILD_ACADOS_SOLVER_LIB "Should the solver library acados_solver_ntnu_leg_disp be build?" OFF)
+option(BUILD_ACADOS_OCP_SOLVER_LIB "Should the OCP solver library acados_ocp_solver_ntnu_leg_disp be build?" OFF)
+option(BUILD_EXAMPLE "Should the example main_ntnu_leg_disp be build?" OFF)
+option(BUILD_SIM_EXAMPLE "Should the simulation example main_sim_ntnu_leg_disp be build?" OFF)
+option(BUILD_ACADOS_SIM_SOLVER_LIB "Should the simulation solver library acados_sim_solver_ntnu_leg_disp be build?" OFF)
 
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -54,40 +54,44 @@ endif()
 
 
 # object target names
-set(MODEL_OBJ model_ntnu_leg)
-set(OCP_OBJ ocp_ntnu_leg)
-set(SIM_OBJ sim_ntnu_leg)
+set(MODEL_OBJ model_ntnu_leg_disp)
+set(OCP_OBJ ocp_ntnu_leg_disp)
+set(SIM_OBJ sim_ntnu_leg_disp)
 
 # model
 set(MODEL_SRC
-    ntnu_leg_model/ntnu_leg_expl_ode_fun.c
-    ntnu_leg_model/ntnu_leg_expl_vde_forw.c
-    ntnu_leg_model/ntnu_leg_expl_vde_adj.c
+    ntnu_leg_disp_model/ntnu_leg_disp_expl_ode_fun.c
+    ntnu_leg_disp_model/ntnu_leg_disp_expl_vde_forw.c
+    ntnu_leg_disp_model/ntnu_leg_disp_expl_vde_adj.c
 )
 add_library(${MODEL_OBJ} OBJECT ${MODEL_SRC} )
 
 # optimal control problem - mostly CasADi exports
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_ACADOS_OCP_SOLVER_LIB} OR ${BUILD_EXAMPLE})
     set(OCP_SRC
-        ntnu_leg_cost/ntnu_leg_cost_y_0_fun.c
-        ntnu_leg_cost/ntnu_leg_cost_y_0_fun_jac_ut_xt.c
-        ntnu_leg_cost/ntnu_leg_cost_y_0_hess.c
-        ntnu_leg_cost/ntnu_leg_cost_y_fun.c
-        ntnu_leg_cost/ntnu_leg_cost_y_fun_jac_ut_xt.c
-        ntnu_leg_cost/ntnu_leg_cost_y_hess.c
-        acados_solver_ntnu_leg.c)
+        ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_fun_jac_uxt_zt.c
+        ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_fun.c
+        ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_e_fun_jac_uxt_zt.c
+        ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_e_fun.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_fun.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_fun_jac_ut_xt.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_hess.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_fun.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_fun_jac_ut_xt.c
+        ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_hess.c
+        acados_solver_ntnu_leg_disp.c)
     add_library(${OCP_OBJ} OBJECT ${OCP_SRC})
 endif()
 # for sim solver
 if(${BUILD_ACADOS_SOLVER_LIB} OR ${BUILD_EXAMPLE}
     OR ${BUILD_SIM_EXAMPLE} OR ${BUILD_ACADOS_SIM_SOLVER_LIB})
-    set(SIM_SRC acados_sim_solver_ntnu_leg.c)
+    set(SIM_SRC acados_sim_solver_ntnu_leg_disp.c)
     add_library(${SIM_OBJ} OBJECT ${SIM_SRC})
 endif()
 
 # for target example
-set(EX_SRC main_ntnu_leg.c)
-set(EX_EXE main_ntnu_leg)
+set(EX_SRC main_ntnu_leg_disp.c)
+set(EX_EXE main_ntnu_leg_disp)
 set(EXTERNAL_DIR)
 set(EXTERNAL_LIB)
 
@@ -122,7 +126,7 @@ endif()
 
 # bundled_shared_lib
 if(${BUILD_ACADOS_SOLVER_LIB})
-    set(LIB_ACADOS_SOLVER acados_solver_ntnu_leg)
+    set(LIB_ACADOS_SOLVER acados_solver_ntnu_leg_disp)
     add_library(${LIB_ACADOS_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>
         $<TARGET_OBJECTS:${SIM_OBJ}>)
     install(TARGETS ${LIB_ACADOS_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
@@ -130,7 +134,7 @@ endif(${BUILD_ACADOS_SOLVER_LIB})
 
 # ocp_shared_lib
 if(${BUILD_ACADOS_OCP_SOLVER_LIB})
-    set(LIB_ACADOS_OCP_SOLVER acados_ocp_solver_ntnu_leg)
+    set(LIB_ACADOS_OCP_SOLVER acados_ocp_solver_ntnu_leg_disp)
     add_library(${LIB_ACADOS_OCP_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${OCP_OBJ}>)
     # Specify libraries or flags to use when linking a given target and/or its dependents.
     target_link_libraries(${LIB_ACADOS_OCP_SOLVER} PRIVATE ${EXTERNAL_LIB})
@@ -147,15 +151,15 @@ endif(${BUILD_EXAMPLE})
 
 # example_sim
 if(${BUILD_SIM_EXAMPLE})
-    set(EX_SIM_SRC main_sim_ntnu_leg.c)
-    set(EX_SIM_EXE main_sim_ntnu_leg)
+    set(EX_SIM_SRC main_sim_ntnu_leg_disp.c)
+    set(EX_SIM_EXE main_sim_ntnu_leg_disp)
     add_executable(${EX_SIM_EXE} ${EX_SIM_SRC} $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${SIM_OBJ}>)
     install(TARGETS ${EX_SIM_EXE} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_SIM_EXAMPLE})
 
 # sim_shared_lib
 if(${BUILD_ACADOS_SIM_SOLVER_LIB})
-    set(LIB_ACADOS_SIM_SOLVER acados_sim_solver_ntnu_leg)
+    set(LIB_ACADOS_SIM_SOLVER acados_sim_solver_ntnu_leg_disp)
     add_library(${LIB_ACADOS_SIM_SOLVER} SHARED $<TARGET_OBJECTS:${MODEL_OBJ}> $<TARGET_OBJECTS:${SIM_OBJ}>)
     install(TARGETS ${LIB_ACADOS_SIM_SOLVER} DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif(${BUILD_ACADOS_SIM_SOLVER_LIB})
