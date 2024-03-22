@@ -75,6 +75,10 @@ switch reference_mode
 
 end
 
+
+%augment with u
+x0 = [x0;0;0;0];
+
 %torque reference
 tau_ref = [0;0;0];
 %% INPUT2: discretization-solvers-sim_method
@@ -92,9 +96,10 @@ qp_solver_cond_N =  N; % for partial condensing
 sim_method = 'erk'; % integrator type. Choose from ['erk','irk','irk_gnsf']
 
 %% model dynamics [missing ny]
-model = leg_model;
+model = leg_model_u;
 nx = model.nx;
 nu = model.nu;
+nx_true =nx-nu;
 % ny = size(model.cost_expr_y, 1);      % used in simulink example
 % ny_e = size(model.cost_expr_y_e, 1);
 
@@ -119,7 +124,13 @@ end
 
 %% 3. Constraints:
 %0.  Initial State
-ocp_model.set('constr_x0', x0);
+% ocp_model.set('constr_x0', x0);
+
+ocp_model.set('constr_lbx_0', [ x0(1:10);model.state_constraints(11:13,1)] );
+ocp_model.set('constr_ubx_0', [ x0(1:10);model.state_constraints(11:13,2)]);
+ocp_model.set('constr_Jbx_0', eye(nx));
+
+
 
 %1.  Input Box constraints
 ocp_model.set('constr_lbu',model.input_constraints(:,1))
@@ -132,16 +143,18 @@ ocp_model.set('constr_ubx',model.state_constraints(:,2))
 ocp_model.set('constr_Jbx',eye(nx))
 
 %3.  Terminal constraints (on state)
-ocp_model.set('constr_lbx_e',x0)
-ocp_model.set('constr_ubx_e',x0)
-ocp_model.set('constr_Jbx_e',eye(nx))
+ocp_model.set('constr_lbx_e',x0(1:nx_true))
+ocp_model.set('constr_ubx_e',x0(1:nx_true))
+ocp_model.set('constr_Jbx_e',[eye(nx_true),zeros(nx_true,nu)])
 
 %slack terminal
-ocp_model.set('constr_Jsbx_e',eye(nx))
+%not constraint in u
+
+ocp_model.set('constr_Jsbx_e',[eye(nx_true)] )
 Z_x = [];
 z_x = [];
 % Z_x_e = 1e-1*eye(nx);
-Z_x_e = diag([ 1e-1*ones(1,5),1e-2*ones(1,5)]);
+Z_x_e = diag([ 1e-1*ones(1,5),0.2e-2*ones(1,5)]);
 z_x_e = zeros(10,1);
 
 % MUST ADD
@@ -155,8 +168,8 @@ n_pc = 2; %number of path constraints
 constraint_coefficients;
 C_c      = zeros(n_pc,nx);
 D_c      = zeros(n_pc,nu);
-C_c(1,:) = [cc_1,zeros(1,nx/2)];
-C_c(2,:) = [cc_2,zeros(1,nx/2)];
+C_c(1,:) = [cc_1,zeros(1,nx_true/2),[0,0,0]];
+C_c(2,:) = [cc_2,zeros(1,nx_true/2),[0,0,0]];
 
 upper_g = [cb_1;cb_2];
 lower_g = [-1e5;-1e5];
@@ -207,7 +220,7 @@ ocp_model.set('cost_type','nonlinear_ls')
 
 %1. Torque Reference: 
 qmh    = model.sym_x(1);
-tau    = model.sym_u;
+tau    = model.sym_x(11:13);
 actual_torque   = [tau(1); ( tau(2)+tau(3) ) *[sin(qmh);-cos(qmh)]];
 
 %2.  Penalize u norm
@@ -233,7 +246,7 @@ deg = 8;
 qq  =  model.sym_x;
 qub = model.state_constraints(1:5,2);
 qlb = model.state_constraints(1:5,1);
-for i =1:nx/2
+for i =1:nx_true/2
     penalize_constr(i,1) = Kl(i)*(qq(i) +(- qlb(i))  )^deg + Ku(i)*( qq(i) - qub(i) )^deg ; 
 end
 pen_ref = zeros(5,1);
@@ -372,6 +385,8 @@ x_traj_init = zeros(nx,N+1);
 x_retrun = consistent_x0([x0(1),-x0(2),-x0(4)],[0;0;0]);
 % x_retrun = consistent_x0([-pi/2,-x0(2),-x0(4)],[0;-1;-1]);
 
+
+x_retrun = [x_retrun;[0;0;0]];
 steps = Ncutoff ;                             %// number of steps
 x_traj_init(:,1:Ncutoff) = bsxfun(@plus,((x_retrun(:)-x0(:))./(steps-1))*[0:steps-1],x0(:));
 steps = Nrest+1 ;
@@ -637,6 +652,7 @@ populate_plot(5,tmpc,xtraj(6:10,:)',"display_names",sim_names)
 
 
 %% 8.d. Comparison plots: [u]
+utraj = xtraj(11:13,1:N);
 figure(Name= 'Comparison: [u]')
 
 title_str   = '$Acados \ optimized\ trajectory:\ [\tau] $';

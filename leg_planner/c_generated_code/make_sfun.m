@@ -31,20 +31,20 @@
 
 
 SOURCES = { ...
-            'ntnu_leg_disp_model/ntnu_leg_disp_expl_ode_fun.c', ...
-            'ntnu_leg_disp_model/ntnu_leg_disp_expl_vde_forw.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_fun.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_fun_jac_ut_xt.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_0_hess.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_fun.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_fun_jac_ut_xt.c',...
-            'ntnu_leg_disp_cost/ntnu_leg_disp_cost_y_hess.c',...
-            'ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_fun.c', ...
-            'ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_fun_jac_uxt_zt.c', ...
-            'ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_e_fun.c', ...
-            'ntnu_leg_disp_constraints/ntnu_leg_disp_constr_h_e_fun_jac_uxt_zt.c', ...
-            'acados_solver_sfunction_ntnu_leg_disp.c', ...
-            'acados_solver_ntnu_leg_disp.c'
+            'ntnu_leg_u_disp_model/ntnu_leg_u_disp_expl_ode_fun.c', ...
+            'ntnu_leg_u_disp_model/ntnu_leg_u_disp_expl_vde_forw.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_0_fun.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_0_fun_jac_ut_xt.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_0_hess.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_fun.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_fun_jac_ut_xt.c',...
+            'ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost_y_hess.c',...
+            'ntnu_leg_u_disp_constraints/ntnu_leg_u_disp_constr_h_fun.c', ...
+            'ntnu_leg_u_disp_constraints/ntnu_leg_u_disp_constr_h_fun_jac_uxt_zt.c', ...
+            'ntnu_leg_u_disp_constraints/ntnu_leg_u_disp_constr_h_e_fun.c', ...
+            'ntnu_leg_u_disp_constraints/ntnu_leg_u_disp_constr_h_e_fun_jac_uxt_zt.c', ...
+            'acados_solver_sfunction_ntnu_leg_u_disp.c', ...
+            'acados_solver_ntnu_leg_u_disp.c'
           };
 
 INC_PATH = '/home/papaveneti/acados/include';
@@ -76,7 +76,7 @@ try
     %     mex('-v', '-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
     mex('-O', CFLAGS, LDFLAGS, COMPFLAGS, COMPDEFINES, INCS{:}, ...
             LIB_PATH, LIBS{:}, SOURCES{:}, ...
-            '-output', 'acados_solver_sfunction_ntnu_leg_disp' );
+            '-output', 'acados_solver_sfunction_ntnu_leg_u_disp' );
 catch exception
     disp('make_sfun failed with the following exception:')
     disp(exception);
@@ -84,7 +84,7 @@ catch exception
     keyboard
 end
 
-fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_ntnu_leg_disp', '.', ...
+fprintf( [ '\n\nSuccessfully created sfunction:\nacados_solver_sfunction_ntnu_leg_u_disp', '.', ...
     eval('mexext')] );
 
 
@@ -96,25 +96,25 @@ i_in = 1;
 global sfun_input_names
 sfun_input_names = {};
 input_note = strcat(input_note, num2str(i_in), ') lbx_0 - lower bound on x for stage 0,',...
-                    ' size [10]\n ');
-sfun_input_names = [sfun_input_names; 'lbx_0 [10]'];
+                    ' size [13]\n ');
+sfun_input_names = [sfun_input_names; 'lbx_0 [13]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for stage 0,',...
-                    ' size [10]\n ');
-sfun_input_names = [sfun_input_names; 'ubx_0 [10]'];
+                    ' size [13]\n ');
+sfun_input_names = [sfun_input_names; 'ubx_0 [13]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [17]\n ');
 sfun_input_names = [sfun_input_names; 'y_ref_0 [17]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
-                    ' size [2533]\n ');
-sfun_input_names = [sfun_input_names; 'y_ref [2533]'];
+                    ' size [5083]\n ');
+sfun_input_names = [sfun_input_names; 'y_ref [5083]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [1490]\n ');
-sfun_input_names = [sfun_input_names; 'lbx [1490]'];
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [3887]\n ');
+sfun_input_names = [sfun_input_names; 'lbx [3887]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [1490]\n ');
-sfun_input_names = [sfun_input_names; 'ubx [1490]'];
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [3887]\n ');
+sfun_input_names = [sfun_input_names; 'ubx [3887]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbx_e (lbx at shooting node N), size [10]\n ');
 sfun_input_names = [sfun_input_names; 'lbx_e [10]'];
@@ -122,23 +122,23 @@ i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubx_e (ubx at shooting node N), size [10]\n ');
 sfun_input_names = [sfun_input_names; 'ubx_e [10]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [450]\n ');
-sfun_input_names = [sfun_input_names; 'lbu [450]'];
+input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [900]\n ');
+sfun_input_names = [sfun_input_names; 'lbu [900]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [450]\n ');
-sfun_input_names = [sfun_input_names; 'ubu [450]'];
+input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [900]\n ');
+sfun_input_names = [sfun_input_names; 'ubu [900]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [300]\n ');
-sfun_input_names = [sfun_input_names; 'lg [300]'];
+input_note = strcat(input_note, num2str(i_in), ') lg for shooting nodes 0 to N-1, size [600]\n ');
+sfun_input_names = [sfun_input_names; 'lg [600]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [300]\n ');
-sfun_input_names = [sfun_input_names; 'ug [300]'];
+input_note = strcat(input_note, num2str(i_in), ') ug for shooting nodes 0 to N-1, size [600]\n ');
+sfun_input_names = [sfun_input_names; 'ug [600]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lh for shooting nodes 0 to N-1, size [300]\n ');
-sfun_input_names = [sfun_input_names; 'lh [300]'];
+input_note = strcat(input_note, num2str(i_in), ') lh for shooting nodes 0 to N-1, size [600]\n ');
+sfun_input_names = [sfun_input_names; 'lh [600]'];
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') uh for shooting nodes 0 to N-1, size [300]\n ');
-sfun_input_names = [sfun_input_names; 'uh [300]'];
+input_note = strcat(input_note, num2str(i_in), ') uh for shooting nodes 0 to N-1, size [600]\n ');
+sfun_input_names = [sfun_input_names; 'uh [600]'];
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lh_e, size [2]\n ');
 sfun_input_names = [sfun_input_names; 'lh_e [2]'];
@@ -163,11 +163,11 @@ i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') u0, control input at node 0, size [3]\n ');
 sfun_output_names = [sfun_output_names; 'u0 [3]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [450]\n ');
-sfun_output_names = [sfun_output_names; 'utraj [450]'];
+output_note = strcat(output_note, num2str(i_out), ') utraj, control input concatenated for nodes 0 to N-1, size [900]\n ');
+sfun_output_names = [sfun_output_names; 'utraj [900]'];
 i_out = i_out + 1;
-output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [1510]\n ');
-sfun_output_names = [sfun_output_names; 'xtraj [1510]'];
+output_note = strcat(output_note, num2str(i_out), ') xtraj, state concatenated for nodes 0 to N, size [3913]\n ');
+sfun_output_names = [sfun_output_names; 'xtraj [3913]'];
 i_out = i_out + 1;
 output_note = strcat(output_note, num2str(i_out), ') acados solver status (0 = SUCCESS)\n ');
 sfun_output_names = [sfun_output_names; 'solver_status'];

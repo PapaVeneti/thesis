@@ -29,11 +29,11 @@
 
 %
 
-SOURCES = [ 'acados_sim_solver_sfunction_ntnu_leg_disp.c ', ...
-            'acados_sim_solver_ntnu_leg_disp.c ', ...
-            'ntnu_leg_disp_model/ntnu_leg_disp_expl_ode_fun.c ',...
-            'ntnu_leg_disp_model/ntnu_leg_disp_expl_vde_forw.c ',...
-            'ntnu_leg_disp_model/ntnu_leg_disp_expl_vde_adj.c ',...
+SOURCES = [ 'acados_sim_solver_sfunction_ntnu_leg_u_disp.c ', ...
+            'acados_sim_solver_ntnu_leg_u_disp.c ', ...
+            'ntnu_leg_u_disp_model/ntnu_leg_u_disp_expl_ode_fun.c ',...
+            'ntnu_leg_u_disp_model/ntnu_leg_u_disp_expl_vde_forw.c ',...
+            'ntnu_leg_u_disp_model/ntnu_leg_u_disp_expl_vde_adj.c ',...
           ];
 
 INC_PATH = '/home/papaveneti/acados/include';
@@ -49,8 +49,8 @@ LIB_PATH = '/home/papaveneti/acados/lib';
 LIBS = '-lacados -lblasfeo -lhpipm';
 
 try
-    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_ntnu_leg_disp ', ...
-    eval( [ 'mex -output  acados_sim_solver_sfunction_ntnu_leg_disp ', ...
+    % eval( [ 'mex -v -output  acados_sim_solver_sfunction_ntnu_leg_u_disp ', ...
+    eval( [ 'mex -output  acados_sim_solver_sfunction_ntnu_leg_u_disp ', ...
         CFLAGS, INCS, ' ', SOURCES, ' -L', LIB_PATH, ' ', LIBS ]);
 
 catch exception
@@ -61,7 +61,7 @@ catch exception
 end
 
 
-fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_ntnu_leg_disp', '.', ...
+fprintf( [ '\n\nSuccessfully created sfunction:\nacados_sim_solver_sfunction_ntnu_leg_u_disp', '.', ...
     eval('mexext')] );
 
 
@@ -70,9 +70,9 @@ sfun_sim_input_names = {};
 
 %% print note on usage of s-function
 fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
-input_note = 'Inputs are:\n1) x0, initial state, size [10]\n ';
+input_note = 'Inputs are:\n1) x0, initial state, size [13]\n ';
 i_in = 2;
-sfun_sim_input_names = [sfun_sim_input_names; 'x0 [10]'];
+sfun_sim_input_names = [sfun_sim_input_names; 'x0 [13]'];
 input_note = strcat(input_note, num2str(i_in), ') u, size [3]\n ');
 i_in = i_in + 1;
 sfun_sim_input_names = [sfun_sim_input_names; 'u [3]'];
@@ -86,8 +86,8 @@ global sfun_sim_output_names
 sfun_sim_output_names = {};
 
 output_note = strcat('Outputs are:\n', ...
-                '1) x1 - simulated state, size [10]\n');
-sfun_sim_output_names = [sfun_sim_output_names; 'x1 [10]'];
+                '1) x1 - simulated state, size [13]\n');
+sfun_sim_output_names = [sfun_sim_output_names; 'x1 [13]'];
 
 fprintf(output_note)
 

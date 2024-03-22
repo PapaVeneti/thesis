@@ -38,77 +38,77 @@
 #include "acados_c/external_function_interface.h"
 
 // example specific
-#include "ntnu_leg_disp_model/ntnu_leg_disp_model.h"
-#include "ntnu_leg_disp_constraints/ntnu_leg_disp_constraints.h"
-#include "ntnu_leg_disp_cost/ntnu_leg_disp_cost.h"
+#include "ntnu_leg_u_disp_model/ntnu_leg_u_disp_model.h"
+#include "ntnu_leg_u_disp_constraints/ntnu_leg_u_disp_constraints.h"
+#include "ntnu_leg_u_disp_cost/ntnu_leg_u_disp_cost.h"
 
 
 
 
-#include "acados_solver_ntnu_leg_disp.h"
+#include "acados_solver_ntnu_leg_u_disp.h"
 
-#define NX     NTNU_LEG_DISP_NX
-#define NZ     NTNU_LEG_DISP_NZ
-#define NU     NTNU_LEG_DISP_NU
-#define NP     NTNU_LEG_DISP_NP
-#define NBX    NTNU_LEG_DISP_NBX
-#define NBX0   NTNU_LEG_DISP_NBX0
-#define NBU    NTNU_LEG_DISP_NBU
-#define NSBX   NTNU_LEG_DISP_NSBX
-#define NSBU   NTNU_LEG_DISP_NSBU
-#define NSH    NTNU_LEG_DISP_NSH
-#define NSG    NTNU_LEG_DISP_NSG
-#define NSPHI  NTNU_LEG_DISP_NSPHI
-#define NSHN   NTNU_LEG_DISP_NSHN
-#define NSGN   NTNU_LEG_DISP_NSGN
-#define NSPHIN NTNU_LEG_DISP_NSPHIN
-#define NSBXN  NTNU_LEG_DISP_NSBXN
-#define NS     NTNU_LEG_DISP_NS
-#define NSN    NTNU_LEG_DISP_NSN
-#define NG     NTNU_LEG_DISP_NG
-#define NBXN   NTNU_LEG_DISP_NBXN
-#define NGN    NTNU_LEG_DISP_NGN
-#define NY0    NTNU_LEG_DISP_NY0
-#define NY     NTNU_LEG_DISP_NY
-#define NYN    NTNU_LEG_DISP_NYN
-// #define N      NTNU_LEG_DISP_N
-#define NH     NTNU_LEG_DISP_NH
-#define NPHI   NTNU_LEG_DISP_NPHI
-#define NHN    NTNU_LEG_DISP_NHN
-#define NPHIN  NTNU_LEG_DISP_NPHIN
-#define NR     NTNU_LEG_DISP_NR
+#define NX     NTNU_LEG_U_DISP_NX
+#define NZ     NTNU_LEG_U_DISP_NZ
+#define NU     NTNU_LEG_U_DISP_NU
+#define NP     NTNU_LEG_U_DISP_NP
+#define NBX    NTNU_LEG_U_DISP_NBX
+#define NBX0   NTNU_LEG_U_DISP_NBX0
+#define NBU    NTNU_LEG_U_DISP_NBU
+#define NSBX   NTNU_LEG_U_DISP_NSBX
+#define NSBU   NTNU_LEG_U_DISP_NSBU
+#define NSH    NTNU_LEG_U_DISP_NSH
+#define NSG    NTNU_LEG_U_DISP_NSG
+#define NSPHI  NTNU_LEG_U_DISP_NSPHI
+#define NSHN   NTNU_LEG_U_DISP_NSHN
+#define NSGN   NTNU_LEG_U_DISP_NSGN
+#define NSPHIN NTNU_LEG_U_DISP_NSPHIN
+#define NSBXN  NTNU_LEG_U_DISP_NSBXN
+#define NS     NTNU_LEG_U_DISP_NS
+#define NSN    NTNU_LEG_U_DISP_NSN
+#define NG     NTNU_LEG_U_DISP_NG
+#define NBXN   NTNU_LEG_U_DISP_NBXN
+#define NGN    NTNU_LEG_U_DISP_NGN
+#define NY0    NTNU_LEG_U_DISP_NY0
+#define NY     NTNU_LEG_U_DISP_NY
+#define NYN    NTNU_LEG_U_DISP_NYN
+// #define N      NTNU_LEG_U_DISP_N
+#define NH     NTNU_LEG_U_DISP_NH
+#define NPHI   NTNU_LEG_U_DISP_NPHI
+#define NHN    NTNU_LEG_U_DISP_NHN
+#define NPHIN  NTNU_LEG_U_DISP_NPHIN
+#define NR     NTNU_LEG_U_DISP_NR
 
 
 // ** solver data **
 
-ntnu_leg_disp_solver_capsule * ntnu_leg_disp_acados_create_capsule(void)
+ntnu_leg_u_disp_solver_capsule * ntnu_leg_u_disp_acados_create_capsule(void)
 {
-    void* capsule_mem = malloc(sizeof(ntnu_leg_disp_solver_capsule));
-    ntnu_leg_disp_solver_capsule *capsule = (ntnu_leg_disp_solver_capsule *) capsule_mem;
+    void* capsule_mem = malloc(sizeof(ntnu_leg_u_disp_solver_capsule));
+    ntnu_leg_u_disp_solver_capsule *capsule = (ntnu_leg_u_disp_solver_capsule *) capsule_mem;
 
     return capsule;
 }
 
 
-int ntnu_leg_disp_acados_free_capsule(ntnu_leg_disp_solver_capsule *capsule)
+int ntnu_leg_u_disp_acados_free_capsule(ntnu_leg_u_disp_solver_capsule *capsule)
 {
     free(capsule);
     return 0;
 }
 
 
-int ntnu_leg_disp_acados_create(ntnu_leg_disp_solver_capsule* capsule)
+int ntnu_leg_u_disp_acados_create(ntnu_leg_u_disp_solver_capsule* capsule)
 {
-    int N_shooting_intervals = NTNU_LEG_DISP_N;
+    int N_shooting_intervals = NTNU_LEG_U_DISP_N;
     double* new_time_steps = NULL; // NULL -> don't alter the code generated time-steps
-    return ntnu_leg_disp_acados_create_with_discretization(capsule, N_shooting_intervals, new_time_steps);
+    return ntnu_leg_u_disp_acados_create_with_discretization(capsule, N_shooting_intervals, new_time_steps);
 }
 
 
-int ntnu_leg_disp_acados_update_time_steps(ntnu_leg_disp_solver_capsule* capsule, int N, double* new_time_steps)
+int ntnu_leg_u_disp_acados_update_time_steps(ntnu_leg_u_disp_solver_capsule* capsule, int N, double* new_time_steps)
 {
     if (N != capsule->nlp_solver_plan->N) {
-        fprintf(stderr, "ntnu_leg_disp_acados_update_time_steps: given number of time steps (= %d) " \
+        fprintf(stderr, "ntnu_leg_u_disp_acados_update_time_steps: given number of time steps (= %d) " \
             "differs from the currently allocated number of " \
             "time steps (= %d)!\n" \
             "Please recreate with new discretization and provide a new vector of time_stamps!\n",
@@ -129,9 +129,9 @@ int ntnu_leg_disp_acados_update_time_steps(ntnu_leg_disp_solver_capsule* capsule
 }
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 1
+ * Internal function for ntnu_leg_u_disp_acados_create: step 1
  */
-void ntnu_leg_disp_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const int N)
+void ntnu_leg_u_disp_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, const int N)
 {
     assert(N == nlp_solver_plan->N);
 
@@ -163,9 +163,9 @@ void ntnu_leg_disp_acados_create_1_set_plan(ocp_nlp_plan_t* nlp_solver_plan, con
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 2
+ * Internal function for ntnu_leg_u_disp_acados_create: step 2
  */
-ocp_nlp_dims* ntnu_leg_disp_acados_create_2_create_and_set_dimensions(ntnu_leg_disp_solver_capsule* capsule)
+ocp_nlp_dims* ntnu_leg_u_disp_acados_create_2_create_and_set_dimensions(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     ocp_nlp_plan_t* nlp_solver_plan = capsule->nlp_solver_plan;
     const int N = nlp_solver_plan->N;
@@ -223,7 +223,7 @@ ocp_nlp_dims* ntnu_leg_disp_acados_create_2_create_and_set_dimensions(ntnu_leg_d
     nbx[0]  = NBX0;
     nsbx[0] = 0;
     ns[0] = NS - NSBX;
-    nbxe[0] = 10;
+    nbxe[0] = 0;
     ny[0] = NY0;
 
     // terminal - common
@@ -284,9 +284,9 @@ return nlp_dims;
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 3
+ * Internal function for ntnu_leg_u_disp_acados_create: step 3
  */
-void ntnu_leg_disp_acados_create_3_create_and_set_functions(ntnu_leg_disp_solver_capsule* capsule)
+void ntnu_leg_u_disp_acados_create_3_create_and_set_functions(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
 
@@ -309,51 +309,51 @@ void ntnu_leg_disp_acados_create_3_create_and_set_functions(ntnu_leg_disp_solver
     // constraints.constr_type == "BGH" and dims.nh > 0
     capsule->nl_constr_h_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        MAP_CASADI_FNC(nl_constr_h_fun_jac[i], ntnu_leg_disp_constr_h_fun_jac_uxt_zt);
+        MAP_CASADI_FNC(nl_constr_h_fun_jac[i], ntnu_leg_u_disp_constr_h_fun_jac_uxt_zt);
     }
     capsule->nl_constr_h_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        MAP_CASADI_FNC(nl_constr_h_fun[i], ntnu_leg_disp_constr_h_fun);
+        MAP_CASADI_FNC(nl_constr_h_fun[i], ntnu_leg_u_disp_constr_h_fun);
     }
     
 
-    MAP_CASADI_FNC(nl_constr_h_e_fun_jac, ntnu_leg_disp_constr_h_e_fun_jac_uxt_zt);
-    MAP_CASADI_FNC(nl_constr_h_e_fun, ntnu_leg_disp_constr_h_e_fun);
+    MAP_CASADI_FNC(nl_constr_h_e_fun_jac, ntnu_leg_u_disp_constr_h_e_fun_jac_uxt_zt);
+    MAP_CASADI_FNC(nl_constr_h_e_fun, ntnu_leg_u_disp_constr_h_e_fun);
 
 
     // explicit ode
     capsule->forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        MAP_CASADI_FNC(forw_vde_casadi[i], ntnu_leg_disp_expl_vde_forw);
+        MAP_CASADI_FNC(forw_vde_casadi[i], ntnu_leg_u_disp_expl_vde_forw);
     }
 
     capsule->expl_ode_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        MAP_CASADI_FNC(expl_ode_fun[i], ntnu_leg_disp_expl_ode_fun);
+        MAP_CASADI_FNC(expl_ode_fun[i], ntnu_leg_u_disp_expl_ode_fun);
     }
 
 
     // nonlinear least squares function
-    MAP_CASADI_FNC(cost_y_0_fun, ntnu_leg_disp_cost_y_0_fun);
-    MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, ntnu_leg_disp_cost_y_0_fun_jac_ut_xt);
-    MAP_CASADI_FNC(cost_y_0_hess, ntnu_leg_disp_cost_y_0_hess);
+    MAP_CASADI_FNC(cost_y_0_fun, ntnu_leg_u_disp_cost_y_0_fun);
+    MAP_CASADI_FNC(cost_y_0_fun_jac_ut_xt, ntnu_leg_u_disp_cost_y_0_fun_jac_ut_xt);
+    MAP_CASADI_FNC(cost_y_0_hess, ntnu_leg_u_disp_cost_y_0_hess);
     // nonlinear least squares cost
     capsule->cost_y_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N-1; i++)
     {
-        MAP_CASADI_FNC(cost_y_fun[i], ntnu_leg_disp_cost_y_fun);
+        MAP_CASADI_FNC(cost_y_fun[i], ntnu_leg_u_disp_cost_y_fun);
     }
 
     capsule->cost_y_fun_jac_ut_xt = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N-1; i++)
     {
-        MAP_CASADI_FNC(cost_y_fun_jac_ut_xt[i], ntnu_leg_disp_cost_y_fun_jac_ut_xt);
+        MAP_CASADI_FNC(cost_y_fun_jac_ut_xt[i], ntnu_leg_u_disp_cost_y_fun_jac_ut_xt);
     }
 
     capsule->cost_y_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N-1; i++)
     {
-        MAP_CASADI_FNC(cost_y_hess[i], ntnu_leg_disp_cost_y_hess);
+        MAP_CASADI_FNC(cost_y_hess[i], ntnu_leg_u_disp_cost_y_hess);
     }
 
 #undef MAP_CASADI_FNC
@@ -361,17 +361,17 @@ void ntnu_leg_disp_acados_create_3_create_and_set_functions(ntnu_leg_disp_solver
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 4
+ * Internal function for ntnu_leg_u_disp_acados_create: step 4
  */
-void ntnu_leg_disp_acados_create_4_set_default_parameters(ntnu_leg_disp_solver_capsule* capsule) {
+void ntnu_leg_u_disp_acados_create_4_set_default_parameters(ntnu_leg_u_disp_solver_capsule* capsule) {
     // no parameters defined
 }
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 5
+ * Internal function for ntnu_leg_u_disp_acados_create: step 5
  */
-void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* capsule, const int N, double* new_time_steps)
+void ntnu_leg_u_disp_acados_create_5_set_nlp_in(ntnu_leg_u_disp_solver_capsule* capsule, const int N, double* new_time_steps)
 {
     assert(N == capsule->nlp_solver_plan->N);
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -388,7 +388,7 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     
 
     if (new_time_steps) {
-        ntnu_leg_disp_acados_update_time_steps(capsule, N, new_time_steps);
+        ntnu_leg_u_disp_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
         double time_step = 0.005;
         for (int i = 0; i < N; i++)
@@ -510,11 +510,11 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     Zl_e[2] = 0.1;
     Zl_e[3] = 0.1;
     Zl_e[4] = 0.1;
-    Zl_e[5] = 0.01;
-    Zl_e[6] = 0.01;
-    Zl_e[7] = 0.01;
-    Zl_e[8] = 0.01;
-    Zl_e[9] = 0.01;
+    Zl_e[5] = 0.002;
+    Zl_e[6] = 0.002;
+    Zl_e[7] = 0.002;
+    Zl_e[8] = 0.002;
+    Zl_e[9] = 0.002;
     Zl_e[10] = 5;
     Zl_e[11] = 5;
 
@@ -524,11 +524,11 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     Zu_e[2] = 0.1;
     Zu_e[3] = 0.1;
     Zu_e[4] = 0.1;
-    Zu_e[5] = 0.01;
-    Zu_e[6] = 0.01;
-    Zu_e[7] = 0.01;
-    Zu_e[8] = 0.01;
-    Zu_e[9] = 0.01;
+    Zu_e[5] = 0.002;
+    Zu_e[6] = 0.002;
+    Zu_e[7] = 0.002;
+    Zu_e[8] = 0.002;
+    Zu_e[9] = 0.002;
     Zu_e[10] = 5;
     Zu_e[11] = 5;
 
@@ -557,6 +557,9 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     idxbx0[7] = 7;
     idxbx0[8] = 8;
     idxbx0[9] = 9;
+    idxbx0[10] = 10;
+    idxbx0[11] = 11;
+    idxbx0[12] = 12;
 
     double* lubx0 = calloc(2*NBX0, sizeof(double));
     double* lbx0 = lubx0;
@@ -570,27 +573,18 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     ubx0[3] = 1.1;
     lbx0[4] = -0.01097185567;
     ubx0[4] = -0.01097185567;
+    lbx0[10] = -10;
+    ubx0[10] = 10;
+    lbx0[11] = -10;
+    ubx0[11] = 10;
+    lbx0[12] = -10;
+    ubx0[12] = 10;
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "ubx", ubx0);
     free(idxbx0);
     free(lubx0);
-    // idxbxe_0
-    int* idxbxe_0 = malloc(10 * sizeof(int));
-    
-    idxbxe_0[0] = 0;
-    idxbxe_0[1] = 1;
-    idxbxe_0[2] = 2;
-    idxbxe_0[3] = 3;
-    idxbxe_0[4] = 4;
-    idxbxe_0[5] = 5;
-    idxbxe_0[6] = 6;
-    idxbxe_0[7] = 7;
-    idxbxe_0[8] = 8;
-    idxbxe_0[9] = 9;
-    ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbxe", idxbxe_0);
-    free(idxbxe_0);
 
     /* constraints that are the same for initial and intermediate */
     // u
@@ -603,12 +597,12 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     double* lbu = lubu;
     double* ubu = lubu + NBU;
     
-    lbu[0] = -10;
-    ubu[0] = 10;
-    lbu[1] = -10;
-    ubu[1] = 10;
-    lbu[2] = -10;
-    ubu[2] = 10;
+    lbu[0] = -200;
+    ubu[0] = 200;
+    lbu[1] = -200;
+    ubu[1] = 200;
+    lbu[2] = -200;
+    ubu[2] = 200;
 
     for (int i = 0; i < N; i++)
     {
@@ -657,6 +651,9 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     idxbx[7] = 7;
     idxbx[8] = 8;
     idxbx[9] = 9;
+    idxbx[10] = 10;
+    idxbx[11] = 11;
+    idxbx[12] = 12;
     double* lubx = calloc(2*NBX, sizeof(double));
     double* lbx = lubx;
     double* ubx = lubx + NBX;
@@ -681,6 +678,12 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
     ubx[8] = 32;
     lbx[9] = -32;
     ubx[9] = 32;
+    lbx[10] = -10;
+    ubx[10] = 10;
+    lbx[11] = -10;
+    ubx[11] = 10;
+    lbx[12] = -10;
+    ubx[12] = 10;
 
     for (int i = 1; i < N; i++)
     {
@@ -855,9 +858,9 @@ void ntnu_leg_disp_acados_create_5_set_nlp_in(ntnu_leg_disp_solver_capsule* caps
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 6
+ * Internal function for ntnu_leg_u_disp_acados_create: step 6
  */
-void ntnu_leg_disp_acados_create_6_set_opts(ntnu_leg_disp_solver_capsule* capsule)
+void ntnu_leg_u_disp_acados_create_6_set_opts(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -921,7 +924,7 @@ void ntnu_leg_disp_acados_create_6_set_opts(ntnu_leg_disp_solver_capsule* capsul
     /* options QP solver */
     int qp_solver_cond_N;
 
-    const int qp_solver_cond_N_ori = 150;
+    const int qp_solver_cond_N_ori = 300;
     qp_solver_cond_N = N < qp_solver_cond_N_ori ? N : qp_solver_cond_N_ori; // use the minimum value here
     ocp_nlp_solver_opts_set(nlp_config, nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
@@ -967,9 +970,9 @@ int print_level = 0;
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 7
+ * Internal function for ntnu_leg_u_disp_acados_create: step 7
  */
-void ntnu_leg_disp_acados_create_7_set_nlp_out(ntnu_leg_disp_solver_capsule* capsule)
+void ntnu_leg_u_disp_acados_create_7_set_nlp_out(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     const int N = capsule->nlp_solver_plan->N;
     ocp_nlp_config* nlp_config = capsule->nlp_config;
@@ -986,6 +989,9 @@ void ntnu_leg_disp_acados_create_7_set_nlp_out(ntnu_leg_disp_solver_capsule* cap
     x0[2] = -0.7434528511;
     x0[3] = 1.1;
     x0[4] = -0.01097185567;
+    x0[10] = -10;
+    x0[11] = -10;
+    x0[12] = -10;
 
 
     double* u0 = xu0 + NX;
@@ -1003,17 +1009,17 @@ void ntnu_leg_disp_acados_create_7_set_nlp_out(ntnu_leg_disp_solver_capsule* cap
 
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 8
+ * Internal function for ntnu_leg_u_disp_acados_create: step 8
  */
-//void ntnu_leg_disp_acados_create_8_create_solver(ntnu_leg_disp_solver_capsule* capsule)
+//void ntnu_leg_u_disp_acados_create_8_create_solver(ntnu_leg_u_disp_solver_capsule* capsule)
 //{
 //    capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
 //}
 
 /**
- * Internal function for ntnu_leg_disp_acados_create: step 9
+ * Internal function for ntnu_leg_u_disp_acados_create: step 9
  */
-int ntnu_leg_disp_acados_create_9_precompute(ntnu_leg_disp_solver_capsule* capsule) {
+int ntnu_leg_u_disp_acados_create_9_precompute(ntnu_leg_u_disp_solver_capsule* capsule) {
     int status = ocp_nlp_precompute(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
 
     if (status != ACADOS_SUCCESS) {
@@ -1025,14 +1031,14 @@ int ntnu_leg_disp_acados_create_9_precompute(ntnu_leg_disp_solver_capsule* capsu
 }
 
 
-int ntnu_leg_disp_acados_create_with_discretization(ntnu_leg_disp_solver_capsule* capsule, int N, double* new_time_steps)
+int ntnu_leg_u_disp_acados_create_with_discretization(ntnu_leg_u_disp_solver_capsule* capsule, int N, double* new_time_steps)
 {
     // If N does not match the number of shooting intervals used for code generation, new_time_steps must be given.
-    if (N != NTNU_LEG_DISP_N && !new_time_steps) {
-        fprintf(stderr, "ntnu_leg_disp_acados_create_with_discretization: new_time_steps is NULL " \
+    if (N != NTNU_LEG_U_DISP_N && !new_time_steps) {
+        fprintf(stderr, "ntnu_leg_u_disp_acados_create_with_discretization: new_time_steps is NULL " \
             "but the number of shooting intervals (= %d) differs from the number of " \
             "shooting intervals (= %d) during code generation! Please provide a new vector of time_stamps!\n", \
-             N, NTNU_LEG_DISP_N);
+             N, NTNU_LEG_U_DISP_N);
         return 1;
     }
 
@@ -1041,37 +1047,37 @@ int ntnu_leg_disp_acados_create_with_discretization(ntnu_leg_disp_solver_capsule
 
     // 1) create and set nlp_solver_plan; create nlp_config
     capsule->nlp_solver_plan = ocp_nlp_plan_create(N);
-    ntnu_leg_disp_acados_create_1_set_plan(capsule->nlp_solver_plan, N);
+    ntnu_leg_u_disp_acados_create_1_set_plan(capsule->nlp_solver_plan, N);
     capsule->nlp_config = ocp_nlp_config_create(*capsule->nlp_solver_plan);
 
     // 3) create and set dimensions
-    capsule->nlp_dims = ntnu_leg_disp_acados_create_2_create_and_set_dimensions(capsule);
-    ntnu_leg_disp_acados_create_3_create_and_set_functions(capsule);
+    capsule->nlp_dims = ntnu_leg_u_disp_acados_create_2_create_and_set_dimensions(capsule);
+    ntnu_leg_u_disp_acados_create_3_create_and_set_functions(capsule);
 
     // 4) set default parameters in functions
-    ntnu_leg_disp_acados_create_4_set_default_parameters(capsule);
+    ntnu_leg_u_disp_acados_create_4_set_default_parameters(capsule);
 
     // 5) create and set nlp_in
     capsule->nlp_in = ocp_nlp_in_create(capsule->nlp_config, capsule->nlp_dims);
-    ntnu_leg_disp_acados_create_5_set_nlp_in(capsule, N, new_time_steps);
+    ntnu_leg_u_disp_acados_create_5_set_nlp_in(capsule, N, new_time_steps);
 
     // 6) create and set nlp_opts
     capsule->nlp_opts = ocp_nlp_solver_opts_create(capsule->nlp_config, capsule->nlp_dims);
-    ntnu_leg_disp_acados_create_6_set_opts(capsule);
+    ntnu_leg_u_disp_acados_create_6_set_opts(capsule);
 
     // 7) create and set nlp_out
     // 7.1) nlp_out
     capsule->nlp_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
     // 7.2) sens_out
     capsule->sens_out = ocp_nlp_out_create(capsule->nlp_config, capsule->nlp_dims);
-    ntnu_leg_disp_acados_create_7_set_nlp_out(capsule);
+    ntnu_leg_u_disp_acados_create_7_set_nlp_out(capsule);
 
     // 8) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
-    //ntnu_leg_disp_acados_create_8_create_solver(capsule);
+    //ntnu_leg_u_disp_acados_create_8_create_solver(capsule);
 
     // 9) do precomputations
-    int status = ntnu_leg_disp_acados_create_9_precompute(capsule);
+    int status = ntnu_leg_u_disp_acados_create_9_precompute(capsule);
 
     return status;
 }
@@ -1079,7 +1085,7 @@ int ntnu_leg_disp_acados_create_with_discretization(ntnu_leg_disp_solver_capsule
 /**
  * This function is for updating an already initialized solver with a different number of qp_cond_N. It is useful for code reuse after code export.
  */
-int ntnu_leg_disp_acados_update_qp_solver_cond_N(ntnu_leg_disp_solver_capsule* capsule, int qp_solver_cond_N)
+int ntnu_leg_u_disp_acados_update_qp_solver_cond_N(ntnu_leg_u_disp_solver_capsule* capsule, int qp_solver_cond_N)
 {
     // 1) destroy solver
     ocp_nlp_solver_destroy(capsule->nlp_solver);
@@ -1090,17 +1096,17 @@ int ntnu_leg_disp_acados_update_qp_solver_cond_N(ntnu_leg_disp_solver_capsule* c
         printf("Warning: qp_solver_cond_N = %d > N = %d\n", qp_solver_cond_N, N);
     ocp_nlp_solver_opts_set(capsule->nlp_config, capsule->nlp_opts, "qp_cond_N", &qp_solver_cond_N);
 
-    // 3) continue with the remaining steps from ntnu_leg_disp_acados_create_with_discretization(...):
+    // 3) continue with the remaining steps from ntnu_leg_u_disp_acados_create_with_discretization(...):
     // -> 8) create solver
     capsule->nlp_solver = ocp_nlp_solver_create(capsule->nlp_config, capsule->nlp_dims, capsule->nlp_opts);
 
     // -> 9) do precomputations
-    int status = ntnu_leg_disp_acados_create_9_precompute(capsule);
+    int status = ntnu_leg_u_disp_acados_create_9_precompute(capsule);
     return status;
 }
 
 
-int ntnu_leg_disp_acados_reset(ntnu_leg_disp_solver_capsule* capsule, int reset_qp_solver_mem)
+int ntnu_leg_u_disp_acados_reset(ntnu_leg_u_disp_solver_capsule* capsule, int reset_qp_solver_mem)
 {
 
     // set initialization to all zeros
@@ -1144,7 +1150,7 @@ int ntnu_leg_disp_acados_reset(ntnu_leg_disp_solver_capsule* capsule, int reset_
 
 
 
-int ntnu_leg_disp_acados_update_params(ntnu_leg_disp_solver_capsule* capsule, int stage, double *p, int np)
+int ntnu_leg_u_disp_acados_update_params(ntnu_leg_u_disp_solver_capsule* capsule, int stage, double *p, int np)
 {
     int solver_status = 0;
 
@@ -1197,20 +1203,20 @@ int ntnu_leg_disp_acados_update_params(ntnu_leg_disp_solver_capsule* capsule, in
 }
 
 
-int ntnu_leg_disp_acados_update_params_sparse(ntnu_leg_disp_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
+int ntnu_leg_u_disp_acados_update_params_sparse(ntnu_leg_u_disp_solver_capsule * capsule, int stage, int *idx, double *p, int n_update)
 {
     int solver_status = 0;
 
     int casadi_np = 0;
     if (casadi_np < n_update) {
-        printf("ntnu_leg_disp_acados_update_params_sparse: trying to set %d parameters for external functions."
+        printf("ntnu_leg_u_disp_acados_update_params_sparse: trying to set %d parameters for external functions."
             " External function has %d parameters. Exiting.\n", n_update, casadi_np);
         exit(1);
     }
     // for (int i = 0; i < n_update; i++)
     // {
     //     if (idx[i] > casadi_np) {
-    //         printf("ntnu_leg_disp_acados_update_params_sparse: attempt to set parameters with index %d, while"
+    //         printf("ntnu_leg_u_disp_acados_update_params_sparse: attempt to set parameters with index %d, while"
     //             " external functions only has %d parameters. Exiting.\n", idx[i], casadi_np);
     //         exit(1);
     //     }
@@ -1220,7 +1226,7 @@ int ntnu_leg_disp_acados_update_params_sparse(ntnu_leg_disp_solver_capsule * cap
     return solver_status;
 }
 
-int ntnu_leg_disp_acados_solve(ntnu_leg_disp_solver_capsule* capsule)
+int ntnu_leg_u_disp_acados_solve(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     // solve NLP
     int solver_status = ocp_nlp_solve(capsule->nlp_solver, capsule->nlp_in, capsule->nlp_out);
@@ -1229,7 +1235,7 @@ int ntnu_leg_disp_acados_solve(ntnu_leg_disp_solver_capsule* capsule)
 }
 
 
-int ntnu_leg_disp_acados_free(ntnu_leg_disp_solver_capsule* capsule)
+int ntnu_leg_u_disp_acados_free(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     // before destroying, keep some info
     const int N = capsule->nlp_solver_plan->N;
@@ -1282,7 +1288,7 @@ int ntnu_leg_disp_acados_free(ntnu_leg_disp_solver_capsule* capsule)
 }
 
 
-void ntnu_leg_disp_acados_print_stats(ntnu_leg_disp_solver_capsule* capsule)
+void ntnu_leg_u_disp_acados_print_stats(ntnu_leg_u_disp_solver_capsule* capsule)
 {
     int sqp_iter, stat_m, stat_n, tmp_int;
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "sqp_iter", &sqp_iter);
@@ -1319,7 +1325,7 @@ void ntnu_leg_disp_acados_print_stats(ntnu_leg_disp_solver_capsule* capsule)
 
 }
 
-int ntnu_leg_disp_acados_custom_update(ntnu_leg_disp_solver_capsule* capsule, double* data, int data_len)
+int ntnu_leg_u_disp_acados_custom_update(ntnu_leg_u_disp_solver_capsule* capsule, double* data, int data_len)
 {
     (void)capsule;
     (void)data;
@@ -1332,11 +1338,11 @@ int ntnu_leg_disp_acados_custom_update(ntnu_leg_disp_solver_capsule* capsule, do
 
 
 
-ocp_nlp_in *ntnu_leg_disp_acados_get_nlp_in(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_in; }
-ocp_nlp_out *ntnu_leg_disp_acados_get_nlp_out(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_out; }
-ocp_nlp_out *ntnu_leg_disp_acados_get_sens_out(ntnu_leg_disp_solver_capsule* capsule) { return capsule->sens_out; }
-ocp_nlp_solver *ntnu_leg_disp_acados_get_nlp_solver(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_solver; }
-ocp_nlp_config *ntnu_leg_disp_acados_get_nlp_config(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_config; }
-void *ntnu_leg_disp_acados_get_nlp_opts(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_opts; }
-ocp_nlp_dims *ntnu_leg_disp_acados_get_nlp_dims(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_dims; }
-ocp_nlp_plan_t *ntnu_leg_disp_acados_get_nlp_plan(ntnu_leg_disp_solver_capsule* capsule) { return capsule->nlp_solver_plan; }
+ocp_nlp_in *ntnu_leg_u_disp_acados_get_nlp_in(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_in; }
+ocp_nlp_out *ntnu_leg_u_disp_acados_get_nlp_out(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_out; }
+ocp_nlp_out *ntnu_leg_u_disp_acados_get_sens_out(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->sens_out; }
+ocp_nlp_solver *ntnu_leg_u_disp_acados_get_nlp_solver(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_solver; }
+ocp_nlp_config *ntnu_leg_u_disp_acados_get_nlp_config(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_config; }
+void *ntnu_leg_u_disp_acados_get_nlp_opts(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_opts; }
+ocp_nlp_dims *ntnu_leg_u_disp_acados_get_nlp_dims(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_dims; }
+ocp_nlp_plan_t *ntnu_leg_u_disp_acados_get_nlp_plan(ntnu_leg_u_disp_solver_capsule* capsule) { return capsule->nlp_solver_plan; }
