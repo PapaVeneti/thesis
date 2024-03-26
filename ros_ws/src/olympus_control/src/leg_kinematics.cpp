@@ -1,14 +1,14 @@
 #include "leg_kinematics.hpp"
 #include <cmath>
 
-//calculate_joint_angles use pc1,pc2,p_EE_22d from current state -> thus faster for state estimation
+//state_estimation use pc1,pc2,p_EE_2d from current state -> thus faster for state estimation
 //CANNOT BE USED FOR CONSISTENT INITIALIZATION
 //I may want to know where a state gets me without going there.
 
 //1. DK return Xw
 //2. DK_update (update current cartesian position)
-//3. calculate_joint_angles (must be used for consistent initial positions)
-//4. update_current_joint_angles -> with conjuction of DK_update for fast state_estimation
+//3. state_estimation (must be used for consistent initial positions)
+//4. update_current_joint_angles -> with conjuction of DK_update for fast state_estimation_AND_DK
 // new features:
 //5. IK return qd
 
@@ -34,13 +34,74 @@ void print_nested_array(const std::array<std::array<T,2>,2> & arr){
   std::cout          << arr[1][1] << "] ]" <<std::endl ; 
 }
 
+//Forward Kinematics and State estimation
+#pragma region
+
+//Forward Kinematics:
+Eigen::Vector3d  leg_kinematics::DK(const Eigen::Vector3d &JointPositionVector){
+          end_effector_2D(JointPositionVector);
+  return  end_effector_MH(JointPositionVector[0]);
+};
 void leg_kinematics::DK(){
   pEE = DK( qm ) ;
 }
 
-Eigen::Vector3d  leg_kinematics::DK(const Eigen::Vector3d &JointPositionVector){
-  double q11,q12;
-  double qMH = JointPositionVector[0] ; 
+//State Estimation:
+Eigen::Matrix<double,5,1> leg_kinematics::state_estimation(const Eigen::Vector3d &JointPositionVector){
+  end_effector_2D(JointPositionVector); //Updates `pc1`,`pc2`,`p_EE_2d`
+
+  //The calculations are done in the rotated frame. 
+  Eigen::Vector2d link11_v = p1c-pj11;
+  Eigen::Vector2d link12_v = p2c-pj12;
+
+  Eigen::Vector2d link21_v = p_EE_2d-p1c;
+  Eigen::Vector2d link22_v = p_EE_2d-p2c;
+  
+  double theta1=   acos( ( link11_v.dot(link21_v) ) / (link11_v.norm() * link21_v.norm() )) ;
+  double theta2=  -acos( ( link12_v.dot(link22_v) ) / (link12_v.norm() * link22_v.norm() )) ;
+
+  //Check direction
+  Eigen::Vector2d link11_vn =  link11_v.normalized();
+  double side1_extended_x   = link11_vn[0]*(l11+l21);
+
+  Eigen::Vector2d link12_vn =  link12_v.normalized();
+  double side2_extended_x   = link12_vn[0]*(l12+l22);
+
+  if ( p_EE_2d[0] <  side1_extended_x ) {
+    // joint12 is outwards
+    theta1 *= -1;
+  }else if(p_EE_2d[0] >  side2_extended_x){
+    // joint22 is outwards
+    theta2 *= -1;
+  }
+
+  Eigen::Matrix<double,5,1> qvector;
+
+  qvector[0] = JointPositionVector[0] ; 
+  qvector[1] = JointPositionVector[1] ; //Positive joint angles opposite from MH
+  qvector[2] = theta1 - q21_offset;
+  qvector[3] = JointPositionVector[2] ; 
+  qvector[4] = theta2 - q22_offset; 
+
+  return qvector;
+}
+void leg_kinematics::state_estimation(){
+  q = state_estimation(qm);
+}
+
+// State Estimation and FK:
+void leg_kinematics::state_estimation_AND_DK(const Eigen::Vector3d &JointPositionVector){
+  state_estimation(JointPositionVector);
+  pEE = end_effector_MH(JointPositionVector[0]);
+}
+void leg_kinematics::state_estimation_AND_DK(){
+  state_estimation_AND_DK(qm);
+}
+
+// FK helpers:
+
+void leg_kinematics::end_effector_2D(const Eigen::Vector3d &JointPositionVector){
+ double q11,q12;
   switch (config_param){
     case 1:
       q11 = - JointPositionVector[1] +  offsets_1[joint_id::j11];
@@ -87,71 +148,29 @@ Eigen::Vector3d  leg_kinematics::DK(const Eigen::Vector3d &JointPositionVector){
   h = sqrt( (l21*l21) - (a*a));
 
   //4. Calculate Intersection point in the rotated {MH} frame.
+  p_EE_2d = p1c + (a*vc) + (h*vn);
+}
+Eigen::Vector3d leg_kinematics::end_effector_MH(const double & qMH){
   Eigen::Vector3d p_MHrotated_EE = {0,0,z_MH_j11j21};
-  p_EE_22d = p1c + (a*vc) + (h*vn);
+  p_MHrotated_EE.head(2) = p_EE_2d; 
 
-  p_MHrotated_EE.head(2) = p_EE_22d; 
-  //5. Change to the default {MH} frame = {MH} for q1=0
+  //Change to the default {MH} frame = {MH} for q1=0
   return  rotate_x(qMH)*p_MHrotated_EE;
-
-  // Eigen::Transform<double,3,Eigen::Isometry> a;
-  // Eigen::Rotation2Dd d(3);
-};
-
-Eigen::Matrix<double,5,1> leg_kinematics::calculate_joint_angles(const Eigen::Vector3d &JointPositionVector){
-  //The calculations are done in the rotated frame. 
-  Eigen::Vector2d link11_v = p1c-pj11;
-  Eigen::Vector2d link12_v = p2c-pj12;
-
-  Eigen::Vector2d link21_v = p_EE_22d-p1c;
-  Eigen::Vector2d link22_v = p_EE_22d-p2c;
-  
-  double theta1=   acos( ( link11_v.dot(link21_v) ) / (link11_v.norm() * link21_v.norm() )) ;
-  double theta2=  -acos( ( link12_v.dot(link22_v) ) / (link12_v.norm() * link22_v.norm() )) ;
-
-  //Check direction
-  Eigen::Vector2d link11_vn =  link11_v.normalized();
-  double side1_extended_x   = link11_vn[0]*(l11+l21);
-
-  Eigen::Vector2d link12_vn =  link12_v.normalized();
-  double side2_extended_x   = link12_vn[0]*(l12+l22);
-
-  if ( p_EE_22d[0] <  side1_extended_x ) {
-    // joint12 is outwards
-    theta1 *= -1;
-  }else if(p_EE_22d[0] >  side2_extended_x){
-    // joint22 is outwards
-    theta2 *= -1;
-  }
-
-  Eigen::Matrix<double,5,1> qvector;
-
-  qvector[0] = JointPositionVector[0] ; 
-  qvector[1] = JointPositionVector[1] ; //Positive joint angles opposite from MH
-  qvector[2] = theta1 - q21_offset;
-  qvector[3] = JointPositionVector[2] ; 
-  qvector[4] = theta2 - q22_offset; 
-
-  return qvector;
 }
 
-void leg_kinematics::calculate_joint_angles(){
-  q = calculate_joint_angles(qm);
-}
 
-void leg_kinematics::state_estimation(){
-  DK();
-  calculate_joint_angles();
-}
+#pragma endregion
+
+//getters:
 
 Eigen::Matrix<double,5,1> leg_kinematics::get_joint_angles(void){
   return q;
 }
-
 Eigen::Vector3d leg_kinematics::get_EE_position(void){
   return pEE;
 }
 
+//helpers
 Eigen::Matrix3d leg_kinematics::rotate_x(const double & th){
 Eigen::Matrix3d rotm;
 // rotm<<{ {1,0,0},{0, cos(th),-sin(th)},{0, sin(th),cos(th)} };
@@ -161,6 +180,11 @@ rotm<<  1,0,0,
 
 return rotm;
 };
+
+
+// Inverse Kinematics
+#pragma region
+
 
 //maybe change to return bool
 //as IK can fail
@@ -396,3 +420,4 @@ inline bool leg_kinematics::solution_in_limits(const std::array<double,2> & sol,
   return ( joint_angle_in_limits(sol[0],qa_lim) && joint_angle_in_limits(sol[1],qb_lim) ) ? true : false; 
 }
 
+#pragma endregion

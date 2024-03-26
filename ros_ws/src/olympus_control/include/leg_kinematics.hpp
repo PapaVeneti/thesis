@@ -39,32 +39,67 @@ class leg_kinematics {
         ;
     }
     
-    /// @brief Return the position of the end effector in the `MH` frame. 
-    ///
-    /// [joint1,joint2,motor3]
-    /// @param[in] JointPositionVector Vector containing the joint angles of the leg
-    /// @return Position in MotorHousing frame (=motor3 frame in urdf for zero angle) to debug!
+  // Forward Kinematics:
+    /// @brief Return the position of the end effector in the {MH} frame. 
+    /// @param[in] JointPositionVector The measured joint positions `[qMH,q11,q12]`
+    /// @return p_EE in {MH} frame
     /// @note The leg doesn't know its position in the world frame. The user is responsible for further transformations. 
-    /// Based on: "The Pantograph Mk-II: A Haptic Instrument". 
+    ///
+    /// It calculates the end_effector position in {MHr} frame using `end_effector_2D` and then transforms it to the{MH}
+    /// using `end_effector_MH`.
     ///
     Eigen::Vector3d DK(const Eigen::Vector3d &JointPositionVector);
 
-    ///Function to return the full  leg state.
-    /// @note It must be called after the most relevatn DK call
-    Eigen::Matrix<double,5,1> calculate_joint_angles(const Eigen::Vector3d &JointPositionVector);
-
-    /// FW kinematics based on the current measured state `qm`
-    /// It updated the current estimated end effector position `pEE` in the {MH} frame.
+    /// FW kinematics based on the current measured state `qm` saved in the class
+    /// It updates the current estimated end effector position `pEE` in the {MH} frame.
     void DK();
-    void calculate_joint_angles();
+
+  private: 
+    /// @brief Calculates the end_effector position in the {MHr} frame and saves it in `p_EE_2d` field. Also, saves the positions of j21,j22 
+    ///(`pc1`,`pc2`) in {MHr} frame  that is used for state estimation by `state_estimation()`. 
+    ///
+    /// @param[in] JointPositionVector The measured joint positions `[qMH,q11,q12]`
+    /// @note Depending on `config_param` it handles the 2 configurations of the leg
+    /// 
+    void end_effector_2D(const Eigen::Vector3d &JointPositionVector);
+    
+    /// @brief Calculates the end_effector position in the {MH} frame using the current `p_EE_2d` that is calculated
+    /// from `end_effector_2D`
+    ///
+    /// @param[in] JointPositionVector The measured joint positions `[qMH,q11,q12]`
+    /// @return  p_EE in {MH} frame
+    /// 
+    Eigen::Vector3d end_effector_MH(const double &JointPositionVector);
+
+    // State Estimation:
+
+public:
+    /// @brief Calculates the full state of the leg `[qMH,q11,q21,q12,22]`. 
+    ///
+    /// @param[in] JointPositionVector The measured joint positions `[qMH,q11,q12]`
+    /// @note It calls the `end_effector_2D` to update `pc1`,`pc2`,`p_EE_2d`. If we want to update the current 
+    /// EE position and estimate the state we must use `state_estimation_AND_DK`.
+    /// 
+    Eigen::Matrix<double,5,1> state_estimation(const Eigen::Vector3d &JointPositionVector);
+
+    /// Calculates the full state of the legs based on the current measured state `qm` saved in the class
     void state_estimation();
 
+    // State estimation and DK
+    /// @brief Calculates the full state of the leg `[qMH,q11,q21,q12,22]` and the end effector position in {MH} frame
+    ///
+    /// @param[in] JointPositionVector The measured joint positions `[qMH,q11,q12]`
+    /// @note It uses the dedicated functions  `DK`  and  `state_estimation`
+    /// 
+    void state_estimation_AND_DK(const Eigen::Vector3d &JointPositionVector);
 
-    //getters
+    ///Calculates the full state of the leg `[qMH,q11,q21,q12,22]` and the end effector position in {MH} frame based on the current measured state `qm` saved in the class
+    void state_estimation_AND_DK();
+
+    //getters of current state
     Eigen::Vector3d get_EE_position(void);
     Eigen::Matrix<double,5,1> get_joint_angles(void);
-    
-    
+        
     //helpers:
     Eigen::Matrix3d rotate_x(const double & th);
 
@@ -125,9 +160,10 @@ double j_Dy = -1.1338e-05; //Vertical Distance of joint11 and joint12 from MH fr
 const int config_param = 2; // [config 1: {FR,RL}, config2: {FL,RR}] 
 
 Eigen::Vector2d       p1c,p2c;                   //`p1c`,`p2c` are circle centers in the rotated {MH} frame. Used in `DK`, and saved for state estimation
-Eigen::Vector2d       p_EE_22d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
-const Eigen::Vector2d pj11{0.046, -1.1338e-05} ; // `pj11` is the center of joint11
-const Eigen::Vector2d pj12{0.136, -1.1338e-05} ; // `pj12` is the center of joint12 
+Eigen::Vector2d       p_EE_2d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
+const Eigen::Vector2d pj11{0.046, -1.1338e-05} ; // `pj11` is the center of joint11 in the rotated {MH} frame
+const Eigen::Vector2d pj12{0.136, -1.1338e-05} ; // `pj12` is the center of joint12 in the rotated {MH} frame
+
 
 //State (Cartesian and Angle joints)
 Eigen::Vector3d pEE; //End Effector position vector in the default {MH} frame.
