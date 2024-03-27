@@ -161,9 +161,8 @@ const int config_param = 2; // [config 1: {FR,RL}, config2: {FL,RR}]
 
 Eigen::Vector2d       p1c,p2c;                   //`p1c`,`p2c` are circle centers in the rotated {MH} frame. Used in `DK`, and saved for state estimation
 Eigen::Vector2d       p_EE_2d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
-const Eigen::Vector2d pj11{0.046, -1.1338e-05} ; // `pj11` is the center of joint11 in the rotated {MH} frame
-const Eigen::Vector2d pj12{0.136, -1.1338e-05} ; // `pj12` is the center of joint12 in the rotated {MH} frame
-
+const Eigen::Vector3d Pj11{0.046, -1.1338e-05,z_MH_j11j21} ; // `pj11` is the center of joint11 in the rotated {MH} frame
+const Eigen::Vector3d Pj12{0.136, -1.1338e-05,z_MH_j11j21} ; // `pj12` is the center of joint12 in the rotated {MH} frame
 
 //State (Cartesian and Angle joints)
 Eigen::Vector3d pEE; //End Effector position vector in the default {MH} frame.

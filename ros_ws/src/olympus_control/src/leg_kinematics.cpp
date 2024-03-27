@@ -50,6 +50,9 @@ void leg_kinematics::DK(){
 Eigen::Matrix<double,5,1> leg_kinematics::state_estimation(const Eigen::Vector3d &JointPositionVector){
   end_effector_2D(JointPositionVector); //Updates `pc1`,`pc2`,`p_EE_2d`
 
+  auto& pj11 = Pj11.segment<2>(0);
+  auto& pj12 = Pj12.segment<2>(0);
+
   //The calculations are done in the rotated frame. 
   Eigen::Vector2d link11_v = p1c-pj11;
   Eigen::Vector2d link12_v = p2c-pj12;
@@ -77,7 +80,7 @@ Eigen::Matrix<double,5,1> leg_kinematics::state_estimation(const Eigen::Vector3d
 
   Eigen::Matrix<double,5,1> qvector;
 
-  qvector[0] = JointPositionVector[0] ; 
+  qvector[0] = JointPositionVector[0] ;
   qvector[1] = JointPositionVector[1] ; //Positive joint angles opposite from MH
   qvector[2] = theta1 - q21_offset;
   qvector[3] = JointPositionVector[2] ; 
@@ -99,48 +102,30 @@ void leg_kinematics::state_estimation_AND_DK(){
 }
 
 // FK helpers:
-
 void leg_kinematics::end_effector_2D(const Eigen::Vector3d &JointPositionVector){
- double q11,q12;
-  switch (config_param){
-    case 1:
-      q11 = - JointPositionVector[1] +  offsets_1[joint_id::j11];
-      q12 = - JointPositionVector[2] +  offsets_1[joint_id::j12];
-      break;
-    case 2:
-      q11 = + JointPositionVector[1] +  offsets_2[joint_id::j11];
-      q12 = + JointPositionVector[2] +  offsets_2[joint_id::j12];
-      break;
-  }
+  double q11,q12;
+  double side_sign = (( config_param == 1)? 1 : -1);
 
-  double side_param = (( config_param == 1)? 1 : -1);
+  //0. offset angles
+  q11 = -side_sign*( JointPositionVector[1] -  offsets_1[joint_id::j11] );
+  q12 = -side_sign*( JointPositionVector[2] -  offsets_1[joint_id::j12] );
 
   //1. circle centers:
   Eigen::Vector2d vc;    //distance vector from `p1c` and `p2c` circle centers
   Eigen::Vector2d vn;    //normal to distance vector `vc`
 
-  p1c[0] =             j11_Dx + l11*cos(q11);
-  p1c[1] = side_param* j_Dy   + l11*sin(q11);
+  p1c[0] =             Pj11[0] + l11*cos(q11);
+  p1c[1] =  side_sign* Pj11[1] + l11*sin(q11);
 
-  p2c[0] =             j12_Dx + l12*cos(q12);
-  p2c[1] = side_param* j_Dy   + l12*sin(q12);
+  p2c[0] =             Pj12[0] + l12*cos(q12);
+  p2c[1] =  side_sign* Pj12[1] + l12*sin(q12);
 
   //2. Distance vectors and normal to distance
   vc = p2c-p1c;
   double d = vc.norm(); //distance of circle centers `p1c` and `p2c`
   vc.normalize();             
+  vn << -vc[1],vc[0];
 
-  switch (config_param){
-    case 1:
-      //clockwise normal:
-      vn << -vc[1],vc[0];
-      break;
-    case 2:
-      //anticlockwise normal:
-      vn << vc[1],-vc[0];
-      break;
-  }
-  
   //3. Triangle solution: 
   //see https://www.petercollingridge.co.uk/tutorials/computational-geometry/circle-circle-intersections/
   double a,h;
@@ -148,7 +133,7 @@ void leg_kinematics::end_effector_2D(const Eigen::Vector3d &JointPositionVector)
   h = sqrt( (l21*l21) - (a*a));
 
   //4. Calculate Intersection point in the rotated {MH} frame.
-  p_EE_2d = p1c + (a*vc) + (h*vn);
+  p_EE_2d = p1c + (a*vc) + side_sign* (h*vn);
 }
 Eigen::Vector3d leg_kinematics::end_effector_MH(const double & qMH){
   Eigen::Vector3d p_MHrotated_EE = {0,0,z_MH_j11j21};
@@ -189,11 +174,9 @@ return rotm;
 //maybe change to return bool
 //as IK can fail
 Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
-  // double qMH = atan2(pD_MH[2],pD_MH[1]) - qMH_default_angle;
-
   double side_param = (( config_param == 1)? 1 : -1);
 
-  //Find qMH angle:
+  //A. Finding qmh
   const double & yd  = pD_MH[1];
   const double & zd  = pD_MH[2];
   constexpr double r = abs(z_MH_j11j21) ; 
@@ -206,6 +189,8 @@ Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
   double qMH = atan2(s3,c3);//-qMH_default_angle; 
   
   qMH -= (config_param==1?offsets_1[joint_id::jMH]:offsets_2[joint_id::jMH]);
+
+  //Enforce limits:
   //For  the initial position, we match the y axis  of {MH} with the y axis of the RR plane ->
   //Thus offseting qMH ->
 
@@ -218,10 +203,13 @@ Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
   //   return Eigen::Vector3d{0,0,0};
   // }
 
+  //B. Transform Desired point from {MH} to {MHr}
+  //Debug, to remove
   std::cout << "Desired Position in {MH} frame:" <<std::endl;
   std::cout << pD_MH <<std::endl;
   std::cout << "Rotation Matrix:" <<std::endl;
   std::cout << rotate_x(qMH) <<std::endl;
+  
   //Project pD to RR plane:
   Eigen::Vector3d p_MH   = rotate_x(-qMH)*pD_MH; //Rotate pDesired 
   Eigen::Vector3d DP1{j11_Dx,abs( z_MH_j11j21) ,j_Dy};
