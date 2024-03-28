@@ -1,12 +1,16 @@
 #include <eigen3/Eigen/Dense>
 
+#define j11_Dx 0.046
+#define j12_Dx 0.136
+#define j_Dy   -1.1338e-05
+#define z_MH_j11j21 -0.0597
+
 #define qMH_offset -M_PI_2
 #define q11_offset  2.3095
 #define q21_offset  1.3265
 #define q12_offset  0.83482
 #define q22_offset  -1.3233
 
-#define z_MH_j11j21 -0.0597
 
 //Limits
 // qMH:
@@ -27,7 +31,7 @@
 
 #define SQUARE(x) ((x)*(x))
 #define ANLGE_DIST(x1,x2,x3,x4)  SQUARE(x1)+SQUARE(x2)+SQUARE(x3)+SQUARE(x4)
-
+#define config_sing(x)  ( x==1?1:-1 )
 
 // enum config_parameter {FR_RR}
 
@@ -35,9 +39,11 @@ enum joint_id {jMH,j11,j21,j12,j22};
 
 class leg_kinematics {
   public:		
-    leg_kinematics(int configuration):config_param(configuration)  {
-        ;
-    }
+    leg_kinematics(int configuration):
+    config_param(configuration),
+    Pj11{j11_Dx, config_sing(configuration)*j_Dy,z_MH_j11j21},
+    Pj12{j12_Dx, config_sing(configuration)*j_Dy,z_MH_j11j21},
+    config_sign( config_sing(configuration) ) {}
     
   // Forward Kinematics:
     /// @brief Return the position of the end effector in the {MH} frame. 
@@ -106,6 +112,9 @@ public:
 
     // IK
 
+    /// TODO: handle  infeasible commands <-> never send nan to RR_IK
+
+
     /// @brief Return the input in`motor3` frame. 
     ///
     /// Returns [joint1,joint2,motor3]
@@ -122,14 +131,30 @@ public:
     ///
     Eigen::Vector3d IK(const Eigen::Vector3d & pD_MH  );
 
+    /// TODO: handle  infeasible commands <-> never send theta2 as nan to RR_IK_system
+
     /// @brief Returns the solutions of the inverse kinematics for an RR manipulator
     ///
-    /// @param[in] 
+    /// @param[in] chain [template] integer {1,2} to denote which chain we are working on.
+    /// @param[in] Pd a 2D vector with the [x;y] position of the leg in the {MHr} frame.
     /// @return An `std::array` with 2 arrays for the 2 different solutions. Each array contains 2 angles `q1i` and `q2i` where i=1,2 for each chain.
-    /// @note The leg doesn't know its position in the world frame. The user is responsible for further transformations. 
+    /// @note The functions does the inverse kinematics for a planar RR manipulator, thus it works in 2D vectors. The returned angles are joint positions, 
+    /// meaning offsets are already compensated. This function uses `constexpr if` to create two versions for each chain, and thus requires std++17
     /// 
-    std::array<std::array<double,2>,2> RR_IK(const double &x,const double &y, const bool & chain_1);
-    inline double RR_IK_system(const double x,const double y,const double r1,const double r2,const double & theta2);
+    template <int chain>
+    std::array<std::array<double,2>,2> RR_IK(const Eigen::Vector2d & Pd);
+
+    /// @brief This function solves the system that arises in the RR IK problem after finding `theta2` solutions.
+    ///
+    /// @param[in] Pd Desired Position of the end effector
+    /// @param[in] r1 Length of link 1 
+    /// @param[in] r2 Length of link 2 
+    /// @param[in] theta2 Solution of `theta2` 
+    /// @return The value of `theta1`, or `NaN` if `theta2` is `NaN`. 
+    ///
+    /// @note There is always a solution in this system if theta2 is not nan.
+    ///
+    inline double RR_IK_system(const Eigen::Vector2d & Pd,const double r1,const double r2,const double & theta2);
 
     void feasibility_check( 
       const std::array<std::array<double,2>,2> & SOLS_1,
@@ -146,23 +171,21 @@ public:
 // private:
 public:
 //Geometrical Quantites:
-double j11_Dx = 0.046; //Horizontal distance of joint11 from MH frame
 double l11    = 0.18;
 double l21    = 0.29977;
 
-double j12_Dx = 0.136; //Horizontal distance of joint12 from MH frame
 double l12    = 0.18;
 double l22    = 0.29929;
 
-double j_Dy = -1.1338e-05; //Vertical Distance of joint11 and joint12 from MH frame
 
 //Kinematic Quantities
-const int config_param = 2; // [config 1: {FR,RL}, config2: {FL,RR}] 
+const int config_param; // [config 1: {FR,RL}, config2: {FL,RR}] 
+const double config_sign;
 
 Eigen::Vector2d       p1c,p2c;                   //`p1c`,`p2c` are circle centers in the rotated {MH} frame. Used in `DK`, and saved for state estimation
 Eigen::Vector2d       p_EE_2d;  //End Effector position vector in the rotated {MH} frame -> in the projected plane -> 2d.
-const Eigen::Vector3d Pj11{0.046, -1.1338e-05,z_MH_j11j21} ; // `pj11` is the center of joint11 in the rotated {MH} frame
-const Eigen::Vector3d Pj12{0.136, -1.1338e-05,z_MH_j11j21} ; // `pj12` is the center of joint12 in the rotated {MH} frame
+const Eigen::Vector3d Pj11{j11_Dx, j_Dy,z_MH_j11j21} ; // `pj11` is the center of joint11 in the rotated {MH} frame
+const Eigen::Vector3d Pj12{j12_Dx, j_Dy,z_MH_j11j21} ; // `pj12` is the center of joint12 in the rotated {MH} frame
 
 //State (Cartesian and Angle joints)
 Eigen::Vector3d pEE; //End Effector position vector in the default {MH} frame.

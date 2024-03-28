@@ -15,6 +15,9 @@
 //6. Set desired cartesian position
 //7. Document functions
 
+//explicitely generate the two IK functions:
+template std::array<std::array<double,2>,2> leg_kinematics::RR_IK<1>(const Eigen::Vector2d & Pd);
+template std::array<std::array<double,2>,2> leg_kinematics::RR_IK<2>(const Eigen::Vector2d & Pd);
 
 // testing
 #include <iostream>
@@ -104,21 +107,20 @@ void leg_kinematics::state_estimation_AND_DK(){
 // FK helpers:
 void leg_kinematics::end_effector_2D(const Eigen::Vector3d &JointPositionVector){
   double q11,q12;
-  double side_sign = (( config_param == 1)? 1 : -1);
 
   //0. offset angles
-  q11 = -side_sign*( JointPositionVector[1] -  offsets_1[joint_id::j11] );
-  q12 = -side_sign*( JointPositionVector[2] -  offsets_1[joint_id::j12] );
+  q11 = -config_sign*( JointPositionVector[1] -  offsets_1[joint_id::j11] );
+  q12 = -config_sign*( JointPositionVector[2] -  offsets_1[joint_id::j12] );
 
   //1. circle centers:
   Eigen::Vector2d vc;    //distance vector from `p1c` and `p2c` circle centers
   Eigen::Vector2d vn;    //normal to distance vector `vc`
 
-  p1c[0] =             Pj11[0] + l11*cos(q11);
-  p1c[1] =  side_sign* Pj11[1] + l11*sin(q11);
+  p1c[0] =               Pj11[0] + l11*cos(q11);
+  p1c[1] =  config_sign* Pj11[1] + l11*sin(q11);
 
-  p2c[0] =             Pj12[0] + l12*cos(q12);
-  p2c[1] =  side_sign* Pj12[1] + l12*sin(q12);
+  p2c[0] =               Pj12[0] + l12*cos(q12);
+  p2c[1] =  config_sign* Pj12[1] + l12*sin(q12);
 
   //2. Distance vectors and normal to distance
   vc = p2c-p1c;
@@ -133,7 +135,7 @@ void leg_kinematics::end_effector_2D(const Eigen::Vector3d &JointPositionVector)
   h = sqrt( (l21*l21) - (a*a));
 
   //4. Calculate Intersection point in the rotated {MH} frame.
-  p_EE_2d = p1c + (a*vc) + side_sign* (h*vn);
+  p_EE_2d = p1c + (a*vc) + config_sign* (h*vn);
 }
 Eigen::Vector3d leg_kinematics::end_effector_MH(const double & qMH){
   Eigen::Vector3d p_MHrotated_EE = {0,0,z_MH_j11j21};
@@ -174,26 +176,32 @@ return rotm;
 //maybe change to return bool
 //as IK can fail
 Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
-  double side_param = (( config_param == 1)? 1 : -1);
-
   //A. Finding qmh
   const double & yd  = pD_MH[1];
   const double & zd  = pD_MH[2];
   constexpr double r = abs(z_MH_j11j21) ; 
 
-  double lambda = side_param* sqrt(SQUARE(zd)+SQUARE(yd)-SQUARE(r) ); //plus
-  double c3,s3,determinant3;
-  determinant3 = SQUARE(r) + SQUARE(lambda); 
-  c3 =  (r*yd + lambda*zd) / determinant3;
-  s3 =  (r*zd - lambda*yd) / determinant3;
+  double temp_quant_1 = SQUARE(zd)+SQUARE(yd)-SQUARE(r); 
+  //Error check 1
+  if ( temp_quant_1 < 0 ){
+    std::cerr << "[IK]: error in qmh -> feasibility check 1" <<std::endl;
+    std::cerr << "[IK]: returning nan" <<std::endl;
+  }
+
+  double lambda = config_sign* sqrt(temp_quant_1); //plus
+  double c3,s3;
+  // determinant3 = SQUARE(r) + SQUARE(lambda); 
+  // c3 =  (r*yd + lambda*zd) / determinant3;
+  // s3 =  (r*zd - lambda*yd) / determinant3;
+  c3 =  r*yd + lambda*zd;
+  s3 =  r*zd - lambda*yd;
   double qMH = atan2(s3,c3);//-qMH_default_angle; 
   
-  qMH -= (config_param==1?offsets_1[joint_id::jMH]:offsets_2[joint_id::jMH]);
+  qMH -= offsets_1[joint_id::jMH];
 
   //Enforce limits:
   //For  the initial position, we match the y axis  of {MH} with the y axis of the RR plane ->
   //Thus offseting qMH ->
-
   // try {
   //   if ( qMH > qMH_ub || qMH< qMH_lb ) {
   //     throw(std::runtime_error("[IK]:Cannot rotate ab-ad to reach this possition") );
@@ -203,34 +211,45 @@ Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
   //   return Eigen::Vector3d{0,0,0};
   // }
 
-  //B. Transform Desired point from {MH} to {MHr}
-  //Debug, to remove
-  std::cout << "Desired Position in {MH} frame:" <<std::endl;
-  std::cout << pD_MH <<std::endl;
-  std::cout << "Rotation Matrix:" <<std::endl;
-  std::cout << rotate_x(qMH) <<std::endl;
-  
+  //B. Transform Desired point from {MH} to {MHr}  
   //Project pD to RR plane:
   Eigen::Vector3d p_MH   = rotate_x(-qMH)*pD_MH; //Rotate pDesired 
-  Eigen::Vector3d DP1{j11_Dx,abs( z_MH_j11j21) ,j_Dy};
-  Eigen::Vector3d DP2{j12_Dx,abs( z_MH_j11j21) ,j_Dy};
+  
+  //Offset pD from joint positions -> Make IK and RR IK
+  Eigen::Vector3d p_j1   = p_MH - Pj11;
+  Eigen::Vector3d p_j2   = p_MH - Pj12;
 
-  Eigen::Vector3d p_j1   = p_MH - rotate_x(-M_PI_2)*DP1;
-  Eigen::Vector3d p_j2   = p_MH - rotate_x(-M_PI_2)*DP2;
+  //Debug, to remove
+  // std::cout << "Desired Position in {MH} frame:" <<std::endl;
+  // std::cout << pD_MH <<std::endl;
+  // std::cout << "Rotation Matrix:" <<std::endl;
+  // std::cout << rotate_x(qMH) <<std::endl;
+  //end of debug segment
+
+  // Old working segment. BAD code: 
+  // Eigen::Vector3d DP1{j11_Dx,abs( z_MH_j11j21) ,j_Dy};
+  // Eigen::Vector3d DP2{j12_Dx,abs( z_MH_j11j21) ,j_Dy};
+  // Eigen::Vector3d p_j1_old   = p_MH - rotate_x(-M_PI_2)*DP1;
+  // Eigen::Vector3d p_j2_old   = p_MH - rotate_x(-M_PI_2)*DP2;
+  // std::cout << "difference 1 is: " <<std::endl;
+  // std::cout << p_j1 - p_j1_old <<std::endl;
+  // std::cout << p_j2 - p_j2_old <<std::endl;
+  // end of segment
   // std::cout << "Desired Position in Rotated {MH} frame:" <<std::endl;
   // std::cout << p_MH <<std::endl;
+;
+  //C. Get all RR IK solutions:
+  // auto SOLS_1  = RR_IK(p_j1[0],p_j1[1],true); //Array { [q12,q22]_a,  [q12,q22]_b } 
+  // auto SOLS_2  = RR_IK(p_j2[0],p_j2[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
 
+  auto SOLS_1  = RR_IK<1>(p_j1.head<2>()); //Array { [q12,q22]_a,  [q12,q22]_b } 
+  auto SOLS_2  = RR_IK<2>(p_j2.head<2>()); //Array { [q12,q22]_a,  [q12,q22]_b } 
 
-  //Get all RRIK solutions
-  // auto SOLS_1  = RR_IK(p_MH[0]-j11_Dx,p_MH[1],true) ; //Array { [q11,q21]_a,  [q11,q21]_b }  
-  // auto SOLS_2  = RR_IK(p_MH[0]-j12_Dx,p_MH[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
-  auto SOLS_1  = RR_IK(p_j1[0],p_j1[1],true); //Array { [q12,q22]_a,  [q12,q22]_b } 
-  auto SOLS_2  = RR_IK(p_j2[0],p_j2[1],false); //Array { [q12,q22]_a,  [q12,q22]_b } 
-
+  //Debug:
   print_nested_array(SOLS_1);
   print_nested_array(SOLS_2);
 
-  //check feasibility:
+  //D. check feasibility:
   feasibility_check(SOLS_1,SOLS_2);
   print_nested_array(feasibility_matrix);
   //Select best
@@ -244,94 +263,87 @@ Eigen::Vector3d leg_kinematics::IK(const Eigen::Vector3d & pD_MH ){
 
 }
 
+template <int chain>
+std::array<std::array<double,2>,2> leg_kinematics::RR_IK(const Eigen::Vector2d & Pd){
+  //Input references
+  const double & x = Pd[0];
+  const double & y = Pd[1];
 
-std::array<std::array<double,2>,2> leg_kinematics::RR_IK(const double &x,const double &y, const bool & chain1){
+  //Output defs
   std::array<double,2> solution1; //[theta1,theta2]
   std::array<double,2> solution2; //[theta1,theta2]
 
-  double theta2;
-  double r1;
-  double r2;
+  //Aliases for convenience:
+  double & theta1_a = solution1[0];
+  double & theta2_a = solution1[1];
+  double & theta1_b = solution2[0];
+  double & theta2_b = solution2[1];
+
+  //Function defs
+  const double & r1 =  (chain == 1) ? l11 : l12;
+  const double & r2 =  (chain == 1) ? l21 : l22;
   double theta1_offset;
   double theta2_offset;
-  
 
-  if (chain1){
-    r1 = l11; r2 = l21;
-    if (config_param == 1){
-      theta1_offset = offsets_1[joint_id::j11];
-      theta2_offset = offsets_1[joint_id::j21];
-    }else{
-      theta1_offset = offsets_2[joint_id::j11];
-      theta2_offset = offsets_2[joint_id::j21];
-    }
-
-  }else{
-    r1 = l12; r2 = l22; 
-    // theta1_offset = q12_offset;
-    // theta2_offset = -q22_offset;
-    if (config_param == 1){
-      theta1_offset = offsets_1[joint_id::j12];
-      theta2_offset = offsets_1[joint_id::j22];
-    }else{
-      theta1_offset = offsets_2[joint_id::j12];
-      theta2_offset = offsets_2[joint_id::j22];
-    }
-  }
-  solution1[1] = acos(( x*x +y*y -r1*r1 -r2*r2)/(2*r1*r2));
-  solution2[1] = -solution1[1];
-
-  solution1[0] = RR_IK_system(x,y,r1,r2,solution1[1]);
-  solution2[0] = RR_IK_system(x,y,r1,r2,solution2[1]);
-
-
-// offsets:
-  if ( config_param == 2) { 
-    solution1[0] = -theta1_offset + solution1[0] ;
-    solution1[0] = wrap_angle(solution1[0]);
-
-    solution2[0] = -theta1_offset + solution2[0] ;
-    solution2[0] = wrap_angle(solution2[0]);
-
-    solution1[1]  = -theta2_offset + solution1[1] ;
-    solution1[1]  = wrap_angle(solution1[1]);
-
-    solution2[1]  = -theta2_offset + solution2[1] ;
-    solution2[1]  = wrap_angle(solution2[1]);
-  }else{
-    solution1[0] = theta1_offset - solution1[0] ;
-    solution1[0] = wrap_angle(solution1[0]);
-
-    solution2[0] = theta1_offset - solution2[0] ;
-    solution2[0] = wrap_angle(solution2[0]);
-
-    solution1[1]  = -theta2_offset - solution1[1] ;
-    solution1[1]  = wrap_angle(solution1[1]);
-
-    solution2[1]  = -theta2_offset - solution2[1] ;
-    solution2[1]  = wrap_angle(solution2[1]);
+  if constexpr (chain==1) {
+    theta1_offset = offsets_1[joint_id::j11];
+    theta2_offset = offsets_1[joint_id::j21];
+  }else {
+    theta1_offset = offsets_1[joint_id::j12];
+    theta2_offset = offsets_1[joint_id::j22];
   }
 
+  //Solve IK: 
+  //a. Finding theta2:
+  double temp_value = ( x*x +y*y -r1*r1 -r2*r2)/(2*r1*r2);
+
+  if ( temp_value < -1 || temp_value > 1 ){
+    std::cerr << "[IK]: error in theta2 -> feasibility check 2" <<std::endl;
+    std::cerr << "[IK]: returning nan" <<std::endl;
+  }
+
+  theta2_a = acos(temp_value);
+  theta2_b = -theta2_a;
+
+  //b. Finding theta1:
+  theta1_a = RR_IK_system(Pd,r1,r2,theta2_a);
+  theta1_b = RR_IK_system(Pd,r1,r2,theta2_b);
 
 
+  //Offsets:
+  //q1i
+  theta1_a =  theta1_offset -(config_sign)* theta1_a ;
+  theta1_b =  theta1_offset -(config_sign)* theta1_b ;
 
+  //q2i
+  theta2_a = -theta2_offset -(config_sign)* theta2_a ;
+  theta2_b = -theta2_offset -(config_sign)* theta2_b ;
 
   return std::array<std::array<double,2>,2> {solution1,solution2};
 };
 
-inline double leg_kinematics::RR_IK_system(const double x,
-                                                const double y,
-                                                const double r1,
-                                                const double r2,
-                                                const double & theta2){
-  
-  double k1,k2,c1,s1,determinant;
+
+inline double leg_kinematics::RR_IK_system( const Eigen::Vector2d & Pd,
+                                            const double r1,
+                                            const double r2,
+                                            const double & theta2){
+  if (std::isnan(theta2)){ 
+  // Check if theta2 is not a nan-> if nan-> return nan
+    return std::nan("1");
+  }                                            
+
+  const double & x = Pd[0];
+  const double & y = Pd[1];
+
+  double k1,k2,c1,s1;
   k1 = r1+r2*cos(theta2);
   k2 =    r2*sin(theta2);
-  determinant = k1*k1 + k2*k2;
+  // determinant = k1*k1 + k2*k2;
+  // c1 = (k1*x+k2*y)/(determinant);
+  // s1 = (k1*y-k2*x)/(determinant);
 
-  c1 = (k1*x+k2*y)/(determinant);
-  s1 = (k1*y-k2*x)/(determinant);
+  c1 = k1*x+k2*y;
+  s1 = k1*y-k2*x;
 
   return  atan2(s1,c1);
 }
